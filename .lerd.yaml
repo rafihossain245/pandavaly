@@ -1,0 +1,9 @@
+domains:
+  - goebazar
+php_version: "8.3"
+framework: laravel
+framework_version: "12"
+services:
+  - mailpit
+  - mysql
+  - redis
