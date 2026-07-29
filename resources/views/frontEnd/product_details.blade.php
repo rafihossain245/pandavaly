@@ -289,6 +289,18 @@
                                     <i class="fas fa-bolt me-1"></i> Buy Now
                                 </button>
                             </div>
+                            @php $contactPhone = App\Models\Setting::first()->contact_phone ?? null; @endphp
+                            @if($contactPhone)
+                                <div class="d-flex gap-2 mt-2">
+                                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $contactPhone) }}?text={{ urlencode('I want to order: ' . $product->name) }}"
+                                        target="_blank" rel="noopener" class="btn flex-fill" style="background:#25D366;color:#fff;">
+                                        <i class="fa-brands fa-whatsapp me-1"></i> Order On WhatsApp
+                                    </a>
+                                    <a href="tel:{{ $contactPhone }}" class="btn btn-dark flex-fill">
+                                        <i class="fas fa-phone me-1"></i> Call For Order
+                                    </a>
+                                </div>
+                            @endif
                         </form>
                     </div>
                     
@@ -692,38 +704,7 @@
                 <h2 class="section-title recom-title">Related Products</h2>
                 <div class="products-grid">
                     @forelse($relatedProducts as $item)
-                        @php
-                            $rp = $item->product_prices->first();
-                            $rpSelling  = $rp->selling_price ?? $item->selling_price ?? 0;
-                            $rpPrevious = $rp->previous_price ?? null;
-                            $rpDiscount = ($rpPrevious && $rpPrevious > $rpSelling) ? round((($rpPrevious - $rpSelling) / $rpPrevious) * 100) : 0;
-                        @endphp
-                        <div class="product-card item">
-                            @if($rpDiscount > 0)
-                                <div class="discount-badge">{{ $rpDiscount }}%</div>
-                            @endif
-                            <div class="product-image">
-                                <img src="{{ asset($item->thumbnail) }}" alt="{{ $item->name }}">
-                            </div>
-                            <a href="{{ route('product.details', $item->slug) }}" class="product-name line-2">{{ $item->name }}</a>
-                            <div class="price-container">
-                                @if($rpDiscount > 0)
-                                    <span class="original-price">৳ {{ number_format($rpPrevious, 2) }}</span>
-                                @endif
-                                <span class="current-price">৳ {{ number_format($rpSelling, 2) }}</span>
-                            </div>
-                            <div class="stock-info">IN STOCK: <span class="stock-count">{{ $item->stock_qty ?? 0 }}</span></div>
-                            <div class="action-buttons">
-                                <div class="icon-buttons">
-                                    <span class="hover-tooltip" data-tooltip="View Product">
-                                        <a href="{{ route('product.details', $item->slug) }}"><i class="icon-button pointer ti ti-eye"></i></a>
-                                    </span>
-                                </div>
-                                <button class="add-to-cart hover-tooltip add-to-cart-btn" data-tooltip="Add to Cart" data-product="{{ $item->id }}">
-                                    <i class="fa-solid fa-bag-shopping"></i>
-                                </button>
-                            </div>
-                        </div>
+                        @include('frontEnd.partials.product-card', ['item' => $item, 'wrapperClass' => 'item'])
                     @empty
                         <p class="text-muted">No related products found.</p>
                     @endforelse

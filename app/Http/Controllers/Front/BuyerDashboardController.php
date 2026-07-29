@@ -142,8 +142,15 @@ class BuyerDashboardController extends Controller
     {
         $buyer = $this->buyer();
         $tradeLicenseDocument = $buyer->documents()->where('type', 'TradeLicense')->latest()->with('media')->first();
+        $districts = \App\Models\District::active()->get();
+        $thanasByDistrict = \App\Models\Thana::orderBy('name')->get()->groupBy('district_id');
 
-        return view('frontEnd.buyer.profile', ['buyer' => $buyer, 'tradeLicenseDocument' => $tradeLicenseDocument]);
+        return view('frontEnd.buyer.profile', [
+            'buyer' => $buyer,
+            'tradeLicenseDocument' => $tradeLicenseDocument,
+            'districts' => $districts,
+            'thanasByDistrict' => $thanasByDistrict,
+        ]);
     }
 
     public function updateProfile(Request $request)
@@ -155,6 +162,8 @@ class BuyerDashboardController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('buyers')->ignore($buyer->id)],
             'phone' => ['required', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:2000'],
+            'district_id' => ['nullable', 'exists:districts,id'],
+            'thana_id' => ['nullable', 'exists:thanas,id'],
             'city' => ['nullable', 'string', 'max:255'],
             'state' => ['nullable', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:50'],

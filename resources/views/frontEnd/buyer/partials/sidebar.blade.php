@@ -12,6 +12,9 @@
     <a href="{{ route('buyer.invoices') }}" class="{{ request()->routeIs('buyer.invoices*') ? 'active' : '' }}">
         <i class="fas fa-file-invoice"></i> Invoices
     </a>
+    <a href="{{ route('buyer.wishlist') }}" class="{{ request()->routeIs('buyer.wishlist') ? 'active' : '' }}">
+        <i class="fas fa-heart"></i> Wishlist
+    </a>
     <a href="{{ route('buyer.profile') }}" class="{{ request()->routeIs('buyer.profile*') ? 'active' : '' }}">
         <i class="fas fa-user"></i> Profile
     </a>

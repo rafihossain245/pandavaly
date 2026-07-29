@@ -155,14 +155,17 @@
                 </a>
                 <div class="header-action">
                     <!-- <i class="fas fa-search m-d-block top-search"></i>    -->
+                    <a class="m-d-none" href="{{ route('track-order') }}" title="Track Order">
+                        <i class="fas fa-truck-fast" style="font-size: 20px;"></i>
+                    </a>
                     <a href="#" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
                         aria-controls="offcanvasRight">
                         <img src="{{asset('frontEnd/assets/')}}/image/cart.png" alt="">
                         <span class="total-cart">{{ $cart['count'] }}</span>
                     </a>
-                    <a href="wishlist.html">
+                    <a href="{{ Auth::guard('buyer')->check() ? route('buyer.wishlist') : route('buyer.login') }}">
                         <img src="{{asset('frontEnd/assets/')}}/image/heart.png" alt="">
-                        <span class="total-wishlist">0</span>
+                        <span class="total-wishlist">{{ Auth::guard('buyer')->check() ? Auth::guard('buyer')->user()->wishlists()->count() : 0 }}</span>
                     </a>
                     <a class="m-d-none" href="{{ Auth::guard('buyer')->check() ? route('buyer.dashboard') : route('buyer.login') }}">
                         <img src="{{asset('frontEnd/assets/')}}/image/profile.png" alt="">
@@ -207,6 +210,19 @@
             <a href="{{ route('cart.index') }}" class="cs-view-cart">View Cart</a>
         </div>
     </div>
+
+    {{-- Floating quick-access widgets --}}
+    <a href="{{ route('cart.index') }}" class="floating-cart" style="position:fixed; right:0; top:300px; background:#f47b32; color:#fff; border-radius:12px 0 0 12px; z-index:40; padding:12px 16px; text-align:center; text-decoration:none; {{ $cart['count'] ? '' : 'display:none;' }}">
+        <div style="font-size:20px;">🛍️</div>
+        <div style="font-size:12px;">{{ $cart['count'] }} Items</div>
+        <div style="font-size:12px; font-weight:700;">৳{{ number_format($cart['total']) }}</div>
+    </a>
+    @if($setting->contact_phone ?? null)
+        <a href="https://wa.me/{{ preg_replace('/\D/', '', $setting->contact_phone) }}" target="_blank" rel="noopener"
+           class="chat-btn" style="position:fixed; right:26px; bottom:32px; background:#25D366; color:#fff; width:54px; height:54px; border-radius:50%; display:grid; place-items:center; z-index:40; text-decoration:none; box-shadow:0 4px 12px rgba(0,0,0,.2);">
+            <i class="fa-brands fa-whatsapp" style="font-size:26px;"></i>
+        </a>
+    @endif
 
     {{-- Add-to-cart toast notification --}}
     <div class="cart-toast" id="cartToast">

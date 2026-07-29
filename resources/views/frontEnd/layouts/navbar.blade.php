@@ -7,7 +7,7 @@
                 <div class="toggle-dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false"><i class="ti ti-menu-2"></i> Categories</a>
-                    <div class="dropdown-menu {{ request()->routeIs('home') ? 'd-block' : '' }} main-menu" style="min-height: 57vh;">
+                    <div class="dropdown-menu main-menu" style="min-height: 57vh;">
                         <ul class="main-ul">
                             @foreach ($categories as $item)
                                 <li class="has_dropdown">

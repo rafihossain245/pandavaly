@@ -64,7 +64,7 @@ class BuyerAuthController extends Controller
             $buyer = Buyer::create([
                 'company_id' => $company?->id,
                 'business_name' => $validated['business_name'],
-                'category' => $validated['category'] ?: 'Retail',
+                'category' => $validated['category'] ?? 'Retail',
                 'email' => $validated['email'],
                 'phone' => $validated['phone'],
                 'password' => $validated['password'],

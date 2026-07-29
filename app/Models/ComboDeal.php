@@ -46,6 +46,10 @@ class ComboDeal extends Model
 
     public function originalPrice(): float
     {
-        return $this->products->sum(fn ($product) => $product->selling_price * $product->pivot->qty);
+        return $this->products->sum(function ($product) {
+            $price = $product->product_prices->first()->selling_price ?? 0;
+
+            return $price * $product->pivot->qty;
+        });
     }
 }

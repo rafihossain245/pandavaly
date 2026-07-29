@@ -144,29 +144,7 @@
                 <div class="col-lg-9">
                     <div class="shop-products d-flex flex-wrap gap-20px">
                         @forelse ($products as $item)
-                            @php
-                                $price = $item->product_prices->first();
-                            @endphp
-                            <div class="product-card item">
-                                <div class="discount-badge">0%</div>
-                                <div class="product-image">
-                                    <img src="{{ asset($item->thumbnail) }}" alt="{{ $item->name }}">
-                                </div>
-                                <a href="{{ route('product.details', $item->slug) }}" class="product-name line-2">
-                                    {{ $item->name }}
-                                </a>
-                                <div class="price-container">
-                                    <span class="original-price">৳ {{ $price->previous_price ?? '0' }}</span>
-                                    <span class="current-price">৳ {{ $price->selling_price ?? '0' }}</span>
-                                </div>
-                                <div class="stock-info">
-                                    IN STOCK: <span class="stock-count">{{ $item->stock_qty ?? 0 }}</span>
-                                </div>
-                                <div class="action-buttons mt-2">
-                                    <button class="btn btn-sm btn-primary text-white add-to-cart-btn" data-product="{{ $item->id }}">Add to Cart</button>
-                                    <a href="{{ route('product.details', $item->slug) }}" class="btn btn-sm btn-outline-secondary ms-2">View</a>
-                                </div>
-                            </div>
+                            @include('frontEnd.partials.product-card', ['item' => $item, 'wrapperClass' => 'item'])
                         @empty
                             <div class="w-100 text-center p-5 bg-light rounded">
                                 <h5 class="mb-2">No products found</h5>

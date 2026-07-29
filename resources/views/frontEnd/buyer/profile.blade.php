@@ -15,10 +15,8 @@
                     ['email', 'Email address', 'email', 6],
                     ['phone', 'Phone', 'text', 6],
                     ['address', 'Address', 'text', 12],
-                    ['city', 'City', 'text', 4],
-                    ['state', 'State', 'text', 4],
+                    ['city', 'City / Area', 'text', 4],
                     ['postal_code', 'Postal code', 'text', 4],
-                    ['country', 'Country', 'text', 6],
                 ] as [$name, $label, $type, $width])
                     <div class="col-md-{{ $width }}">
                         <label class="form-label" for="{{ $name }}">{{ $label }}</label>
@@ -31,6 +29,23 @@
                         @error($name)<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 @endforeach
+                <div class="col-md-4">
+                    <label class="form-label" for="district_id">District</label>
+                    <select class="form-control @error('district_id') is-invalid @enderror" id="district_id" name="district_id">
+                        <option value="">Select District</option>
+                        @foreach($districts as $district)
+                            <option value="{{ $district->id }}" {{ old('district_id', $buyer->district_id) == $district->id ? 'selected' : '' }}>{{ $district->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('district_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="thana_id">Thana / Upazila</label>
+                    <select class="form-control @error('thana_id') is-invalid @enderror" id="thana_id" name="thana_id">
+                        <option value="">Select District First</option>
+                    </select>
+                    @error('thana_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
             </div>
             <hr class="my-4">
             <h5>Business Verification (KYC)</h5>
@@ -92,4 +107,32 @@
         </form>
     </div>
 @include('frontEnd.buyer.partials.layout-end')
+<script>
+(function () {
+    const thanasByDistrict = @json($thanasByDistrict);
+    const districtSelect = document.getElementById('district_id');
+    const thanaSelect = document.getElementById('thana_id');
+    const selectedThanaId = '{{ old('thana_id', $buyer->thana_id) }}';
+
+    function populateThanas() {
+        const districtId = districtSelect.value;
+        const thanas = thanasByDistrict[districtId] || [];
+        if (!districtId || !thanas.length) {
+            thanaSelect.innerHTML = '<option value="">Select District First</option>';
+            return;
+        }
+        thanaSelect.innerHTML = '<option value="">Select Thana</option>';
+        thanas.forEach(function (thana) {
+            const opt = document.createElement('option');
+            opt.value = thana.id;
+            opt.textContent = thana.name;
+            if (String(thana.id) === String(selectedThanaId)) opt.selected = true;
+            thanaSelect.appendChild(opt);
+        });
+    }
+
+    districtSelect.addEventListener('change', populateThanas);
+    if (districtSelect.value) populateThanas();
+})();
+</script>
 @endsection

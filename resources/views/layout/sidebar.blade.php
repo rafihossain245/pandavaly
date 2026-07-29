@@ -73,12 +73,14 @@
                 </div>
                 <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
             </button>
-            <div id="webSubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{ request()->routeIs('role.sliders.index') || request()->routeIs('role.sliders.index') ? '' : 'hidden' }}">
+            <div id="webSubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{ request()->routeIs('role.sliders.index') || request()->routeIs('role.homepage-sections.index') || request()->routeIs('role.banners.index') ? '' : 'hidden' }}">
+                <a href="{{ route('role.homepage-sections.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.homepage-sections.index') ? 'active' : '' }}"><i class="fas fa-th-large"></i> Homepage Sections</a>
                 <a href="{{ route('role.sliders.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.sliders.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Slider</a>
+                <a href="{{ route('role.banners.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.banners.index') ? 'active' : '' }}"><i class="fas fa-images"></i> Banners</a>
+                <a href="{{ route('role.combo-deals.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.combo-deals.index') ? 'active' : '' }}"><i class="fas fa-gift"></i> Combo Deals</a>
                 <a href="{{ route('role.page-categories.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.page-categories.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Page Category</a>
                 <a href="{{ route('role.pages.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.pages.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Page</a>
-                <a href="{{ route('role.home-page.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.home-page.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Homepage Setting</a>
-                
+
             </div>
         </div>
 

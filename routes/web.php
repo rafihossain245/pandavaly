@@ -60,8 +60,9 @@ use App\Http\Controllers\Dashboard\BuyerController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\Dashboard\AttributeController;
 use App\Http\Controllers\Dashboard\AttributeValueController;
-use App\Http\Controllers\Dashboard\HomepageController;
 use App\Http\Controllers\Dashboard\SliderController;
+use App\Http\Controllers\Dashboard\HomepageSectionController;
+use App\Http\Controllers\Dashboard\BannerController;
 use App\Http\Controllers\Dashboard\PageCategoryController;
 use App\Http\Controllers\Dashboard\PageController;
 use App\Http\Controllers\Dashboard\SettingController;
@@ -83,6 +84,7 @@ use App\Http\Controllers\Dashboard\ProductReviewController as DashboardProductRe
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/product-details/{slug}', [HomeController::class, 'product_details'])->name('product.details');
+Route::get('/track-order', [\App\Http\Controllers\Front\TrackOrderController::class, 'index'])->name('track-order');
 // Cart routes (frontend)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -101,6 +103,7 @@ Route::middleware('buyer.guest')->get('/login', [BuyerAuthController::class, 'sh
 
 Route::middleware('buyer.auth')->group(function () {
     Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/wishlist/toggle', [\App\Http\Controllers\Front\WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
@@ -117,6 +120,7 @@ Route::middleware('buyer.auth')->group(function () {
         Route::get('/invoices/{invoice}', [BuyerDashboardController::class, 'invoice'])->name('invoices.show');
         Route::post('/orders/{order}/upload-slip', [BuyerDashboardController::class, 'uploadSlip'])->name('orders.upload-slip');
         Route::post('/orders/{order}/reorder', [BuyerDashboardController::class, 'reorder'])->name('orders.reorder');
+        Route::get('/wishlist', [\App\Http\Controllers\Front\WishlistController::class, 'index'])->name('wishlist');
     });
 });
 
@@ -187,9 +191,12 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     Route::put('attribute-values/{attributeValue}', [AttributeValueController::class, 'update'])->name('attribute-values.update');
     Route::delete('attribute-values/{attributeValue}', [AttributeValueController::class, 'destroy'])->name('attribute-values.destroy');
     Route::resource('sliders', SliderController::class)->except('show');
+    Route::post('homepage-sections/reorder', [HomepageSectionController::class, 'reorder'])->name('homepage-sections.reorder');
+    Route::resource('homepage-sections', HomepageSectionController::class)->except('show');
+    Route::resource('banners', BannerController::class)->except('show');
+    Route::resource('combo-deals', \App\Http\Controllers\Dashboard\ComboDealController::class)->except('show');
     Route::resource('page-categories', PageCategoryController::class)->except('show');
     Route::resource('pages', PageController::class)->except('show');
-    Route::resource('home-page', HomepageController::class)->except('show');
     Route::get('website-settings', [SettingController::class, 'index'])->name('website-settings');
     Route::post('website-settings', [SettingController::class, 'store'])->name('website-settings.store');
     

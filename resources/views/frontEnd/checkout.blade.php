@@ -140,7 +140,24 @@
                                     @error('address')<div class="co-error">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="co-label">City</label>
+                                    <label class="co-label">District <span class="co-required">*</span></label>
+                                    <select name="district_id" id="district_id" class="co-input @error('district_id') is-invalid @enderror" required>
+                                        <option value="">Select District</option>
+                                        @foreach($districts as $district)
+                                            <option value="{{ $district->id }}" {{ old('district_id', $buyer->district_id ?? '') == $district->id ? 'selected' : '' }}>{{ $district->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('district_id')<div class="co-error">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="co-label">Thana / Upazila <span class="co-required">*</span></label>
+                                    <select name="thana_id" id="thana_id" class="co-input @error('thana_id') is-invalid @enderror" required>
+                                        <option value="">Select District First</option>
+                                    </select>
+                                    @error('thana_id')<div class="co-error">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="co-label">City / Area</label>
                                     <input type="text" name="city" class="co-input"
                                            value="{{ old('city', $buyer->city) }}">
                                 </div>
@@ -240,6 +257,22 @@
                                     <div class="pm-option-sub">Transfer to our bank account</div>
                                 </div>
                             </label>
+                            <label class="pm-option" style="opacity:.55; cursor:not-allowed;">
+                                <input type="radio" disabled>
+                                <i class="fas fa-globe pm-icon" style="color:#9ca3af"></i>
+                                <div>
+                                    <div class="pm-option-text">Online Payment <span class="badge bg-secondary" style="font-size:10px; vertical-align:middle;">Coming Soon</span></div>
+                                    <div class="pm-option-sub">Card / mobile banking gateway</div>
+                                </div>
+                            </label>
+                            <label class="pm-option" style="opacity:.55; cursor:not-allowed;">
+                                <input type="radio" disabled>
+                                <i class="fas fa-mobile-alt pm-icon" style="color:#9ca3af"></i>
+                                <div>
+                                    <div class="pm-option-text">bKash <span class="badge bg-secondary" style="font-size:10px; vertical-align:middle;">Coming Soon</span></div>
+                                    <div class="pm-option-sub">Pay via bKash mobile wallet</div>
+                                </div>
+                            </label>
                             @error('payment_method')<div class="co-error">{{ $message }}</div>@enderror
                         </div>
                     </div>
@@ -266,5 +299,33 @@ function selectPM(radio, labelId) {
     document.querySelectorAll('.pm-option').forEach(function(l) { l.classList.remove('active'); });
     document.getElementById(labelId).classList.add('active');
 }
+
+(function () {
+    const thanasByDistrict = @json($thanasByDistrict);
+    const districtSelect = document.getElementById('district_id');
+    const thanaSelect = document.getElementById('thana_id');
+    const selectedThanaId = '{{ old('thana_id', $buyer->thana_id ?? '') }}';
+
+    function populateThanas() {
+        const districtId = districtSelect.value;
+        thanaSelect.innerHTML = '';
+        const thanas = thanasByDistrict[districtId] || [];
+        if (!districtId || !thanas.length) {
+            thanaSelect.innerHTML = '<option value="">Select District First</option>';
+            return;
+        }
+        thanaSelect.innerHTML = '<option value="">Select Thana</option>';
+        thanas.forEach(function (thana) {
+            const opt = document.createElement('option');
+            opt.value = thana.id;
+            opt.textContent = thana.name;
+            if (String(thana.id) === String(selectedThanaId)) opt.selected = true;
+            thanaSelect.appendChild(opt);
+        });
+    }
+
+    districtSelect.addEventListener('change', populateThanas);
+    if (districtSelect.value) populateThanas();
+})();
 </script>
 @endsection

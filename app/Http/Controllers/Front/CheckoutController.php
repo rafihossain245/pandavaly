@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\District;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Product;
@@ -11,6 +12,7 @@ use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\Stock;
 use App\Models\StockMovement;
+use App\Models\Thana;
 use Illuminate\Http\Request;
 use App\Mail\OrderConfirmed;
 use Illuminate\Support\Facades\Auth;
@@ -62,8 +64,10 @@ class CheckoutController extends Controller
         }
 
         $buyer = Auth::guard('buyer')->user();
+        $districts = District::active()->get();
+        $thanasByDistrict = Thana::orderBy('name')->get()->groupBy('district_id');
 
-        return view('frontEnd.checkout', compact('cart', 'buyer'));
+        return view('frontEnd.checkout', compact('cart', 'buyer', 'districts', 'thanasByDistrict'));
     }
 
     public function place(Request $request)
@@ -76,6 +80,8 @@ class CheckoutController extends Controller
             'delivery_contact_name' => 'nullable|string|max:255',
             'delivery_contact_phone'=> 'nullable|string|max:30',
             'address'               => 'required|string',
+            'district_id'           => 'required|exists:districts,id',
+            'thana_id'              => 'required|exists:thanas,id',
             'city'                  => 'nullable|string|max:255',
             'postal_code'           => 'nullable|string|max:50',
             'purchase_ref_no'       => 'nullable|string|max:255',
@@ -122,6 +128,8 @@ class CheckoutController extends Controller
                 $order->delivery_contact_name = $request->delivery_contact_name;
                 $order->delivery_contact_phone= $request->delivery_contact_phone;
                 $order->shipping_address      = $request->address;
+                $order->district_id           = $request->district_id;
+                $order->thana_id              = $request->thana_id;
                 $order->shipping_city         = $request->city;
                 $order->shipping_postal_code  = $request->postal_code;
                 $order->purchase_ref_no       = $request->purchase_ref_no;

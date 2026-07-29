@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Models\Category;
+use App\Models\ComboDeal;
+use App\Models\HomepageSection;
 use App\Models\Product;
 use App\Models\Slider;
 use Illuminate\Http\Request;
@@ -13,54 +16,46 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $sliders = Cache::remember('home_sliders', 60 * 60, function () {
-            return Slider::where('is_active', 1)
-                ->orderBy('id', 'desc')
-                ->get();
-        });
+        $sections = HomepageSection::active()
+            ->orderBy('sort_order')
+            ->with(['banners' => fn ($q) => $q->where('is_active', 1)->orderBy('sort_order')])
+            ->get();
 
-        $trending_products = Cache::remember('home_trending_products', 60 * 60, function () {
-            return Product::with('product_prices')
-                ->where('is_trending', 1)
-                ->orderBy('id', 'desc')
-                ->get();
-        });
+        foreach ($sections as $section) {
+            $section->setRelation('resolvedData', $this->resolveSectionData($section));
+        }
 
-        $popular_products = Cache::remember('home_popular_products', 60 * 60, function () {
-            return Product::with('product_prices')
-                ->where('is_popular', 1)
-                ->orderBy('id', 'desc')
-                ->get();
-        });
+        return view('frontEnd.home', compact('sections'));
+    }
 
-        $recommended_products = Cache::remember('home_recommended_products', 60 * 60, function () {
-            return Product::with('product_prices')
-                ->where('is_recommended', 1)
-                ->orderBy('id', 'desc')
-                ->get();
-        });
+    protected function resolveSectionData(HomepageSection $section)
+    {
+        return match ($section->type) {
+            'hero_slider' => Slider::where('is_active', 1)->orderBy('id', 'desc')->get(),
+            'category_strip' => Category::where('is_active', 1)->orderBy('sort_order')->orderBy('name')->get(),
+            'brand_strip' => Brand::where('is_active', 1)->orderBy('name')->get(),
+            'combo_deals' => ComboDeal::active()->with('products.product_prices')->orderBy('sort_order')->get(),
+            'product_row' => $this->resolveProductRow($section),
+            default => null,
+        };
+    }
 
-        $categories = Cache::remember('home_categories', 60 * 60, function () {
-            return Category::where('is_active', 1)
-                ->orderBy('id', 'desc')
-                ->get();
-        });
+    protected function resolveProductRow(HomepageSection $section)
+    {
+        $config = $section->config ?? [];
+        $limit = $config['limit'] ?? 8;
 
-        $product_categories = Cache::remember('home_product_categories', 60 * 60, function () {
-            return Category::where('is_active', 1)
-                ->orderBy('id', 'desc')
-                ->take(5)
-                ->get();
-        });
+        $query = Product::with('product_prices')->where('is_active', 1);
 
-        return view('frontEnd.home', compact(
-            'sliders',
-            'trending_products',
-            'popular_products',
-            'recommended_products',
-            'categories',
-            'product_categories'
-        ));
+        return match ($config['source'] ?? 'manual') {
+            'trending' => $query->where('is_trending', 1)->orderBy('id', 'desc')->limit($limit)->get(),
+            'popular' => $query->where('is_popular', 1)->orderBy('id', 'desc')->limit($limit)->get(),
+            'recommended' => $query->where('is_recommended', 1)->orderBy('id', 'desc')->limit($limit)->get(),
+            'category' => $config['category_id']
+                ? $query->where('category_id', $config['category_id'])->orderBy('id', 'desc')->limit($limit)->get()
+                : collect(),
+            default => $section->products()->with('product_prices')->where('is_active', 1)->limit($limit)->get(),
+        };
     }
     public function product_details($slug)
     {
