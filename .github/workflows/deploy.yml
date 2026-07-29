@@ -1,0 +1,36 @@
+name: Deploy to cPanel via SSH
+
+on:
+  push:
+    branches:
+      - main  # adjust if needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          # Optional: add known hosts entry (won't fail if it can't scan)
+          ssh-keyscan -p 21098 -H ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts || echo "⚠️ ssh-keyscan failed"
+
+          # SSH config for custom port
+          echo -e "Host *\n  IdentityFile ~/.ssh/id_rsa\n  Port 21098\n  StrictHostKeyChecking no\n  UserKnownHostsFile=/dev/null" > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+      - name: Deploy via rsync
+        run: |
+          rsync -az --delete \
+            --exclude '/core/.env' \
+            --exclude '/core/vendor/' \
+            --exclude '/core/app/Config/App.php' \
+            --exclude '/.github/workflows/deploy.yml' \
+            ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USERNAME }}/public_html/
