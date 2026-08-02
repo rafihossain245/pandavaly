@@ -19,3 +19,4 @@
     <link rel="stylesheet" href="{{asset('frontEnd/assets/')}}/css/variable.css">
     <link rel="stylesheet" href="{{asset('frontEnd/assets/')}}/css/responsive.css">
     <link rel="stylesheet" href="{{asset('frontEnd/assets/')}}/css/buyer-account.css">
+    <link rel="stylesheet" href="{{asset('frontEnd/assets/')}}/css/brand-theme.css">

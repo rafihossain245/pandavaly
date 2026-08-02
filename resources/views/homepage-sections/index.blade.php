@@ -89,9 +89,10 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="btn-group btn-group-sm flex space-x-1">
-                                            @if ($value->type === 'split_banner')
+                                            @if (in_array($value->type, ['split_banner', 'hero_slider']))
                                                 <a href="{{ route('role.banners.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first()), 'homepage_section_id' => $value->id]) }}"
-                                                    class="btn btn-outline-secondary border border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded-md transition duration-200" title="Manage Banners">
+                                                    class="btn btn-outline-secondary border border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white px-3 py-1 rounded-md transition duration-200"
+                                                    title="{{ $value->type === 'hero_slider' ? 'Manage Side Banner(s)' : 'Manage Banners' }}">
                                                     <i class="fas fa-images"></i>
                                                 </a>
                                             @endif

@@ -100,6 +100,29 @@
             });
         });
 
+        // ---- Newsletter subscribe ----
+        $(document).on('submit', '#newsletterForm', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var $msg = $('#newsletterMsg');
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                data: $form.serialize(),
+                headers: { 'Accept': 'application/json' },
+                success: function (res) {
+                    $msg.css('color', '#16a34a').text(res.message || 'Subscribed!');
+                    $form[0].reset();
+                },
+                error: function (xhr) {
+                    var msg = xhr.responseJSON && xhr.responseJSON.errors && xhr.responseJSON.errors.email
+                        ? xhr.responseJSON.errors.email[0]
+                        : 'Could not subscribe. Please try again.';
+                    $msg.css('color', '#e53935').text(msg);
+                }
+            });
+        });
+
         // ---- Combo deal: add all products to cart ----
         $(document).on('click', '.add-combo-to-cart-btn', function (e) {
             e.preventDefault();
@@ -269,6 +292,11 @@
                     speed: 500,
                     preloadImages: true,
                     updateOnImagesReady: true,
+                    // The hero can sit in a flex column beside side banners,
+                    // so re-measure when the container/layout changes.
+                    observer: true,
+                    observeParents: true,
+                    resizeObserver: true,
 
                     pagination: {
                         el: '.slideshow-pagination',
@@ -329,11 +357,17 @@
             }
             animate(direction = 'next') {
 
-                // Get the active slide
-                this.DOM.activeSlide = this.DOM.el.querySelector('.swiper-slide-active'),
-                    this.DOM.activeSlideImg = this.DOM.activeSlide.querySelector('.slide-image'),
-                    this.DOM.activeSlideTitle = this.DOM.activeSlide.querySelector('.slide-title'),
-                    this.DOM.activeSlideTitleLetters = this.DOM.activeSlideTitle.querySelectorAll('span');
+                // Get the active slide. Slides may be image-only (no caption),
+                // so every title lookup below is optional.
+                this.DOM.activeSlide = this.DOM.el.querySelector('.swiper-slide-active');
+                if (!this.DOM.activeSlide) {
+                    return;
+                }
+                this.DOM.activeSlideImg = this.DOM.activeSlide.querySelector('.slide-image');
+                this.DOM.activeSlideTitle = this.DOM.activeSlide.querySelector('.slide-title');
+                this.DOM.activeSlideTitleLetters = this.DOM.activeSlideTitle
+                    ? this.DOM.activeSlideTitle.querySelectorAll('span')
+                    : [];
 
                 // Reverse if prev
                 this.DOM.activeSlideTitleLetters = direction === "next" ? this.DOM.activeSlideTitleLetters : [].slice
@@ -344,8 +378,10 @@
                     .querySelector('.swiper-slide-next');
                 if (this.DOM.oldSlide) {
                     // Get parts
-                    this.DOM.oldSlideTitle = this.DOM.oldSlide.querySelector('.slide-title'),
-                        this.DOM.oldSlideTitleLetters = this.DOM.oldSlideTitle.querySelectorAll('span');
+                    this.DOM.oldSlideTitle = this.DOM.oldSlide.querySelector('.slide-title');
+                    this.DOM.oldSlideTitleLetters = this.DOM.oldSlideTitle
+                        ? this.DOM.oldSlideTitle.querySelectorAll('span')
+                        : [];
                     // Animate
                     this.DOM.oldSlideTitleLetters.forEach((letter, pos) => {
                         TweenMax.to(letter, .3, {
@@ -372,13 +408,15 @@
                 });
 
                 // Animate background
-                TweenMax.to(this.DOM.activeSlideImg, 1.5, {
-                    ease: Expo.easeOut,
-                    startAt: {
-                        x: direction === 'next' ? 200 : -200
-                    },
-                    x: 0,
-                });
+                if (this.DOM.activeSlideImg) {
+                    TweenMax.to(this.DOM.activeSlideImg, 1.5, {
+                        ease: Expo.easeOut,
+                        startAt: {
+                            x: direction === 'next' ? 200 : -200
+                        },
+                        x: 0,
+                    });
+                }
 
             }
             animatePagination(swiper, paginationEl) {
@@ -408,6 +446,26 @@
         // Instantiate only on pages that have the slideshow element
         const slideshowEl = document.querySelector('.slideshow');
         const slideshow = slideshowEl ? new Slideshow(slideshowEl) : null;
+
+        // Swiper measures slide widths at init. Several sliders here live in
+        // flex/grid containers (e.g. the hero sits beside its side banners),
+        // so re-measure once layout and images have settled, otherwise the
+        // loop translate is computed off the wrong width and slides appear
+        // shifted or clipped.
+        (function () {
+            function updateAllSwipers() {
+                document.querySelectorAll('.swiper, .swiper-container').forEach(function (el) {
+                    if (el.swiper) {
+                        el.swiper.update();
+                    }
+                });
+            }
+            window.addEventListener('load', function () {
+                updateAllSwipers();
+                setTimeout(updateAllSwipers, 250);
+            });
+            window.addEventListener('resize', updateAllSwipers);
+        })();
     </script>
     <script>
         // Simple cart interactions

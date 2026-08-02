@@ -85,6 +85,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/product-details/{slug}', [HomeController::class, 'product_details'])->name('product.details');
 Route::get('/track-order', [\App\Http\Controllers\Front\TrackOrderController::class, 'index'])->name('track-order');
+Route::post('/newsletter/subscribe', [\App\Http\Controllers\Front\NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 // Cart routes (frontend)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -195,6 +196,8 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     Route::resource('homepage-sections', HomepageSectionController::class)->except('show');
     Route::resource('banners', BannerController::class)->except('show');
     Route::resource('combo-deals', \App\Http\Controllers\Dashboard\ComboDealController::class)->except('show');
+    Route::get('newsletter-subscribers', [\App\Http\Controllers\Dashboard\NewsletterSubscriberController::class, 'index'])->name('newsletter-subscribers.index');
+    Route::delete('newsletter-subscribers/{id}', [\App\Http\Controllers\Dashboard\NewsletterSubscriberController::class, 'destroy'])->name('newsletter-subscribers.destroy');
     Route::resource('page-categories', PageCategoryController::class)->except('show');
     Route::resource('pages', PageController::class)->except('show');
     Route::get('website-settings', [SettingController::class, 'index'])->name('website-settings');

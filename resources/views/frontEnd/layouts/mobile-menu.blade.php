@@ -1,3 +1,10 @@
+@php
+    $mobileCategories = App\Models\Category::with('sub_categories')
+        ->where('is_active', 1)
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get();
+@endphp
 <div class="offcanvas offcanvas-start mobile-menu-sidebar" tabindex="-1" id="offcanvasMenu"
         aria-labelledby="offcanvasMenuLabel">
         <button type="button" class="text-reset" data-bs-dismiss="offcanvas" aria-label="Close">
@@ -114,94 +121,27 @@
                 <!-- Categories Tab -->
                 <div class="tab-pane fade" id="categories" role="tabpanel" aria-labelledby="categories-tab">
                     <ul class="sidebar-menu">
-                        <li><a href="#"><span><i class="far fa-file"></i> Category</span></a></li>
-                        <li><a href="#"><span><i class="far fa-file"></i> Category</span></a></li>
-                        <li><a href="#"><span><i class="far fa-file"></i> Category</span></a></li>
-                        <li><a href="#"><span><i class="far fa-file"></i> Category</span></a></li>
-                        <li>
-                            <a href="#">
-                                <span><i class="far fa-file"></i> Multilevel Category</span>
-                                <i class="fa fa-angle-right pull-right"></i>
-                            </a>
-                            <ul class="sidebar-submenu">
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                                <li>
-                                    <a href="#"><span><i class="fa fa-circle-o"></i> Level One</span> <i
-                                            class="fa fa-angle-right pull-right"></i></a>
+                        @foreach ($mobileCategories as $mobileCat)
+                            <li class="{{ $mobileCat->sub_categories->count() ? 'has-sub' : '' }}">
+                                <a href="{{ route('shop', ['category' => $mobileCat->slug]) }}">
+                                    <span><i class="far fa-file"></i> {{ $mobileCat->name }}</span>
+                                    @if($mobileCat->sub_categories->count())
+                                        <i class="fa fa-angle-right pull-right"></i>
+                                    @endif
+                                </a>
+                                @if($mobileCat->sub_categories->count())
                                     <ul class="sidebar-submenu">
-                                        <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                    Two</span></a></li>
-                                        <li>
-                                            <a href="#"><span><i class="fa fa-circle-o"></i> Level Two</span> <i
-                                                    class="fa fa-angle-right pull-right"></i></a>
-                                            <ul class="sidebar-submenu">
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                            </ul>
-                                        </li>
+                                        @foreach ($mobileCat->sub_categories as $mobileSub)
+                                            <li>
+                                                <a href="{{ route('shop', ['category' => $mobileCat->slug, 'sub_category' => $mobileSub->slug]) }}">
+                                                    <span><i class="fa fa-circle-o"></i> {{ $mobileSub->name }}</span>
+                                                </a>
+                                            </li>
+                                        @endforeach
                                     </ul>
-                                </li>
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <span><i class="far fa-file"></i> Multilevel Category</span>
-                                <i class="fa fa-angle-right pull-right"></i>
-                            </a>
-                            <ul class="sidebar-submenu">
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                                <li>
-                                    <a href="#"><span><i class="fa fa-circle-o"></i> Level One</span> <i
-                                            class="fa fa-angle-right pull-right"></i></a>
-                                    <ul class="sidebar-submenu">
-                                        <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                    Two</span></a></li>
-                                        <li>
-                                            <a href="#"><span><i class="fa fa-circle-o"></i> Level Two</span> <i
-                                                    class="fa fa-angle-right pull-right"></i></a>
-                                            <ul class="sidebar-submenu">
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <span><i class="far fa-file"></i> Multilevel Category</span>
-                                <i class="fa fa-angle-right pull-right"></i>
-                            </a>
-                            <ul class="sidebar-submenu">
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                                <li>
-                                    <a href="#"><span><i class="fa fa-circle-o"></i> Level One</span> <i
-                                            class="fa fa-angle-right pull-right"></i></a>
-                                    <ul class="sidebar-submenu">
-                                        <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                    Two</span></a></li>
-                                        <li>
-                                            <a href="#"><span><i class="fa fa-circle-o"></i> Level Two</span> <i
-                                                    class="fa fa-angle-right pull-right"></i></a>
-                                            <ul class="sidebar-submenu">
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                            </ul>
-                        </li>
+                                @endif
+                            </li>
+                        @endforeach
                     </ul>
                 </div>
             </div>

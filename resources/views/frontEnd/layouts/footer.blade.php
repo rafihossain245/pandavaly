@@ -1,139 +1,113 @@
+@php
+    $footerCategories = \App\Models\Category::where('is_active', 1)
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->take(7)
+        ->get();
+@endphp
 <footer>
-        <div class="container">
-            <div class="left-side">
-                <div class="footer-section">
-                    <div class="social-section">
-                        <h3>Social Media</h3>
-                        <div class="social-icons">
-                            <a href="#" class="social-icon">
-                                <img src="{{asset('frontEnd/assets/')}}/image/facebook.png" alt="">
-                            </a>
-                            <a href="#" class="social-icon">
-                                <img src="{{asset('frontEnd/assets/')}}/image/instagram.png" alt="">
-                            </a>
-                            <a href="#" class="social-icon">
-                                <img src="{{asset('frontEnd/assets/')}}/image/twitter.png" alt="">
-                            </a>
-                            <a href="#" class="social-icon">
-                                <img src="{{asset('frontEnd/assets/')}}/image/youtube.png" alt="">
-                            </a>
-                        </div>
-                        <div class="download-app">
-                            <p style="font-weight: bold; margin-bottom: 10px;">Download App</p>
-                            <div class="d-flex align-items-center gap-10px">
-                                <a href="#"><img src="{{asset('frontEnd/assets/')}}/image/app-store.png" alt=""></a>
-                                <a href="#"><img src="{{asset('frontEnd/assets/')}}/image/google-play.png" alt=""></a>
-                            </div>
-                        </div>
-                        <div class="newsletter mt-4">
-                            <p style="font-weight: bold; margin-bottom: 10px;">Subscribe to the newsletter</p>
-                            <div class="relative">
-                                <input type="email" placeholder="Your E-mail">
-                                <button class="newsletter-submit">Submit</button>
-                            </div>
-                        </div>
+    <div class="container footer-top">
+        <div class="footer-brand">
+            <a class="footer-logo" href="{{ route('home') }}">
+                <img src="{{ asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
+                    alt="{{ $setting->title ?? 'GoeBazar' }}" style="height:42px">
+            </a>
 
-                        <div class="help-section">
-                            <p>Need any help? Call now!</p>
-                            <h3 style="font-size: 20px;">+880130000000, +880150000000</h3>
-                        </div>
+            <p class="footer-tagline">
+                {{ $setting->title ?? 'GoeBazar' }} is an e-commerce platform dedicated to providing
+                safe and reliable food to every home.
+            </p>
 
-                    </div>
-                </div>
+            <ul class="footer-contact-list">
+                @if($setting->address ?? null)
+                    <li><i class="fas fa-map-marker-alt"></i> <span>{{ $setting->address }}</span></li>
+                @endif
+                @if($setting->contact_phone ?? null)
+                    <li><i class="fas fa-phone"></i> <a href="tel:{{ $setting->contact_phone }}">{{ $setting->contact_phone }}</a></li>
+                @endif
+                @if($setting->contact_email ?? null)
+                    <li><i class="far fa-envelope"></i> <a href="mailto:{{ $setting->contact_email }}">{{ $setting->contact_email }}</a></li>
+                @endif
+                @if(!($setting->address ?? null) && !($setting->contact_phone ?? null) && !($setting->contact_email ?? null))
+                    <li class="footer-contact-empty">Add your address, phone and email in Website Settings.</li>
+                @endif
+            </ul>
+
+            <div class="social-icons">
+                <a href="#" class="social-icon" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" class="social-icon" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                <a href="#" class="social-icon" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
             </div>
-            <div class="right-side">
-                <div class="footer-section">
-                    <h3>Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
 
-                    <h3 style="margin-top: 30px;">Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-section">
-                    <h3>Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
-
-                    <h3 style="margin-top: 30px;">Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-section">
-                    <h3>Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
-
-                    <h3 style="margin-top: 30px;">Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-section">
-                    <h3>Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
-
-                    <h3 style="margin-top: 30px;">Links Title</h3>
-                    <ul>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                        <li><a href="#">Lorem ipsum</a></li>
-                    </ul>
+            <div class="download-app">
+                <h3 class="footer-heading">Download App on Mobile :</h3>
+                <div class="app-badges">
+                    {{-- Only the square store logos ship with this theme, not the
+                         official "Get it on Google Play" / "Download on the App
+                         Store" badge artwork, so these are rendered as labelled
+                         buttons. Swap in the official badges when available. --}}
+                    <a href="#" class="app-badge">
+                        <img src="{{ asset('frontEnd/assets/') }}/image/google-play.png" alt="">
+                        <span><small>GET IT ON</small>Google Play</span>
+                    </a>
+                    <a href="#" class="app-badge">
+                        <img src="{{ asset('frontEnd/assets/') }}/image/app-store.png" alt="">
+                        <span><small>Download on the</small>App Store</span>
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="container flex-column gap-0 mt-4">
-            <div class="payment-getway">
-                <h5 class="mb-2">Payment Getway</h5>
-                <img src="{{asset('frontEnd/assets/')}}/image/payment-getway.png" alt="">
-            </div>
-            <div class="copyright text-center">
-                <p>
-                    All right reserved. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam dolore ipsa
-                    nisi amet nemo? Soluta assumenda fugiat error enim placeat.
-                </p>
-            </div>
+
+        <div class="footer-section">
+            <h3>Information</h3>
+            <ul>
+                <li><a href="#">About us</a></li>
+                <li><a href="#">Contact us</a></li>
+                <li><a href="#">Company Information</a></li>
+                <li><a href="#">Our Stories</a></li>
+                <li><a href="#">Terms &amp; Conditions</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Careers</a></li>
+            </ul>
         </div>
 
-    </footer>
+        <div class="footer-section">
+            <h3>Shop By</h3>
+            <ul>
+                @forelse($footerCategories as $cat)
+                    <li><a href="{{ route('shop', ['category' => $cat->slug]) }}">{{ $cat->name }}</a></li>
+                @empty
+                    <li><a href="{{ route('shop') }}">All Products</a></li>
+                @endforelse
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h3>Support</h3>
+            <ul>
+                <li><a href="#">Support Center</a></li>
+                <li><a href="#">How to Order</a></li>
+                <li><a href="{{ route('track-order') }}">Order Tracking</a></li>
+                <li><a href="#">Payment</a></li>
+                <li><a href="#">Shipping</a></li>
+                <li><a href="#">FAQ</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h3>Consumer Policy</h3>
+            <ul>
+                <li><a href="#">Happy Return</a></li>
+                <li><a href="#">Refund Policy</a></li>
+                <li><a href="#">Exchange</a></li>
+                <li><a href="#">Cancellation</a></li>
+                <li><a href="#">Pre-Order</a></li>
+                <li><a href="#">Extra Discount</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container footer-bottom">
+        <p class="copyright">Copyright &copy; {{ date('Y') }} {{ $setting->title ?? 'GoeBazar' }}</p>
+    </div>
+</footer>

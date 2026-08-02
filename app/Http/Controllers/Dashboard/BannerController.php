@@ -19,7 +19,7 @@ class BannerController extends Controller
             ->orderBy('sort_order')
             ->paginate(20);
 
-        $sections = HomepageSection::where('type', 'split_banner')->orderBy('title')->get();
+        $sections = HomepageSection::whereIn('type', ['split_banner', 'hero_slider'])->orderBy('title')->get();
 
         return view('banners.index', compact('datas', 'sections', 'sectionId'));
     }

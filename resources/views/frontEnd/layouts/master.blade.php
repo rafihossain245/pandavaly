@@ -144,15 +144,8 @@
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
-                <a class="header-whatsapp" href="#">
-                    <div>
-                        <i class="fa-brands fa-whatsapp"></i>
-                        <div class="d-flex flex-column text-start">
-                            <small>Call Anytime</small>
-                            <div class="phone-no">{{ $setting->contact_phone ?? '' }}</div>
-                        </div>
-                    </div>
-                </a>
+                {{-- WhatsApp moved out of the header; it now lives as a floating
+                     contact button at the bottom of every page (see below). --}}
                 <div class="header-action">
                     <!-- <i class="fas fa-search m-d-block top-search"></i>    -->
                     <a class="m-d-none" href="{{ route('track-order') }}" title="Track Order">
@@ -217,10 +210,16 @@
         <div style="font-size:12px;">{{ $cart['count'] }} Items</div>
         <div style="font-size:12px; font-weight:700;">৳{{ number_format($cart['total']) }}</div>
     </a>
+    {{-- Floating WhatsApp contact (moved here from the header). Only rendered
+         once a contact phone exists, so we never ship a dead wa.me link. --}}
     @if($setting->contact_phone ?? null)
-        <a href="https://wa.me/{{ preg_replace('/\D/', '', $setting->contact_phone) }}" target="_blank" rel="noopener"
-           class="chat-btn" style="position:fixed; right:26px; bottom:32px; background:#25D366; color:#fff; width:54px; height:54px; border-radius:50%; display:grid; place-items:center; z-index:40; text-decoration:none; box-shadow:0 4px 12px rgba(0,0,0,.2);">
-            <i class="fa-brands fa-whatsapp" style="font-size:26px;"></i>
+        <a href="https://wa.me/{{ preg_replace('/\D/', '', $setting->contact_phone) }}"
+            target="_blank" rel="noopener" class="floating-contact" title="Chat with us on WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span class="floating-contact-text">
+                <small>Call Anytime</small>
+                <strong>{{ $setting->contact_phone }}</strong>
+            </span>
         </a>
     @endif
 
