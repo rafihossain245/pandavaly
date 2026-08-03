@@ -23,4 +23,6 @@ yarn-error.log
 /.vscode
 /.zed
 /public/
+/.htaccess
+*.zip
 .env.before_lerd
