@@ -29,8 +29,11 @@ jobs:
       - name: Deploy via rsync
         run: |
           rsync -az --delete \
-            --exclude '/core/.env' \
-            --exclude '/core/vendor/' \
-            --exclude '/core/app/Config/App.php' \
-            --exclude '/.github/workflows/deploy.yml' \
+            --exclude '/public/' \
+            --exclude '/.env' \
+            --exclude '/vendor/' \
+            --exclude '/node_modules/' \
+            --exclude '/storage/' \
+            --exclude '/.github/' \
+            --exclude '/.git/' \
             ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USERNAME }}/public_html/
