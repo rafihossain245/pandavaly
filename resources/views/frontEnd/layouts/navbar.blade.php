@@ -1,5 +1,7 @@
 @php
-    $navCategories = App\Models\Category::with('sub_categories')
+    $navCategories = App\Models\Category::with([
+            'sub_categories' => fn ($q) => $q->where('is_active', 1)->orderBy('name'),
+        ])
         ->where('is_active', 1)
         ->orderBy('sort_order')
         ->orderBy('name')

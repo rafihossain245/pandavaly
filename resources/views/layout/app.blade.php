@@ -279,6 +279,9 @@
         </script>
     @endif
 
+    {{-- Field validation is rendered inline under each input by the forms themselves.
+         Only server/exception failures (session('error') above) surface as a popup. --}}
+
     @if(session('success') || session('error'))
         <div
             x-data="{ show: true }"

@@ -517,6 +517,17 @@
                         method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+
+                        {{-- The detail sits under each field; this only tells the admin where to look
+                             when the failing field is scrolled out of view. --}}
+                        @if ($errors->any())
+                            <div class="mt-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                <strong>{{ $errors->count() }}
+                                    {{ Str::plural('field', $errors->count()) }}</strong>
+                                need{{ $errors->count() === 1 ? 's' : '' }} your attention. The details are shown
+                                in red under each one.
+                            </div>
+                        @endif
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                             <div class="mb-2">
                                 <label for="create_category_id"
@@ -524,75 +535,81 @@
                                 <select id="create_category_id" name="category_id"
                                     onchange="getSubCategory(this, '#create_sub_category_id')"
                                     data-action="{{ route('role.get-sub-category', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}"
-                                    class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2"
+                                    class="select2 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('category_id') border-red-500 @else border-gray-300 @enderror"
                                     style="width: 100%">
                                     <option value="">All</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}"
-                                            {{ $data->category_id == $category->id ? 'selected' : '' }}>
+                                            @selected(old('category_id', $data->category_id) == $category->id)>
                                             {{ $category->name }}</option>
                                     @endforeach
                                 </select>
-                                <p id="create_category_msg" class="text-red-500 text-xs mt-1 hidden error-message">Please
-                                    choose a Category</p>
+                                @error('category_id')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_sub_category_id" class="block text-gray-700 text-sm font-bold mb-2">Sub
                                     Category</label>
                                 <select id="create_sub_category_id" name="sub_category_id"
-                                    class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2"
+                                    data-selected="{{ old('sub_category_id', $data->sub_category_id) }}"
+                                    class="select2 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('sub_category_id') border-red-500 @else border-gray-300 @enderror"
                                     style="width: 100%">
                                     <option value="">All</option>
                                 </select>
-                                <p id="create_category_msg" class="text-red-500 text-xs mt-1 hidden error-message">Please
-                                    choose a sub category</p>
+                                @error('sub_category_id')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_brand_id"
                                     class="block text-gray-700 text-sm font-bold mb-2">Brand</label>
                                 <select id="create_brand_id" name="brand_id"
-                                    class="form-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2"
+                                    class="form-select w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('brand_id') border-red-500 @else border-gray-300 @enderror"
                                     style="width: 100%">
                                     <option value="">All</option>
                                     @foreach ($brands as $brand)
                                         <option value="{{ $brand->id }}"
-                                            {{ $data->brand_id == $brand->id ? 'selected' : '' }}>{{ $brand->name }}
+                                            @selected(old('brand_id', $data->brand_id) == $brand->id)>{{ $brand->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <p id="create_brand_msg" class="text-red-500 text-xs mt-1 hidden error-message">Please
-                                    choose a Brand</p>
+                                @error('brand_id')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_unit_id" class="block text-gray-700 text-sm font-bold mb-2">Unit</label>
                                 <select id="create_unit_id" name="unit_id"
-                                    class="form-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2"
+                                    class="form-select w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('unit_id') border-red-500 @else border-gray-300 @enderror"
                                     style="width: 100%">
                                     <option value="">All</option>
                                     @foreach ($units as $unit)
                                         <option value="{{ $unit->id }}"
-                                            {{ $data->unit_id == $unit->id ? 'selected' : '' }}>{{ $unit->name }}
+                                            @selected(old('unit_id', $data->unit_id) == $unit->id)>{{ $unit->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <p id="create_unit_msg" class="text-red-500 text-xs mt-1 hidden error-message">Please choose
-                                    a Unit</p>
+                                @error('unit_id')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_supplier_id"
                                     class="block text-gray-700 text-sm font-bold mb-2">Supplier</label>
                                 <select id="create_supplier_id" name="supplier_id"
-                                    class="form-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2"
+                                    class="form-select w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('supplier_id') border-red-500 @else border-gray-300 @enderror"
                                     style="width: 100%">
                                     <option value="">All</option>
                                     @foreach ($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}"
-                                            {{ $data->supplier_id == $supplier->id ? 'selected' : '' }}>
+                                            @selected(old('supplier_id', $data->supplier_id) == $supplier->id)>
                                             {{ $supplier->name }}</option>
                                     @endforeach
                                 </select>
-                                <p id="create_supplier_msg" class="text-red-500 text-xs mt-1 hidden error-message">Please
-                                    choose a Supplier</p>
+                                @error('supplier_id')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
@@ -601,58 +618,74 @@
                             <div class="mb-2">
                                 <label for="create_name" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
                                 <input type="text" id="create_name" name="name"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a Name" value="{{ $data->name }}">
-                                <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a Name</p>
+                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('name') border-red-500 @else border-gray-300 @enderror"
+                                    placeholder="Enter a Name" value="{{ old('name', $data->name) }}">
+                                @error('name')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="mb-2">
                                 <label for="create_sku" class="block text-gray-700 text-sm font-bold mb-2">SKU</label>
                                 <input type="text" id="create_sku" name="sku"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a Name" value="{{ $data->sku }}">
-                                <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a SKU</p>
+                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('sku') border-red-500 @else border-gray-300 @enderror"
+                                    placeholder="Enter a SKU" value="{{ old('sku', $data->sku) }}">
+                                @error('sku')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_purchase_price"
                                     class="block text-gray-700 text-sm font-bold mb-2">Purchase Price</label>
-                                <input type="number" id="create_purchase_price" name="purchase_price"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a amount" value="{{ $data->product_prices[0]->purchase_price }}">
-                                <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a Purchase Price
-                                    Amount</p>
+                                <input type="number" step="0.01" min="0" id="create_purchase_price"
+                                    name="purchase_price"
+                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('purchase_price') border-red-500 @else border-gray-300 @enderror"
+                                    placeholder="Enter a amount"
+                                    value="{{ old('purchase_price', optional($data->product_prices->first())->purchase_price) }}">
+                                @error('purchase_price')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_previous_price"
                                     class="block text-gray-700 text-sm font-bold mb-2">Previous Price</label>
-                                <input type="number" id="create_previous_price" name="previous_price"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a amount" value="{{ $data->product_prices[0]->previous_price }}">
-                                <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a Previous Price
-                                    Amount</p>
+                                <input type="number" step="0.01" min="0" id="create_previous_price"
+                                    name="previous_price"
+                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('previous_price') border-red-500 @else border-gray-300 @enderror"
+                                    placeholder="Enter a amount"
+                                    value="{{ old('previous_price', optional($data->product_prices->first())->previous_price) }}">
+                                @error('previous_price')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_selling_price"
                                     class="block text-gray-700 text-sm font-bold mb-2">Selling Price</label>
-                                <input type="number" id="create_selling_price" name="selling_price"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a amount" value="{{ $data->product_prices[0]->selling_price }}">
-                                <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a Selling Price
-                                    Amount</p>
+                                <input type="number" step="0.01" min="0" id="create_selling_price"
+                                    name="selling_price"
+                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('selling_price') border-red-500 @else border-gray-300 @enderror"
+                                    placeholder="Enter a amount"
+                                    value="{{ old('selling_price', optional($data->product_prices->first())->selling_price) }}">
+                                @error('selling_price')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label for="create_moq"
                                     class="block text-gray-700 text-sm font-bold mb-2">Minimum Order Qty</label>
                                 <input type="number" id="create_moq" name="moq" min="1"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter minimum order quantity" value="{{ $data->moq }}">
+                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('moq') border-red-500 @else border-gray-300 @enderror"
+                                    placeholder="Enter minimum order quantity" value="{{ old('moq', $data->moq) }}">
+                                @error('moq')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div class="mb-4">
                                 <label class="flex items-center">
                                     <input type="checkbox" id="create_is_active" name="is_active"
                                         class="form-checkbox h-5 w-5 text-blue-600"
-                                        {{ $data->is_active ? 'checked' : '' }}>
+                                        @checked(old('is_active', $errors->any() ? null : $data->is_active))>
                                     <span class="ml-2 text-gray-700">Active</span>
                                 </label>
                             </div>
@@ -660,7 +693,7 @@
                                 <label class="flex items-center">
                                     <input type="checkbox" id="create_is_trending" name="is_trending"
                                         class="form-checkbox h-5 w-5 text-blue-600"
-                                        {{ $data->is_trending ? 'checked' : '' }}>
+                                        @checked(old('is_trending', $errors->any() ? null : $data->is_trending))>
                                     <span class="ml-2 text-gray-700">Is Trending</span>
                                 </label>
                             </div>
@@ -668,7 +701,7 @@
                                 <label class="flex items-center">
                                     <input type="checkbox" id="create_is_popular" name="is_popular"
                                         class="form-checkbox h-5 w-5 text-blue-600"
-                                        {{ $data->is_popular ? 'checked' : '' }}>
+                                        @checked(old('is_popular', $errors->any() ? null : $data->is_popular))>
                                     <span class="ml-2 text-gray-700">Is Popular</span>
                                 </label>
                             </div>
@@ -676,7 +709,7 @@
                                 <label class="flex items-center">
                                     <input type="checkbox" id="create_is_recommended" name="is_recommended"
                                         class="form-checkbox h-5 w-5 text-blue-600"
-                                        {{ $data->is_recommended ? 'checked' : '' }}>
+                                        @checked(old('is_recommended', $errors->any() ? null : $data->is_recommended))>
                                     <span class="ml-2 text-gray-700">Is Recommended</span>
                                 </label>
                             </div>
@@ -738,7 +771,7 @@
                                     Description
                                 </label>
 
-                                <textarea id="editor" class="hidden" name="content">{!! $data->description !!}</textarea>
+                                <textarea id="editor" class="hidden" name="content">{!! old('content', $data->description) !!}</textarea>
 
                                 <!-- CKEditor container -->
                                 <div id="editor-wrapper"
@@ -785,8 +818,14 @@
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Thumbnail Image</label>
                                 <img src="{{ asset($data->thumbnail) }}" class="w-15 h-14 object-cover rounded">
                                 <input type="file" id="thumbnail_image" name="thumbnail" accept="image/*"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md 
-                                    focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    class="form-input w-full px-3 py-2 border rounded-md
+                                    focus:outline-none focus:ring-2 focus:ring-blue-500 @error('thumbnail') border-red-500 @else border-gray-300 @enderror" />
+
+                                @error('thumbnail')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                                <p class="text-gray-500 text-xs mt-1">Leave empty to keep the current image &middot;
+                                    JPG, PNG, WEBP or GIF up to {{ \App\Helpers\FileLimit::humanUploadMax() }}</p>
 
                                 <!-- Preview -->
                                 <div id="thumbnail_preview" class="mt-3"></div>
@@ -818,8 +857,18 @@
                                     </div>
                                     {{-- </div> --}}
                                 @endif
+                                @php $imagesHaveError = $errors->has('images') || count($errors->get('images.*')) > 0; @endphp
                                 <input type="file" id="create_images" name="images[]" multiple accept="image/*"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $imagesHaveError ? 'border-red-500' : 'border-gray-300' }}" />
+
+                                @error('images')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                                @foreach ($errors->get('images.*') as $imageErrors)
+                                    @foreach ($imageErrors as $imageError)
+                                        <p class="text-red-500 text-xs mt-1">{{ $imageError }}</p>
+                                    @endforeach
+                                @endforeach
 
                                 <p id="image_error" class="text-red-500 text-xs mt-1 hidden">Please upload at least one
                                     image.</p>
@@ -855,22 +904,93 @@
             const errorEl = document.getElementById('image_error');
             const submitBtn = document.getElementById('submit_btn');
 
+            // Server limits, so oversized files are caught here instead of being
+            // dropped silently by PHP.
+            const MAX_FILE_BYTES = {{ \App\Helpers\FileLimit::uploadMaxBytes() }};
+            const MAX_POST_BYTES = {{ \App\Helpers\FileLimit::postMaxBytes() }};
+            const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+            const humanSize = (bytes) => (bytes / 1048576).toFixed(1) + ' MB';
+
+            const rejectFile = (file) => {
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    return `"${file.name}" is not a supported image. Use JPG, PNG, WEBP or GIF.`;
+                }
+                if (file.size > MAX_FILE_BYTES) {
+                    return `"${file.name}" is ${humanSize(file.size)}. The server accepts files up to ${humanSize(MAX_FILE_BYTES)}.`;
+                }
+                return null;
+            };
+
+            const warn = (messages) => {
+                if (!messages.length) return;
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Some images were not added',
+                        html: '<ul class="text-start ps-3 mb-0"><li>' + messages.join('</li><li>') + '</li></ul>',
+                        confirmButtonColor: '#d33'
+                    });
+                } else {
+                    alert(messages.join('\n'));
+                }
+            };
+
             // Handle newly selected files and append them to filesArray
             fileInput.addEventListener('change', (e) => {
                 const newFiles = Array.from(e.target.files);
+                const problems = [];
 
-                // Optional: filter duplicates by name+size (basic dedupe)
                 newFiles.forEach(f => {
+                    const problem = rejectFile(f);
+                    if (problem) {
+                        problems.push(problem);
+                        return;
+                    }
+
+                    // Optional: filter duplicates by name+size (basic dedupe)
                     const exists = filesArray.some(existing => existing.name === f.name && existing
                         .size === f.size && existing.type === f.type);
                     if (!exists) filesArray.push(f);
                 });
 
-                // clear the input so selecting the same file again is possible
-                // fileInput.value = '';
+                const total = filesArray.reduce((sum, f) => sum + f.size, 0);
+                if (total > MAX_POST_BYTES * 0.9) {
+                    problems.push(
+                        `These images total ${humanSize(total)}. The whole form must stay under ${humanSize(MAX_POST_BYTES)}, so please upload fewer or smaller images.`
+                    );
+                }
 
+                warn(problems);
                 renderPreviews();
             });
+
+            // Write filesArray back into the input at submit time. This lived in a separate
+            // <script> where filesArray was out of scope, so removals and multi-pick
+            // selections never reached the server.
+            const editForm = document.getElementById('createForm');
+            if (editForm) {
+                editForm.addEventListener('submit', () => {
+                    const dt = new DataTransfer();
+                    filesArray.forEach(file => dt.items.add(file));
+                    fileInput.files = dt.files;
+                });
+            }
+
+            const thumbnailField = document.getElementById('thumbnail_image');
+            if (thumbnailField) {
+                thumbnailField.addEventListener('change', () => {
+                    const file = thumbnailField.files[0];
+                    if (!file) return;
+                    const problem = rejectFile(file);
+                    if (problem) {
+                        thumbnailField.value = '';
+                        const preview = document.getElementById('thumbnail_preview');
+                        if (preview) preview.innerHTML = '';
+                        warn([problem]);
+                    }
+                });
+            }
 
             // Render file previews from filesArray
             function renderPreviews() {
@@ -980,18 +1100,20 @@
             }
         })();
     </script>
-    <script>
-        const form = document.getElementById('createForm');
+    @if ($errors->any())
+        <script>
+            // Land the admin on the first thing that needs fixing rather than at the top.
+            document.addEventListener('DOMContentLoaded', () => {
+                const firstError = document.querySelector('.border-red-500');
+                if (!firstError) return;
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (typeof firstError.focus === 'function') {
+                    firstError.focus({ preventScroll: true });
+                }
+            });
+        </script>
+    @endif
 
-        form.addEventListener('submit', function() {
-            const input = document.getElementById('create_images');
-            const dt = new DataTransfer();
-
-            filesArray.forEach(file => dt.items.add(file));
-
-            input.files = dt.files;
-        });
-    </script>
     <script>
         const thumbnailInput = document.getElementById('thumbnail_image');
         const thumbnailPreview = document.getElementById('thumbnail_preview');
@@ -1088,12 +1210,18 @@
                     category_id: categoryId
                 },
                 success: function(res) {
+                    // Honour a preselected value once, so editing a product (or bouncing
+                    // off a validation error) keeps the sub category instead of resetting
+                    // it to "All" and silently clearing the column on save.
+                    const preselect = $target.attr('data-selected');
                     let options = '<option value="">All</option>';
 
                     res.forEach(item => {
-                        options += `<option value="${item.id}">${item.name}</option>`;
+                        const selected = preselect && String(item.id) === String(preselect) ? ' selected' : '';
+                        options += `<option value="${item.id}"${selected}>${item.name}</option>`;
                     });
 
+                    $target.removeAttr('data-selected');
                     $target.html(options).trigger('change');
                 },
                 error: function() {
@@ -1101,6 +1229,14 @@
                 }
             });
         }
+
+        // Populate the sub category list on load when a category is already chosen.
+        $(function () {
+            const categoryEl = document.getElementById('create_category_id');
+            if (categoryEl && categoryEl.value) {
+                getSubCategory(categoryEl, '#create_sub_category_id');
+            }
+        });
     </script>
     <script>
         let deleteUrlTemplate =

@@ -23,6 +23,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\FileLimit;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -123,37 +125,21 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'slug' => 'nullable|unique:products,slug',
-            'category_id' => 'required',
-            'brand_id' => 'required',
-            'unit_id' => 'required',
-            'supplier_id' => 'required',
-            'selling_price' => 'required|numeric',
-        ]);
+        $this->logUploadDiagnostics($request);
+
+        $validator = Validator::make($request->all(), $this->productRules(), $this->productValidationMessages(), $this->productAttributeNames());
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first()
-            ]);
+            Log::warning('Product create rejected by validation', ['errors' => $validator->errors()->toArray()]);
+
+            return $this->validationFailed($request, $validator);
         }
 
         try {
             DB::transaction(function () use ($request) {
-                $simage = $request->file('thumbnail');
-                if ($simage) {
-                    $image_name = uniqid();
-                    $ext = strtolower($simage->getClientOriginalExtension());
-                    $image_full_name = $image_name . '.' . $ext;
-                    $upload_path = 'images/product/';
-                    $image_url = $upload_path . $image_full_name;
-                    $success = $simage->move($upload_path, $image_full_name);
-                    if ($success) {
-                        $thumbnail = $image_url;
-                    }
+                $thumbnail = null;
+                if ($request->hasFile('thumbnail')) {
+                    $thumbnail = $this->storeUploadedImage($request->file('thumbnail'), 'images/product');
                 }
                 $data = Product::create([
                     'user_id' => auth()->id(),
@@ -189,13 +175,14 @@ class ProductController extends Controller
                         throw new \Exception('Product price creation failed');
                     }
                 }
-                $specifications = $request->specification_name;
-                for ($i = 0; $i < count($specifications); $i++) {
-                    if (!empty($specifications[$i])) {
+                $specifications = (array) $request->input('specification_name', []);
+                $specificationValues = (array) $request->input('specification_value', []);
+                foreach ($specifications as $i => $specificationName) {
+                    if (filled($specificationName)) {
                         DB::table('product_specifications')->insert([
                             'product_id' => $data->id,
-                            'specification_name' => $specifications[$i],
-                            'specification_value' => $request->specification_value[$i] ?? '',
+                            'specification_name' => $specificationName,
+                            'specification_value' => $specificationValues[$i] ?? '',
                             'created_at' => now(),
                             'updated_at' => now()
                         ]);
@@ -204,17 +191,9 @@ class ProductController extends Controller
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $simage) {
                         if ($simage) {
-                            $image_name = uniqid();
-                            $ext = strtolower($simage->getClientOriginalExtension());
-                            $image_full_name = $image_name . '.' . $ext;
-                            $upload_path = 'images/multi-pro/';
-                            $image_url = $upload_path . $image_full_name;
-
-                            $simage->move($upload_path, $image_full_name);
-
                             DB::table('productwise_images')->insert([
                                 'product_id' => $data->id,
-                                'image_path' => $image_url,
+                                'image_path' => $this->storeUploadedImage($simage, 'images/multi-pro'),
                                 'created_at' => now(),
                                 'updated_at' => now()
                             ]);
@@ -257,13 +236,190 @@ class ProductController extends Controller
                 //     'sku' => $newSku,
                 //     'stock_qty' => $productTotal
                 // ]);
-                return redirect()->back()->with('success', 'Product created successfully.');
             });
         } catch (\Throwable $th) {
-            return redirect()->back()->withErrors(['error' => 'Failed to create product: ' . $th->getMessage()]);
+            report($th);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create product: ' . $th->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Failed to create product: ' . $th->getMessage())
+                ->withInput();
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Product created successfully.']);
         }
 
         return redirect()->back()->with('success', 'Product created successfully.');
+    }
+
+    /**
+     * Temporary instrumentation for the "image does not upload" report. Records what
+     * actually reached PHP so the failure can be pinned down from the log.
+     * Remove once the upload issue is confirmed fixed.
+     */
+    private function logUploadDiagnostics(Request $request): void
+    {
+        $describe = function ($file) {
+            if (!$file instanceof \Illuminate\Http\UploadedFile) {
+                return ['present' => false];
+            }
+
+            return [
+                'name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime' => $file->getMimeType(),
+                'client_mime' => $file->getClientMimeType(),
+                'extension' => $file->getClientOriginalExtension(),
+                'is_valid' => $file->isValid(),
+                'error_code' => $file->getError(),
+                'error_message' => $file->isValid() ? null : $file->getErrorMessage(),
+            ];
+        };
+
+        $productDir = public_path('images/product');
+        $galleryDir = public_path('images/multi-pro');
+
+        Log::info('Product create upload diagnostics', [
+            'content_length' => $request->server('CONTENT_LENGTH'),
+            'content_type' => $request->header('Content-Type'),
+            'post_max_size' => ini_get('post_max_size'),
+            'upload_max_filesize' => ini_get('upload_max_filesize'),
+            'has_thumbnail' => $request->hasFile('thumbnail'),
+            'thumbnail' => $describe($request->file('thumbnail')),
+            'has_images' => $request->hasFile('images'),
+            'images_count' => is_array($request->file('images')) ? count($request->file('images')) : 0,
+            'images' => collect((array) $request->file('images'))->map($describe)->all(),
+            'all_file_keys' => array_keys($request->allFiles()),
+            'posted_field_keys' => array_keys($request->except(['_token'])),
+            'php_files_keys' => array_keys($_FILES ?? []),
+            'product_dir' => ['path' => $productDir, 'exists' => is_dir($productDir), 'writable' => is_writable($productDir)],
+            'gallery_dir' => ['path' => $galleryDir, 'exists' => is_dir($galleryDir), 'writable' => is_writable($galleryDir)],
+            'process_user' => function_exists('posix_getpwuid') && function_exists('posix_geteuid')
+                ? (posix_getpwuid(posix_geteuid())['name'] ?? 'unknown')
+                : 'unknown',
+        ]);
+    }
+
+    /**
+     * Validation rules shared by store() and update(). $ignoreId skips the row being edited
+     * in the unique checks.
+     */
+    private function productRules(?int $ignoreId = null): array
+    {
+        $uniqueSlug = 'unique:products,slug' . ($ignoreId ? ',' . $ignoreId : '');
+
+        return [
+            'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|' . $uniqueSlug,
+            'category_id' => 'required|exists:categories,id',
+            'sub_category_id' => 'nullable|exists:sub_categories,id',
+            'brand_id' => 'required|exists:brands,id',
+            'unit_id' => 'required|exists:units,id',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'selling_price' => 'required|numeric|min:0',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'previous_price' => 'nullable|numeric|min:0',
+            'moq' => 'nullable|integer|min:1',
+            'content' => 'nullable|string',
+            'thumbnail' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:' . FileLimit::uploadMaxKilobytes(),
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'image|mimes:jpeg,jpg,png,webp,gif|max:' . FileLimit::uploadMaxKilobytes(),
+            'specification_name' => 'nullable|array',
+            'specification_name.*' => 'nullable|string|max:255',
+            'specification_value' => 'nullable|array',
+            'specification_value.*' => 'nullable|string|max:500',
+            'variants_json' => 'nullable|json',
+        ];
+    }
+
+    private function productValidationMessages(): array
+    {
+        return [
+            'required' => 'Please provide the :attribute.',
+            'exists' => 'The selected :attribute no longer exists. Pick another one.',
+            'image' => 'The :attribute must be an image file (JPG, PNG, WEBP or GIF).',
+            'mimes' => 'The :attribute must be a JPG, PNG, WEBP or GIF file.',
+            'max.file' => 'The :attribute must be ' . FileLimit::humanUploadMax() . ' or smaller. Please compress the image and try again.',
+            'images.max' => 'You can upload at most 10 gallery images at once.',
+            'uploaded' => 'The :attribute could not be uploaded. It is most likely larger than the server upload limit — try an image under ' . FileLimit::humanUploadMax() . '.',
+            'numeric' => 'The :attribute must be a number.',
+            'min.numeric' => 'The :attribute cannot be negative.',
+            'variants_json.json' => 'The variant data is corrupted. Please rebuild the variants and try again.',
+        ];
+    }
+
+    private function productAttributeNames(): array
+    {
+        return [
+            'name' => 'product name',
+            'category_id' => 'category',
+            'sub_category_id' => 'sub category',
+            'brand_id' => 'brand',
+            'unit_id' => 'unit',
+            'supplier_id' => 'supplier',
+            'selling_price' => 'selling price',
+            'purchase_price' => 'purchase price',
+            'moq' => 'minimum order quantity',
+            'thumbnail' => 'thumbnail image',
+            'images' => 'gallery images',
+            'images.*' => 'gallery image',
+            'content' => 'description',
+        ];
+    }
+
+    /**
+     * Validation failures answer in the caller's language: JSON for the ajax modals,
+     * redirect-back-with-input for the full-page forms.
+     */
+    private function validationFailed(Request $request, $validator)
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        return redirect()->back()->withErrors($validator)->withInput();
+    }
+
+    /**
+     * Moves an uploaded image under public/ and returns the stored relative path.
+     * Throws with a message the admin can act on rather than failing silently.
+     */
+    private function storeUploadedImage(\Illuminate\Http\UploadedFile $file, string $folder): string
+    {
+        if (!$file->isValid()) {
+            throw new \RuntimeException(
+                'Image "' . $file->getClientOriginalName() . '" was not uploaded (' . $file->getErrorMessage() . ').'
+            );
+        }
+
+        $folder = trim($folder, '/');
+        $directory = public_path($folder);
+
+        if (!is_dir($directory) && !@mkdir($directory, 0755, true) && !is_dir($directory)) {
+            throw new \RuntimeException("Could not create the upload folder \"{$folder}\". Check the folder permissions on the server.");
+        }
+
+        if (!is_writable($directory)) {
+            throw new \RuntimeException("The upload folder \"{$folder}\" is not writable. Set it to permission 755 on the server.");
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg');
+        $filename = uniqid() . Str::random(6) . '.' . $extension;
+
+        $file->move($directory, $filename);
+
+        return $folder . '/' . $filename;
     }
 
     /**
@@ -297,17 +453,10 @@ class ProductController extends Controller
      */
     public function update(Request $request, $role, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'category_id' => 'required',
-            'brand_id' => 'required',
-            'unit_id' => 'required',
-            'supplier_id' => 'required',
-            'selling_price' => 'required|numeric',
-        ]);
+        $validator = Validator::make($request->all(), $this->productRules((int) $id), $this->productValidationMessages(), $this->productAttributeNames());
 
         if ($validator->fails()) {
-            return back()->withErrors($validator->errors()->first());
+            return $this->validationFailed($request, $validator);
         }
 
         try {
@@ -330,12 +479,7 @@ class ProductController extends Controller
                         unlink(public_path($data->thumbnail));
                     }
 
-                    $file = $request->file('thumbnail');
-                    $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
-                    $uploadPath = 'images/product/';
-                    $file->move($uploadPath, $fileName);
-
-                    $thumbnail = $uploadPath . $fileName;
+                    $thumbnail = $this->storeUploadedImage($request->file('thumbnail'), 'images/product');
                 } else {
                     $thumbnail = $data->thumbnail;
                 }
@@ -407,13 +551,9 @@ class ProductController extends Controller
                 if ($request->hasFile('images')) {
 
                     foreach ($request->file('images') as $img) {
-
-                        $imageName = uniqid() . '.' . $img->getClientOriginalExtension();
-                        $uploadPath = 'images/multi-pro/';
-                        $img->move($uploadPath, $imageName);
                         DB::table('productwise_images')->insert([
                             'product_id' => $data->id,
-                            'image_path' => $uploadPath . $imageName,
+                            'image_path' => $this->storeUploadedImage($img, 'images/multi-pro'),
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
@@ -435,9 +575,19 @@ class ProductController extends Controller
                 ->back()
                 ->with('success', 'Product updated successfully.');
         } catch (\Throwable $th) {
+            report($th);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Update failed: ' . $th->getMessage(),
+                ], 500);
+            }
+
             return redirect()
                 ->back()
-                ->withErrors(['error' => 'Update failed: ' . $th->getMessage()]);
+                ->with('error', 'Update failed: ' . $th->getMessage())
+                ->withInput();
         }
     }
 
