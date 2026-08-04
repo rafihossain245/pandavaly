@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CountrySeeder::class,
             StateSeeder::class,
             DistrictSeeder::class,
+            ThanaSeeder::class,
         ]);
     }
 }

@@ -38,14 +38,7 @@ class TrackOrderController extends Controller
             }
         }
 
-        $deliveryAddress = null;
-        if ($order) {
-            $deliveryAddress = implode(', ', array_filter([
-                $order->shipping_address,
-                $order->thana?->name,
-                $order->district?->name,
-            ]));
-        }
+        $deliveryAddress = $order?->shipping_address_line;
 
         return view('frontEnd.track_order', [
             'order' => $order,

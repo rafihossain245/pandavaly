@@ -108,6 +108,8 @@ Route::middleware('buyer.auth')->group(function () {
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
+    Route::post('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'apply'])->name('checkout.coupon.apply');
+    Route::delete('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'remove'])->name('checkout.coupon.remove');
     Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
 
     Route::prefix('buyer')->name('buyer.')->group(function () {
@@ -196,6 +198,7 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     Route::resource('homepage-sections', HomepageSectionController::class)->except('show');
     Route::resource('banners', BannerController::class)->except('show');
     Route::resource('combo-deals', \App\Http\Controllers\Dashboard\ComboDealController::class)->except('show');
+    Route::resource('coupons', \App\Http\Controllers\Dashboard\CouponController::class)->except(['show', 'create', 'edit']);
     Route::get('newsletter-subscribers', [\App\Http\Controllers\Dashboard\NewsletterSubscriberController::class, 'index'])->name('newsletter-subscribers.index');
     Route::delete('newsletter-subscribers/{id}', [\App\Http\Controllers\Dashboard\NewsletterSubscriberController::class, 'destroy'])->name('newsletter-subscribers.destroy');
     Route::resource('page-categories', PageCategoryController::class)->except('show');

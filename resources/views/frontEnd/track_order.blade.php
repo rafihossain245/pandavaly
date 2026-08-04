@@ -99,6 +99,7 @@
                         <div class="co-section-body">
                             <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><span>Tk {{ number_format($order->subtotal, 2) }}</span></div>
                             <div class="d-flex justify-content-between mb-2"><span>Discount</span><span>Tk {{ number_format($order->discount, 2) }}</span></div>
+                            <div class="d-flex justify-content-between mb-2"><span>Delivery cost</span><span>Tk {{ number_format($order->shipping_charge, 2) }}</span></div>
                             <hr>
                             <div class="d-flex justify-content-between fw-bold fs-5"><span>Grand Total</span><span>Tk {{ number_format($order->total, 2) }}</span></div>
                             <div class="d-flex justify-content-between mt-2 text-danger fw-bold"><span>Amount Due</span><span>Tk {{ number_format(max(0, $order->total - $order->advance_paid), 2) }}</span></div>

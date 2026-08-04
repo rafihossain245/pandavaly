@@ -1,211 +1,233 @@
-<aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 z-20 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
+@php
+    // Every link in this file needs the {role} route parameter, so resolve it once.
+    $roleSlug = Str::slug(Auth::user()->getRoleNames()->first());
+
+    // Orders awaiting action. Cached because this partial renders on every admin
+    // page, and swallowed on failure because a DB hiccup here would otherwise
+    // take down the whole admin, including the pages needed to diagnose it.
+    $pendingOrderCount = cache()->remember('sidebar.pending_orders', 60, function () {
+        try {
+            return \App\Models\SalesOrder::whereNotNull('company_name')
+                ->where('status', 'pending')
+                ->count();
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    });
+@endphp
+
+<aside id="sidebar"
+    class="sidebar fixed top-0 left-0 h-full w-64 z-20 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
     <!-- Header -->
-    <div class="flex justify-between items-center p-6 border-b border-blue-500/30">
+    <div class="sidebar-brand flex justify-between items-center px-5 py-4">
         <div class="flex items-center text-left">
-            <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
-                <i class="fas fa-chart-pie text-blue-600 text-lg"></i>
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style="background:#0b3d2e">
+                <i class="fas fa-store text-white"></i>
             </div>
-            <div class="text-xl font-bold text-white">{{ config('app.name') }}</div>
+            <div class="text-lg font-bold text-gray-900">{{ config('app.name') }}</div>
         </div>
-        <button id="closeSidebar" class="text-white text-xl md:hidden">
+        <button id="closeSidebar" class="text-gray-400 hover:text-gray-700 text-xl md:hidden">
             <i class="fas fa-times"></i>
         </button>
     </div>
 
     <!-- Navigation -->
-    <nav class="p-2 space-y-2">
-        <!-- Dashboard -->
-        <a href="{{ route('role.dashboard', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.dashboard') ? 'active' : '' }}">
-            <i class="fas fa-chart-line w-6 text-center mr-1"></i>
+    <nav class="px-2">
+
+        <a href="{{ route('role.dashboard', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 mt-2 cursor-pointer {{ request()->routeIs('role.dashboard') ? 'active' : '' }}">
+            <i class="fas fa-chart-line w-6 text-center mr-2"></i>
             <span>Dashboard</span>
         </a>
 
-        <!-- branch -->
-        <a href="{{ route('role.branches.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.branches.index') ? 'active' : '' }}">
-            <i class="fas fa-code-branch w-6 text-center mr-1"></i>
-            <span>Branch</span>
+        <p class="sidebar-section">Sell</p>
+
+        {{-- When the badge shows a number, link straight to that filtered list so
+             clicking "7" lands on those 7 rather than on every order ever placed.
+             OrderController@index already honours ?status=. --}}
+        <a href="{{ route('role.orders.index', array_filter(['role' => $roleSlug, 'status' => $pendingOrderCount ? 'pending' : null])) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.orders.*') ? 'active' : '' }}">
+            <i class="fas fa-shopping-bag w-6 text-center mr-2"></i>
+            <span class="flex-1">Orders</span>
+            @if ($pendingOrderCount)
+                <span class="sidebar-badge">{{ $pendingOrderCount }}</span>
+            @endif
+        </a>
+        <a href="{{ route('role.invoices.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.invoices.*') ? 'active' : '' }}">
+            <i class="fas fa-file-invoice-dollar w-6 text-center mr-2"></i>
+            <span>Invoices</span>
+        </a>
+        {{-- "Buyers" is the table the storefront actually writes on registration and
+             checkout; the separate `customers` table is only used by the hidden
+             Sale/Sale-Return screens. So this is the real customer list. --}}
+        <a href="{{ route('role.buyers.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.buyers.*') ? 'active' : '' }}">
+            <i class="fas fa-users w-6 text-center mr-2"></i>
+            <span>Customers</span>
         </a>
 
-        <!-- Users -->
-        <div class="sidebar-item">
-            <button onclick="toggleSubmenu('userSubmenu', this)" class="w-full flex justify-between items-center p-3 text-white hover:text-blue-200 focus:outline-none cursor-pointer">
-                <div class="flex items-center text-left">
-                    <i class="fas fa-user-friends w-6 text-center mr-1"></i>
-                    <span>User Managements</span>
-                </div>
-                <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
-            </button>
-            <div id="userSubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{ request()->routeIs('role.user.create') || request()->routeIs('role.customers.index') || request()->routeIs('role.suppliers.index') || request()->routeIs('role.user.index') ? '' : 'hidden' }}">
-                <a href="{{ route('role.user.create', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.user.create') ? 'active' : '' }}"><i class="fas fa-plus"></i> Add User</a>
-                <a href="{{ route('role.user.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.user.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Manage Users</a>
-                <a href="{{ route('role.customers.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.customers.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Manage Customers</a>
-                <a href="{{ route('role.suppliers.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.suppliers.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Manage Suppliers</a>
-                <a href="{{ route('role.buyers.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.buyers.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Manage Buyers</a>
-            </div>
-        </div>
+        <p class="sidebar-section">Catalog</p>
 
-        <!-- Item Management -->
-        <div class="sidebar-item">
-            <button onclick="toggleSubmenu('itemSubmenu', this)" class="w-full flex justify-between items-center p-3 text-white hover:text-blue-200 focus:outline-none cursor-pointer">
-                <div class="flex items-center text-left">
-                    <i class="fas fa-box w-6 text-center mr-1"></i>
-                    <span>Product Management</span>
-                </div>
-                <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
-            </button>
-            <div id="itemSubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{ request()->routeIs('role.units.index') || request()->routeIs('role.brands.index') || request()->routeIs('role.categories.index') || request()->routeIs('role.sub-categories.index') || request()->routeIs('role.product-reviews.index') ? '' : 'hidden' }}">
-                <a href="{{ route('role.units.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.units.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Unit</a>
-                <a href="{{ route('role.attributes.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.attributes.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Attribute</a>
-                <a href="{{ route('role.brands.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.brands.create') ? 'active' : '' }}"><i class="fas fa-list"></i> Brand</a>
-                <a href="{{ route('role.categories.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.categories.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Category</a>
-                <a href="{{ route('role.sub-categories.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.sub-categories.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Sub Category</a>
-                <a href="{{ route('role.products.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.products.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Product</a>
-                <a href="{{ route('role.product-reviews.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.product-reviews.index') ? 'active' : '' }}"><i class="fas fa-star"></i> Product Reviews</a>
-            </div>
-        </div>
+        <a href="{{ route('role.products.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.products.*') ? 'active' : '' }}">
+            <i class="fas fa-box w-6 text-center mr-2"></i>
+            <span>Products</span>
+        </a>
+        <a href="{{ route('role.categories.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.categories.*') ? 'active' : '' }}">
+            <i class="fas fa-tags w-6 text-center mr-2"></i>
+            <span>Categories</span>
+        </a>
+        <a href="{{ route('role.sub-categories.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.sub-categories.*') ? 'active' : '' }}">
+            <i class="fas fa-tag w-6 text-center mr-2"></i>
+            <span>Sub Categories</span>
+        </a>
+        <a href="{{ route('role.brands.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.brands.*') ? 'active' : '' }}">
+            <i class="fas fa-copyright w-6 text-center mr-2"></i>
+            <span>Brands</span>
+        </a>
+        <a href="{{ route('role.attributes.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.attributes.*') ? 'active' : '' }}">
+            <i class="fas fa-sliders-h w-6 text-center mr-2"></i>
+            <span>Colors &amp; Sizes</span>
+        </a>
+        <a href="{{ route('role.units.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.units.*') ? 'active' : '' }}">
+            <i class="fas fa-balance-scale w-6 text-center mr-2"></i>
+            <span>Units</span>
+        </a>
+        <a href="{{ route('role.product-reviews.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.product-reviews.*') ? 'active' : '' }}">
+            <i class="fas fa-star w-6 text-center mr-2"></i>
+            <span>Reviews</span>
+        </a>
 
-        <!-- Website Management -->
-        <div class="sidebar-item">
-            <button onclick="toggleSubmenu('webSubmenu', this)" class="w-full flex justify-between items-center p-3 text-white hover:text-blue-200 focus:outline-none cursor-pointer">
-                <div class="flex items-center text-left">
-                    <i class="fas fa-box w-6 text-center mr-1"></i>
-                    <span>Website Management</span>
-                </div>
-                <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
-            </button>
-            <div id="webSubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{ request()->routeIs('role.sliders.index') || request()->routeIs('role.homepage-sections.index') || request()->routeIs('role.banners.index') || request()->routeIs('role.combo-deals.index') || request()->routeIs('role.newsletter-subscribers.index') ? '' : 'hidden' }}">
-                <a href="{{ route('role.homepage-sections.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.homepage-sections.index') ? 'active' : '' }}"><i class="fas fa-th-large"></i> Homepage Sections</a>
-                <a href="{{ route('role.sliders.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.sliders.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Slider</a>
-                <a href="{{ route('role.banners.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.banners.index') ? 'active' : '' }}"><i class="fas fa-images"></i> Banners</a>
-                <a href="{{ route('role.combo-deals.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.combo-deals.index') ? 'active' : '' }}"><i class="fas fa-gift"></i> Combo Deals</a>
-                <a href="{{ route('role.newsletter-subscribers.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.newsletter-subscribers.index') ? 'active' : '' }}"><i class="fas fa-envelope"></i> Newsletter Subscribers</a>
-                <a href="{{ route('role.page-categories.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.page-categories.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Page Category</a>
-                <a href="{{ route('role.pages.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.pages.index') ? 'active' : '' }}"><i class="fas fa-list"></i> Page</a>
+        {{-- Stock only works as a set: Purchase is the only path that adds stock,
+             Warehouses is the only screen that can create one (and the movement
+             screen's dropdowns are empty without it), and Suppliers is Purchase's
+             master data. Shipping any of them without the others leaves the shop
+             able to sell stock but never restock it. --}}
+        <p class="sidebar-section">Inventory</p>
 
-            </div>
-        </div>
+        <a href="{{ route('role.purchases.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.purchases.*') ? 'active' : '' }}">
+            <i class="fas fa-cart-plus w-6 text-center mr-2"></i>
+            <span>Purchase</span>
+        </a>
+        <a href="{{ route('role.suppliers.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.suppliers.*') ? 'active' : '' }}">
+            <i class="fas fa-truck w-6 text-center mr-2"></i>
+            <span>Suppliers</span>
+        </a>
+        <a href="{{ route('role.warehouses.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.warehouses.*') ? 'active' : '' }}">
+            <i class="fas fa-warehouse w-6 text-center mr-2"></i>
+            <span>Warehouses</span>
+        </a>
+        <a href="{{ route('role.stock-movements.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.stock-movements.*') ? 'active' : '' }}">
+            <i class="fas fa-boxes-stacked w-6 text-center mr-2"></i>
+            <span>Stock Movements</span>
+        </a>
 
+        <p class="sidebar-section">Content</p>
 
-        <!-- Inventory -->
-        <div class="sidebar-item">
-            <button onclick="toggleSubmenu('inventorySubmenu', this)" class="w-full flex justify-between items-center p-3 text-white hover:text-blue-200 focus:outline-none cursor-pointer">
-                <div class="flex items-center text-left">
-                    <i class="fas fa-boxes-stacked w-6 text-center mr-1"></i>
-                    <span>Inventory</span>
-                </div>
-                <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
-            </button>
-            <div id="inventorySubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{
-                request()->routeIs('role.orders.*') ||
-                request()->routeIs('role.warehouses.*') ||
-                request()->routeIs('role.return-refs.index') ||
-                request()->routeIs('role.return-refs.create') ||
-                request()->routeIs('role.return-refs.edit') ||
-                request()->routeIs('role.stock-transfers.index') ||
-                request()->routeIs('role.stock-transfers.create') ||
-                request()->routeIs('role.stock-transfers.edit') ||
-                request()->routeIs('role.stock-movements.index') ||
-                request()->routeIs('role.stock-movements.create') ||
-                request()->routeIs('role.stock-movements.edit') ||
-                request()->routeIs('role.sales.index') ||
-                request()->routeIs('role.sales.create') ||
-                request()->routeIs('role.sales.edit') ||
-                request()->routeIs('role.purchases.index') ||
-                request()->routeIs('role.purchases.create') ||
-                request()->routeIs('role.purchases.edit') ||
-                request()->routeIs('role.invoices.*')
-                ? '' : 'hidden' }}">
-                <a href="{{ route('role.orders.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.orders.*') ? 'active' : '' }}"><i class="fas fa-shopping-bag"></i> Online Orders</a>
-                <a href="{{ route('role.invoices.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.invoices.*') ? 'active' : '' }}"><i class="fas fa-file-invoice-dollar"></i> Invoices</a>
-                <a href="{{ route('role.warehouses.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.warehouses.*') ? 'active' : '' }}"><i class="fas fa-warehouse"></i> Warehouses</a>
-                <a href="{{ route('role.sales.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.sales.index') || request()->routeIs('role.sales.create') || request()->routeIs('role.sales.edit') ? 'active' : '' }}"><i class="fas fa-chart-pie"></i> Sale</a>
-                <a href="{{ route('role.purchases.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.purchases.index') || request()->routeIs('role.purchases.create') || request()->routeIs('role.purchases.edit') ? 'active' : '' }}"><i class="fas fa-dollar"></i> Purchase</a>
-                <a href="{{ route('role.stock-transfers.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.stock-transfers.index') || request()->routeIs('role.stock-transfers.create') || request()->routeIs('role.stock-transfers.edit') ? 'active' : '' }}"><i class="fas fa-exchange"></i> Stock Transfer</a>
-                <a href="{{ route('role.stock-movements.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.stock-movements.index') || request()->routeIs('role.stock-movements.create') || request()->routeIs('role.stock-movements.edit') ? 'active' : '' }}"><i class="fas fa-boxes-stacked"></i> Stock Adjustment</a>
-                <a href="{{ route('role.return-refs.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.return-refs.index') || request()->routeIs('role.return-refs.create') || request()->routeIs('role.return-refs.edit') ? 'active' : '' }}"><i class="fas fa-undo"></i> Return Reference</a>
-            </div>
-        </div>
+        <a href="{{ route('role.homepage-sections.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.homepage-sections.*') ? 'active' : '' }}">
+            <i class="fas fa-th-large w-6 text-center mr-2"></i>
+            <span>Homepage Sections</span>
+        </a>
+        <a href="{{ route('role.sliders.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.sliders.*') ? 'active' : '' }}">
+            <i class="fas fa-images w-6 text-center mr-2"></i>
+            <span>Sliders</span>
+        </a>
+        <a href="{{ route('role.banners.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.banners.*') ? 'active' : '' }}">
+            <i class="fas fa-image w-6 text-center mr-2"></i>
+            <span>Banners</span>
+        </a>
+        <a href="{{ route('role.combo-deals.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.combo-deals.*') ? 'active' : '' }}">
+            <i class="fas fa-gift w-6 text-center mr-2"></i>
+            <span>Combo Deals</span>
+        </a>
 
-        <!-- Geography Info -->
-        <div class="sidebar-item">
-            <button onclick="toggleSubmenu('regionalSubmenu', this)" class="w-full flex justify-between items-center p-3 text-white hover:text-blue-200 focus:outline-none cursor-pointer">
-                <div class="flex items-center text-left">
-                    <i class="fas fa-map-marker-alt w-6 text-center mr-1"></i>
-                    <span>Geography Info</span>
-                </div>
-                <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
-            </button>
-            <div id="regionalSubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{ request()->routeIs('role.user.create') || request()->routeIs('role.user.index') ? '' : 'hidden' }}">
-                <a href="{{ route('role.countries.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.countries.index') ? 'active' : '' }}"><i class="fas fa-flag"></i> Country</a>
-                <a href="{{ route('role.states.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.states.index') ? 'active' : '' }}"><i class="fas fa-city"></i> States</a>
-                <a href="{{ route('role.airport.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.airport.index') ? 'active' : '' }}"><i class="fas fa-plane-departure"></i> Airport Management</a>
-            </div>
-        </div>
+        <p class="sidebar-section">Marketing</p>
 
-        <!-- Expenses -->
-        <div class="sidebar-item">
-            <button onclick="toggleSubmenu('expensesSubmenu', this)" class="w-full flex justify-between items-center p-3 text-white hover:text-blue-200 focus:outline-none cursor-pointer">
-                <div class="flex items-center text-left">
-                    <i class="fas fa-money-bill-wave w-6 text-center mr-1"></i>
-                    <span>Expenses</span>
-                </div>
-                <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
-            </button>                                                                                                                                                
-            <div id="expensesSubmenu" class="submenu pl-0 mt-1 space-y-1 text-sm {{ request()->routeIs('role.expense-subcategories.index') || request()->routeIs('role.expense-categories.index') || request()->routeIs('role.expenses.index') ? '' : 'hidden' }}">
-                <a href="{{ route('role.expense-categories.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.expense-categories.index') ? 'active' : '' }}">
-                    <i style="margin-right: 5px;" class="fa-solid fa-folder"></i> Expense Category
-                </a>
-                <a href="{{ route('role.expense-subcategories.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.expense-subcategories.index') ? 'active' : '' }}">
-                    <i style="margin-right: 5px;" class="fa-solid fa-folder"></i> Sub Category
-                </a>
-                <a href="{{ route('role.expenses.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="submenu-item block p-2 text-blue-100 hover:text-white cursor-pointer {{ request()->routeIs('role.expenses.index') ? 'active' : '' }}">
-                    <i style="margin-right: 5px;" class="fa-solid fa-list"></i> All Expenses
-                </a>
-            </div>            
-        </div>
-        
-        <!-- Bank -->
-        <a href="{{ route('role.banks.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.banks.index') ? 'active' : '' }}">
-            <i class="fas fa-building-columns w-6 text-center mr-1"></i>
-            <span>Bank</span>
-        </a>        
+        <a href="{{ route('role.coupons.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.coupons.*') ? 'active' : '' }}">
+            <i class="fas fa-tags w-6 text-center mr-2"></i>
+            <span>Coupons</span>
+        </a>
 
-        <!-- Marketing Section -->
-        <div class="pt-4 mt-4 border-t border-blue-500/30">
-            <h3 class="text-xs uppercase text-blue-300 font-semibold px-3 mb-2">Marketing</h3>
-            
-            <!-- Email Marketing -->
-            <a href="{{ route('role.email-marketing.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.email-marketing.index') ? 'active' : '' }}">
-                <i class="fas fa-envelope w-6 text-center mr-1"></i>
-                <span>Email Marketing</span>
-            </a>
+        <a href="{{ route('role.newsletter-subscribers.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.newsletter-subscribers.*') ? 'active' : '' }}">
+            <i class="fas fa-envelope-open-text w-6 text-center mr-2"></i>
+            <span>Newsletter</span>
+        </a>
 
-            <!-- SMS Marketing -->
-            <a href="{{ route('role.sms-marketing.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.sms-marketing.index') ? 'active' : '' }}">
-                <i class="fas fa-sms w-6 text-center mr-1"></i>
-                <span>SMS Marketing</span>
-            </a>
+        <a href="{{ route('role.email-marketing.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.email-marketing.*') ? 'active' : '' }}">
+            <i class="fas fa-envelope w-6 text-center mr-2"></i>
+            <span>Email</span>
+        </a>
+        <a href="{{ route('role.sms-marketing.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.sms-marketing.*') ? 'active' : '' }}">
+            <i class="fas fa-sms w-6 text-center mr-2"></i>
+            <span>SMS</span>
+        </a>
+        <a href="{{ route('role.whatsapp-marketing.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.whatsapp-marketing.*') ? 'active' : '' }}">
+            <i class="fab fa-whatsapp w-6 text-center mr-2"></i>
+            <span>WhatsApp</span>
+        </a>
 
-            <!-- WhatsApp Marketing -->
-            <a href="{{ route('role.whatsapp-marketing.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.whatsapp-marketing.index') ? 'active' : '' }}">
-                <i class="fab fa-whatsapp w-6 text-center mr-1"></i>
-                <span>WhatsApp Marketing</span>
-            </a>
-        </div>
+        <p class="sidebar-section">Settings</p>
 
-        <!-- Settings -->
-        <div class="pt-4 mt-4 border-t border-blue-500/30">
-            <h3 class="text-xs uppercase text-blue-300 font-semibold px-3 mb-2">Settings</h3>
-            
-            <a href="{{ route('role.company-settings.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.company-settings.index') ? 'active' : '' }}">
-                <i class="fas fa-cog w-6 text-center mr-1"></i>
-                <span>Company Settings</span>
-            </a>
-            <a href="{{ route('role.website-settings', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" class="sidebar-item flex items-center p-3 text-white hover:text-blue-200 cursor-pointer {{ request()->routeIs('role.website-settings') ? 'active' : '' }}">
-                <i class="fas fa-cog w-6 text-center mr-1"></i>
-                <span>Website Settings</span>
-            </a>
-        </div>
-        
+        <a href="{{ route('role.website-settings', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.website-settings') ? 'active' : '' }}">
+            <i class="fas fa-globe w-6 text-center mr-2"></i>
+            <span>Website Settings</span>
+        </a>
+        <a href="{{ route('role.company-settings.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.company-settings.*') ? 'active' : '' }}">
+            <i class="fas fa-building w-6 text-center mr-2"></i>
+            <span>Company Settings</span>
+        </a>
+        <a href="{{ route('role.user.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.user.*') ? 'active' : '' }}">
+            <i class="fas fa-user-shield w-6 text-center mr-2"></i>
+            <span>Users &amp; Roles</span>
+        </a>
+
+        {{--
+            Hidden, not deleted. These come from the ERP/travel template this admin
+            was built on and are not part of running the shop. Every route and
+            controller still exists, so restoring one is just uncommenting its link.
+
+            Branch          role.branches.index          — multi-branch ERP; this is one shop
+            Sale            role.sales.index             — in-store POS, superseded by online Orders
+            Customers       role.customers.index         — master data for Sale only; the storefront
+                                                           writes `buyers`, which is now "Customers"
+            Stock Transfer  role.stock-transfers.index   — needs 2+ warehouses
+            Return Ref.     role.return-refs.index       — Sale-coupled; cancel the order instead
+            Bank            role.banks.index             — ERP ledger, unused by checkout
+            Expenses        role.expenses.index / role.expense-categories.index
+                            / role.expense-subcategories.index  — accounting module
+            Country         role.countries.index         — travel template; checkout uses
+            States          role.states.index              districts/thanas, not these
+            Airport Mgmt.   role.airport.index           — travel template
+
+            Pages           role.pages.index             — BROKEN, do not restore yet:
+            Page Categories role.page-categories.index     PageController's store/update/destroy are
+                                                           empty, and pages/edit-modal.blade.php posts
+                                                           to role.expenses.update with expense => 1,
+                                                           so saving a page edits expense #1.
+        --}}
+
     </nav>
 </aside>

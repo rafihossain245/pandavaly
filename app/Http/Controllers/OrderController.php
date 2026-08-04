@@ -176,11 +176,12 @@ class OrderController extends Controller
             'status'         => $isPaid ? 'paid' : 'unpaid',
             'invoice_date'   => now()->toDateString(),
             'due_date'       => now()->addDays(30)->toDateString(),
-            'subtotal'       => $order->subtotal,
-            'discount'       => $order->discount,
-            'tax'            => $order->tax,
-            'total'          => $order->total,
-            'balance'        => $isPaid ? 0 : $order->total,
+            'subtotal'        => $order->subtotal,
+            'discount'        => $order->discount,
+            'tax'             => $order->tax,
+            'shipping_charge' => $order->shipping_charge,
+            'total'           => $order->total,
+            'balance'         => $isPaid ? 0 : $order->total,
         ]);
 
         $order->items->each(function ($item) use ($invoice) {

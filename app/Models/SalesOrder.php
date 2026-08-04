@@ -14,8 +14,10 @@ class SalesOrder extends Model
             'subtotal' => 'decimal:2',
             'discount' => 'decimal:2',
             'tax' => 'decimal:2',
+            'shipping_charge' => 'decimal:2',
             'total' => 'decimal:2',
             'advance_paid' => 'decimal:2',
+            'billing_same_as_shipping' => 'boolean',
             'payment_slip_uploaded_at' => 'datetime',
         ];
     }
@@ -43,6 +45,51 @@ class SalesOrder extends Model
     public function thana()
     {
         return $this->belongsTo(Thana::class);
+    }
+
+    public function billingDistrict()
+    {
+        return $this->belongsTo(District::class, 'billing_district_id');
+    }
+
+    public function billingThana()
+    {
+        return $this->belongsTo(Thana::class, 'billing_thana_id');
+    }
+
+    /**
+     * One-line delivery address: street, thana, district, city, postal code.
+     * Built here rather than concatenated inline in Blade so every order
+     * screen (admin, buyer, tracker, emails) prints the same thing.
+     */
+    public function getShippingAddressLineAttribute(): string
+    {
+        return $this->addressLine([
+            $this->shipping_address,
+            $this->thana?->name,
+            $this->district?->name,
+            $this->shipping_city,
+            $this->shipping_postal_code,
+        ]);
+    }
+
+    public function getBillingAddressLineAttribute(): string
+    {
+        if ($this->billing_same_as_shipping) {
+            return $this->shipping_address_line;
+        }
+
+        return $this->addressLine([
+            $this->billing_address,
+            $this->billingThana?->name,
+            $this->billingDistrict?->name,
+            $this->billing_country,
+        ]);
+    }
+
+    private function addressLine(array $parts): string
+    {
+        return implode(', ', array_filter(array_map('trim', array_filter($parts))));
     }
 
     /**

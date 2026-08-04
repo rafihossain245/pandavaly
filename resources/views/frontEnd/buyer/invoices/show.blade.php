@@ -50,6 +50,7 @@
                     <tr><th colspan="3" class="text-end">Subtotal</th><td class="text-end">৳{{ number_format($invoice->subtotal, 2) }}</td></tr>
                     <tr><th colspan="3" class="text-end">Discount</th><td class="text-end">-৳{{ number_format($invoice->discount, 2) }}</td></tr>
                     <tr><th colspan="3" class="text-end">Tax</th><td class="text-end">৳{{ number_format($invoice->tax, 2) }}</td></tr>
+                    <tr><th colspan="3" class="text-end">Delivery cost</th><td class="text-end">৳{{ number_format($invoice->shipping_charge, 2) }}</td></tr>
                     <tr><th colspan="3" class="text-end">Total</th><th class="text-end">৳{{ number_format($invoice->total, 2) }}</th></tr>
                     <tr><th colspan="3" class="text-end">Balance Due</th><th class="text-end">৳{{ number_format($invoice->balance, 2) }}</th></tr>
                 </tfoot>

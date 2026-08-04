@@ -252,8 +252,12 @@
         </div>
         <div class="bo-card-body" style="border-top:1px solid #f0f0f0">
             <div class="sum-row"><span>Subtotal</span><span>৳{{ number_format($order->subtotal, 2) }}</span></div>
-            <div class="sum-row"><span>Discount</span><span>-৳{{ number_format($order->discount, 2) }}</span></div>
+            <div class="sum-row">
+                <span>Discount{{ $order->coupon_code ? ' (' . $order->coupon_code . ')' : '' }}</span>
+                <span>-৳{{ number_format($order->discount, 2) }}</span>
+            </div>
             <div class="sum-row"><span>Tax</span><span>৳{{ number_format($order->tax, 2) }}</span></div>
+            <div class="sum-row"><span>Delivery cost</span><span>৳{{ number_format($order->shipping_charge, 2) }}</span></div>
             <div class="sum-row grand"><span>Grand Total</span><span>৳{{ number_format($order->total, 2) }}</span></div>
         </div>
     </div>
@@ -264,16 +268,25 @@
         <div class="bo-card-body">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <div class="text-muted small mb-1">Company</div>
-                    <div class="fw-bold">{{ $order->company_name }}</div>
+                    <div class="text-muted small mb-1">Name</div>
+                    <div class="fw-bold">{{ $order->shipping_name ?: $order->contact_person }}</div>
                 </div>
                 <div class="col-md-6">
-                    <div class="text-muted small mb-1">Contact</div>
-                    <div class="fw-bold">{{ $order->contact_person }} / {{ $order->shipping_phone }}</div>
+                    <div class="text-muted small mb-1">Phone</div>
+                    <div class="fw-bold">{{ $order->shipping_phone }}</div>
                 </div>
                 <div class="col-12">
-                    <div class="text-muted small mb-1">Address</div>
-                    <div>{{ $order->shipping_address }}{{ $order->shipping_city ? ', ' . $order->shipping_city : '' }}{{ $order->shipping_postal_code ? ' - ' . $order->shipping_postal_code : '' }}</div>
+                    <div class="text-muted small mb-1">Shipping Address</div>
+                    <div>{{ $order->shipping_address_line }}</div>
+                </div>
+                <div class="col-12">
+                    <div class="text-muted small mb-1">Billing Address</div>
+                    <div>
+                        {{ $order->billing_address_line }}
+                        @if($order->billing_same_as_shipping)
+                            <span class="text-muted small">(same as shipping)</span>
+                        @endif
+                    </div>
                 </div>
                 @if($order->purchase_ref_no)
                 <div class="col-md-6">

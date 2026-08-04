@@ -21,42 +21,64 @@
     <script src="//unpkg.com/alpinejs" defer></script>    
     <!-- Custom Style -->
     <style>
+        /* Light sidebar: one flat level with quiet section labels, so every
+           destination is visible without expanding anything. */
         .sidebar {
-            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
             scrollbar-width: thin;
+            padding-bottom: 2rem;
         }
-        
+
+        .sidebar-brand {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sidebar-section {
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            font-weight: 700;
+            padding: 0 12px;
+            margin: 18px 0 6px;
+        }
+
         .sidebar-item {
-            transition: all 0.3s ease;
+            transition: background-color .15s ease, color .15s ease;
             border-radius: 8px;
+            color: #374151;
+            border-left: 3px solid transparent;
         }
-        
+
         .sidebar-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
+            background-color: #f3f4f6;
+            color: #111827;
         }
-        
+
         .sidebar-item.active {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-left: 4px solid #60a5fa;
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-left-color: #0b3d2e;
+            font-weight: 600;
         }
-        
-        .submenu {
-            transition: max-height 0.3s ease;
-            overflow: hidden;
-            margin: 0px 10px 10px 20px;
-            padding-bottom: 10px
+
+        .sidebar-item.active i {
+            color: #0b3d2e;
         }
-        
-        .submenu-item {
-            transition: all 0.2s ease;
-            border-radius: 6px;
-            padding-left: 15px;
+
+        .sidebar-item i {
+            color: #9ca3af;
         }
-        
-        .submenu-item:hover,.submenu-item.active {
-            background-color: rgba(255, 255, 255, 0.08);
+
+        .sidebar-badge {
+            background: #f97316;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 3px 7px;
+            border-radius: 999px;
         }
         
         .chevron-rotate {

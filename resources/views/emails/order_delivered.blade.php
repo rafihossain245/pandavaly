@@ -20,8 +20,7 @@
 {{-- Summary --}}
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;border-collapse:collapse;">
 @php $rows = [
-    ['Company',    $order->company_name],
-    ['Delivered To', trim($order->shipping_address . ($order->shipping_city ? ', '.$order->shipping_city : ''))],
+    ['Delivered To', $order->shipping_address_line],
     ['Order Total', 'Tk ' . number_format($order->total, 2)],
     ['Payment',    $order->payment_method === 'bank_transfer' ? 'Bank Transfer (Verified)' : 'Cash on Delivery'],
 ]; @endphp

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\District;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -18,6 +19,7 @@ use App\Mail\OrderConfirmed;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller
 {
@@ -63,30 +65,60 @@ class CheckoutController extends Controller
             return redirect()->route('shop')->with('error', 'Your cart is empty');
         }
 
-        $buyer = Auth::guard('buyer')->user();
-        $districts = District::active()->get();
-        $thanasByDistrict = Thana::orderBy('name')->get()->groupBy('district_id');
+        $buyer     = Auth::guard('buyer')->user();
+        $districts = District::active()->get(['id', 'name', 'delivery_charge']);
 
-        return view('frontEnd.checkout', compact('cart', 'buyer', 'districts', 'thanasByDistrict'));
+        $thanasByDistrict = Thana::orderBy('name')
+            ->get(['id', 'district_id', 'name'])
+            ->groupBy('district_id');
+
+        // Charge for whatever district is preselected (buyer default, or none yet)
+        $deliveryCharge = District::deliveryChargeFor(old('district_id', $buyer->district_id ?? null));
+
+        ['coupon' => $appliedCoupon, 'discount' => $discount] = Coupon::resolveForSubtotal((float) $cart['total']);
+
+        return view('frontEnd.checkout', compact(
+            'cart',
+            'buyer',
+            'districts',
+            'thanasByDistrict',
+            'deliveryCharge',
+            'appliedCoupon',
+            'discount'
+        ));
     }
 
     public function place(Request $request)
     {
+        $thanaInDistrict = fn ($districtField) => Rule::exists('thanas', 'id')
+            ->where(fn ($query) => $query->where('district_id', $request->input($districtField)));
+
         $request->validate([
-            'company_name'          => 'required|string|max:255',
-            'contact_person'        => 'required|string|max:255',
-            'phone'                 => 'required|string|max:30',
-            'email'                 => 'nullable|email|max:255',
-            'delivery_contact_name' => 'nullable|string|max:255',
-            'delivery_contact_phone'=> 'nullable|string|max:30',
-            'address'               => 'required|string',
-            'district_id'           => 'required|exists:districts,id',
-            'thana_id'              => 'required|exists:thanas,id',
-            'city'                  => 'nullable|string|max:255',
-            'postal_code'           => 'nullable|string|max:50',
-            'purchase_ref_no'       => 'nullable|string|max:255',
-            'note'                  => 'nullable|string',
-            'payment_method'        => 'required|in:cod,bank_transfer',
+            'shipping_name'            => 'required|string|max:255',
+            'shipping_phone'           => 'required|string|max:30',
+            'shipping_email'           => 'nullable|email|max:255',
+            'shipping_address'         => 'required|string',
+            'district_id'              => 'required|exists:districts,id',
+            'thana_id'                 => ['nullable', $thanaInDistrict('district_id')],
+
+            'billing_same_as_shipping' => 'nullable|boolean',
+            'billing_name'             => 'required_unless:billing_same_as_shipping,1|nullable|string|max:255',
+            'billing_phone'            => 'required_unless:billing_same_as_shipping,1|nullable|string|max:30',
+            'billing_email'            => 'nullable|email|max:255',
+            'billing_address'          => 'required_unless:billing_same_as_shipping,1|nullable|string',
+            'billing_country'          => 'nullable|string|max:100',
+            'billing_district_id'      => 'required_unless:billing_same_as_shipping,1|nullable|exists:districts,id',
+            'billing_thana_id'         => ['nullable', $thanaInDistrict('billing_district_id')],
+
+            'note'                     => 'nullable|string|max:90',
+            'payment_method'           => 'required|in:cod,bank_transfer',
+        ], [
+            'billing_name.required_unless'      => 'Billing full name is required.',
+            'billing_phone.required_unless'     => 'Billing phone is required.',
+            'billing_address.required_unless'   => 'Billing address is required.',
+            'billing_district_id.required_unless' => 'Billing district is required.',
+            'thana_id.exists'                   => 'The selected thana does not belong to the chosen district.',
+            'billing_thana_id.exists'           => 'The selected billing thana does not belong to the chosen billing district.',
         ]);
 
         $cart = $this->cartState();
@@ -97,8 +129,22 @@ class CheckoutController extends Controller
 
         $buyer = Auth::guard('buyer')->user();
 
+        // Never trust the totals the page rendered — recompute delivery from the
+        // district and re-validate the coupon, which may have gone stale since
+        // it was applied.
+        $sameAsShipping = $request->boolean('billing_same_as_shipping');
+        $shippingCharge = District::deliveryChargeFor($request->district_id);
+        $subtotal       = (float) $cart['total'];
+
+        ['coupon' => $coupon, 'discount' => $discount] = Coupon::resolveForSubtotal($subtotal);
+
+        $grandTotal = $subtotal - $discount + $shippingCharge;
+
         try {
-            $order = DB::transaction(function () use ($request, $cart, $buyer) {
+            $order = DB::transaction(function () use (
+                $request, $cart, $buyer, $sameAsShipping, $shippingCharge,
+                $subtotal, $grandTotal, $coupon, $discount
+            ) {
                 foreach ($cart['items'] as $item) {
                     $product = Product::lockForUpdate()->find($item['id']);
                     if ($product && $product->stock_qty !== null && $product->stock_qty < $item['qty']) {
@@ -112,42 +158,55 @@ class CheckoutController extends Controller
                 $order = new SalesOrder();
                 $order->order_no              = 'SO-' . now()->format('YmdHis') . '-' . random_int(1000, 9999);
                 $order->buyer_id              = $buyer->id;
-                $order->company_name          = $request->company_name;
-                $order->contact_person        = $request->contact_person;
+                $order->company_name          = $buyer->business_name;
+                $order->contact_person        = $request->shipping_name;
                 $order->status                = 'pending';
                 $order->payment_term          = 'cash';
                 $order->payment_method        = $request->payment_method;
                 $order->advance_paid          = 0;
-                $order->subtotal              = $cart['total'];
-                $order->discount              = 0;
+                $order->subtotal              = $subtotal;
+                $order->discount              = $discount;
+                $order->coupon_id             = $coupon?->id;
+                $order->coupon_code           = $coupon?->code;
                 $order->tax                   = 0;
-                $order->total                 = $cart['total'];
-                $order->shipping_name         = $request->contact_person;
-                $order->shipping_email        = $request->email;
-                $order->shipping_phone        = $request->phone;
-                $order->delivery_contact_name = $request->delivery_contact_name;
-                $order->delivery_contact_phone= $request->delivery_contact_phone;
-                $order->shipping_address      = $request->address;
+                $order->shipping_charge       = $shippingCharge;
+                $order->total                 = $grandTotal;
+
+                // Shipping address
+                $order->shipping_name         = $request->shipping_name;
+                $order->shipping_email        = $request->shipping_email;
+                $order->shipping_phone        = $request->shipping_phone;
+                $order->shipping_address      = $request->shipping_address;
+                $order->shipping_country      = 'Bangladesh';
                 $order->district_id           = $request->district_id;
                 $order->thana_id              = $request->thana_id;
-                $order->shipping_city         = $request->city;
-                $order->shipping_postal_code  = $request->postal_code;
-                $order->purchase_ref_no       = $request->purchase_ref_no;
+
+                // Billing address — mirrors shipping unless the buyer entered its own
+                $order->billing_same_as_shipping = $sameAsShipping;
+                $order->billing_name          = $sameAsShipping ? $request->shipping_name    : $request->billing_name;
+                $order->billing_phone         = $sameAsShipping ? $request->shipping_phone   : $request->billing_phone;
+                $order->billing_email         = $sameAsShipping ? $request->shipping_email   : $request->billing_email;
+                $order->billing_address       = $sameAsShipping ? $request->shipping_address  : $request->billing_address;
+                $order->billing_country       = $sameAsShipping ? 'Bangladesh'               : ($request->billing_country ?: 'Bangladesh');
+                $order->billing_district_id   = $sameAsShipping ? $request->district_id      : $request->billing_district_id;
+                $order->billing_thana_id      = $sameAsShipping ? $request->thana_id         : $request->billing_thana_id;
+
                 $order->note                  = $request->note;
                 $order->save();
 
                 $invoice = Invoice::create([
-                    'invoice_no'     => 'INV-' . now()->format('YmdHis') . '-' . random_int(1000, 9999),
-                    'buyer_id'       => $buyer->id,
-                    'sales_order_id' => $order->id,
-                    'status'         => 'unpaid',
-                    'invoice_date'   => now()->toDateString(),
-                    'due_date'       => now()->addDays(30)->toDateString(),
-                    'subtotal'       => $cart['total'],
-                    'discount'       => 0,
-                    'tax'            => 0,
-                    'total'          => $cart['total'],
-                    'balance'        => $cart['total'],
+                    'invoice_no'      => 'INV-' . now()->format('YmdHis') . '-' . random_int(1000, 9999),
+                    'buyer_id'        => $buyer->id,
+                    'sales_order_id'  => $order->id,
+                    'status'          => 'unpaid',
+                    'invoice_date'    => now()->toDateString(),
+                    'due_date'        => now()->addDays(30)->toDateString(),
+                    'subtotal'        => $subtotal,
+                    'discount'        => $discount,
+                    'tax'             => 0,
+                    'shipping_charge' => $shippingCharge,
+                    'total'           => $grandTotal,
+                    'balance'         => $grandTotal,
                 ]);
 
                 foreach ($cart['items'] as $item) {
@@ -193,6 +252,18 @@ class CheckoutController extends Controller
                     Product::where('id', $item['id'])->decrement('stock_qty', $item['qty']);
                 }
 
+                if ($coupon) {
+                    // Re-check the limit under a row lock: two buyers can pass
+                    // validation at the same time on the last remaining use.
+                    $locked = Coupon::whereKey($coupon->id)->lockForUpdate()->first();
+
+                    if ($locked->usage_limit !== null && $locked->used_count >= $locked->usage_limit) {
+                        throw new \Exception("The coupon \"{$locked->code}\" has just reached its usage limit. Please remove it and try again.");
+                    }
+
+                    $locked->increment('used_count');
+                }
+
                 return $order;
             });
         } catch (\Throwable $throwable) {
@@ -200,6 +271,7 @@ class CheckoutController extends Controller
         }
 
         session()->forget('cart');
+        session()->forget(Coupon::SESSION_KEY);
 
         $order->load('items.productSku.product', 'buyer');
         $email = $order->shipping_email ?: $buyer->email;

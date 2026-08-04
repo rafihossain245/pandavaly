@@ -189,10 +189,9 @@
 
             {{-- Buyer Info --}}
             <div class="order-card">
-                <div class="order-card-header"><i class="fas fa-building text-blue-600"></i> Billing Information</div>
+                <div class="order-card-header"><i class="fas fa-truck text-blue-600"></i> Shipping Address</div>
                 <div class="order-card-body">
-                    <div class="info-row"><div class="info-label">Company</div><div class="info-value">{{ $order->company_name }}</div></div>
-                    <div class="info-row"><div class="info-label">Contact Person</div><div class="info-value">{{ $order->contact_person }}</div></div>
+                    <div class="info-row"><div class="info-label">Customer</div><div class="info-value">{{ $order->shipping_name ?: $order->contact_person }}</div></div>
                     <div class="info-row"><div class="info-label">Phone</div><div class="info-value">{{ $order->shipping_phone }}</div></div>
                     <div class="info-row"><div class="info-label">Email</div><div class="info-value">{{ $order->shipping_email ?: '—' }}</div></div>
                     @if($order->delivery_contact_name || $order->delivery_contact_phone)
@@ -203,12 +202,29 @@
                         </div>
                     </div>
                     @endif
-                    <div class="info-row"><div class="info-label">Address</div><div class="info-value">{{ $order->shipping_address }}{{ $order->shipping_city ? ', '.$order->shipping_city : '' }}</div></div>
+                    <div class="info-row"><div class="info-label">District</div><div class="info-value">{{ $order->district?->name ?: '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Thana</div><div class="info-value">{{ $order->thana?->name ?: '—' }}</div></div>
+                    <div class="info-row"><div class="info-label">Address</div><div class="info-value">{{ $order->shipping_address_line ?: '—' }}</div></div>
                     @if($order->purchase_ref_no)
                     <div class="info-row"><div class="info-label">Purchase Ref No</div><div class="info-value">{{ $order->purchase_ref_no }}</div></div>
                     @endif
                     @if($order->note)
                     <div class="info-row"><div class="info-label">Note</div><div class="info-value" style="white-space:pre-wrap">{{ $order->note }}</div></div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Billing Address --}}
+            <div class="order-card">
+                <div class="order-card-header"><i class="fas fa-file-invoice text-blue-600"></i> Billing Address</div>
+                <div class="order-card-body">
+                    @if($order->billing_same_as_shipping)
+                        <p class="text-sm text-gray-500 m-0"><i class="fas fa-check-circle text-green-500 me-1"></i> Same as the shipping address.</p>
+                    @else
+                        <div class="info-row"><div class="info-label">Name</div><div class="info-value">{{ $order->billing_name ?: '—' }}</div></div>
+                        <div class="info-row"><div class="info-label">Phone</div><div class="info-value">{{ $order->billing_phone ?: '—' }}</div></div>
+                        <div class="info-row"><div class="info-label">Email</div><div class="info-value">{{ $order->billing_email ?: '—' }}</div></div>
+                        <div class="info-row"><div class="info-label">Address</div><div class="info-value">{{ $order->billing_address_line ?: '—' }}</div></div>
                     @endif
                 </div>
             </div>
@@ -279,8 +295,15 @@
                 </div>
                 <div class="order-card-body" style="border-top:1px solid #f0f0f0">
                     <div class="sum-row"><span>Subtotal</span><span>Tk {{ number_format($order->subtotal, 2) }}</span></div>
-                    <div class="sum-row"><span>Discount</span><span>Tk {{ number_format($order->discount, 2) }}</span></div>
+                    <div class="sum-row">
+                        <span>Discount{{ $order->coupon_code ? ' (' . $order->coupon_code . ')' : '' }}</span>
+                        <span>Tk {{ number_format($order->discount, 2) }}</span>
+                    </div>
                     <div class="sum-row"><span>Tax / VAT</span><span>Tk {{ number_format($order->tax, 2) }}</span></div>
+                    <div class="sum-row">
+                        <span>Delivery Charge{{ $order->district ? ' (' . $order->district->name . ')' : '' }}</span>
+                        <span>Tk {{ number_format($order->shipping_charge, 2) }}</span>
+                    </div>
                     <div class="sum-row grand"><span>Grand Total</span><span>Tk {{ number_format($order->total, 2) }}</span></div>
                 </div>
             </div>

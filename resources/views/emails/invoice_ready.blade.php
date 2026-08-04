@@ -58,6 +58,7 @@
     ['Subtotal', number_format($order->subtotal, 2)],
     ['Discount', number_format($order->discount, 2)],
     ['Tax / VAT', number_format($order->tax, 2)],
+    ['Delivery cost', number_format($order->shipping_charge, 2)],
 ]; @endphp
 @foreach($rows as [$label, $val])
 <tr>

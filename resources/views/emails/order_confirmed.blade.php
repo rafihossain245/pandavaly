@@ -22,9 +22,9 @@
 {{-- Details --}}
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;border-collapse:collapse;">
 @php $rows = [
-    ['Company',        $order->company_name],
     ['Payment Method', $order->payment_method === 'bank_transfer' ? 'Bank Transfer' : 'Cash on Delivery'],
-    ['Delivery To',    trim($order->shipping_address . ($order->shipping_city ? ', '.$order->shipping_city : ''))],
+    ['Delivery To',    $order->shipping_address_line],
+    ['Delivery Cost',  'Tk ' . number_format($order->shipping_charge, 2)],
 ]; @endphp
 @foreach($rows as [$label, $value])
 <tr>
