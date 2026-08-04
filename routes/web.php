@@ -71,6 +71,8 @@ use App\Http\Controllers\Front\ShopController;
 use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\CheckoutController;
 use App\Http\Controllers\Front\BuyerAuthController;
+use App\Http\Controllers\Front\GoogleAuthController;
+use App\Http\Controllers\Front\OtpAuthController;
 use App\Http\Controllers\Front\BuyerDashboardController;
 use App\Http\Controllers\Front\ProductReviewController;
 use App\Http\Controllers\Dashboard\ProductReviewController as DashboardProductReviewController;
@@ -97,20 +99,31 @@ Route::middleware('buyer.guest')->prefix('buyer')->name('buyer.')->group(functio
     Route::post('/login', [BuyerAuthController::class, 'login'])->name('login.attempt');
     Route::get('/register', [BuyerAuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [BuyerAuthController::class, 'register'])->name('register.store');
+
+    // Sign in with a one-time code sent over SMS.
+    Route::post('/login/otp/send', [OtpAuthController::class, 'send'])->name('login.otp.send');
+    Route::post('/login/otp/verify', [OtpAuthController::class, 'verify'])->name('login.otp.verify');
 });
+
+// Google OAuth. Outside the buyer.guest group because Google redirects back
+// here after the session has already been touched.
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 
 // Buyer login/register landing page
 Route::middleware('buyer.guest')->get('/login', [BuyerAuthController::class, 'showLogin'])->name('login');
 
+// Guest checkout: no auth. Placing an order creates the buyer account when the
+// shopper does not have one yet (see CheckoutController::resolveBuyer).
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
+Route::post('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'apply'])->name('checkout.coupon.apply');
+Route::delete('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'remove'])->name('checkout.coupon.remove');
+Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+
 Route::middleware('buyer.auth')->group(function () {
     Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->name('reviews.store');
     Route::post('/wishlist/toggle', [\App\Http\Controllers\Front\WishlistController::class, 'toggle'])->name('wishlist.toggle');
-
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.place');
-    Route::post('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'apply'])->name('checkout.coupon.apply');
-    Route::delete('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'remove'])->name('checkout.coupon.remove');
-    Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
 
     Route::prefix('buyer')->name('buyer.')->group(function () {
         Route::post('/logout', [BuyerAuthController::class, 'logout'])->name('logout');
@@ -123,7 +136,16 @@ Route::middleware('buyer.auth')->group(function () {
         Route::get('/invoices/{invoice}', [BuyerDashboardController::class, 'invoice'])->name('invoices.show');
         Route::post('/orders/{order}/upload-slip', [BuyerDashboardController::class, 'uploadSlip'])->name('orders.upload-slip');
         Route::post('/orders/{order}/reorder', [BuyerDashboardController::class, 'reorder'])->name('orders.reorder');
+        Route::get('/orders/{order}/tracking', [BuyerDashboardController::class, 'trackOrder'])->name('orders.tracking');
         Route::get('/wishlist', [\App\Http\Controllers\Front\WishlistController::class, 'index'])->name('wishlist');
+
+        Route::get('/coupons', [BuyerDashboardController::class, 'coupons'])->name('coupons');
+        Route::get('/address', [BuyerDashboardController::class, 'address'])->name('address');
+        Route::put('/address', [BuyerDashboardController::class, 'updateAddress'])->name('address.update');
+        Route::get('/payments', [BuyerDashboardController::class, 'payments'])->name('payments');
+        Route::get('/reviews', [BuyerDashboardController::class, 'reviews'])->name('reviews');
+        Route::get('/password', [BuyerDashboardController::class, 'editPassword'])->name('password.edit');
+        Route::put('/password', [BuyerDashboardController::class, 'updatePassword'])->name('password.update');
     });
 });
 

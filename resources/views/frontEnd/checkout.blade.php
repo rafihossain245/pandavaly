@@ -13,6 +13,15 @@
     .co-breadcrumb .co-crumb-sep { color: #c9c9c9; }
     .co-breadcrumb .co-crumb-current { color: var(--primary, #f4801f); font-weight: 700; }
 
+    /* Guest login/register prompt (guests can still check out without one) */
+    .co-guest-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; padding: 14px 18px; margin-bottom: 12px; font-size: 14px; color: #444; }
+    .co-guest-actions { display: flex; gap: 8px; }
+    .co-guest-btn { display: inline-block; padding: 7px 20px; border-radius: 4px; font-size: 13.5px; font-weight: 700; text-decoration: none; transition: filter .2s, background .2s; }
+    .co-guest-btn-outline { border: 1px solid #cfcfcf; color: #444; background: #fff; }
+    .co-guest-btn-outline:hover { background: #f5f5f5; color: #222; }
+    .co-guest-btn-solid { background: var(--primary, #f4801f); color: #fff; border: 1px solid var(--primary, #f4801f); }
+    .co-guest-btn-solid:hover { filter: brightness(.94); color: #fff; }
+
     .co-section { background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; margin-bottom: 10px; }
     .co-section-header { padding: 11px 18px; border-bottom: 1px solid #f0f0f0; font-size: 14px; font-weight: 700; color: #111; background: #fafafa; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .co-section-body { padding: 16px 18px; }
@@ -132,6 +141,17 @@
             <div class="alert alert-danger mb-3">Please fix the errors below and try again.</div>
         @endif
 
+        {{-- Guests can check out as-is; an account is created for them on submit. --}}
+        @guest('buyer')
+        <div class="co-guest-bar">
+            <span>Have any account? please login or register</span>
+            <div class="co-guest-actions">
+                <a href="{{ route('login') }}" class="co-guest-btn co-guest-btn-outline">Login</a>
+                <a href="{{ route('buyer.register') }}" class="co-guest-btn co-guest-btn-solid">Register</a>
+            </div>
+        </div>
+        @endguest
+
         <form action="{{ route('checkout.place') }}" method="POST">
             @csrf
             <div class="row g-3 align-items-start">
@@ -187,7 +207,7 @@
                                 <div class="col-md-6">
                                     <label class="co-label">Your Full Name <span class="co-required">*</span></label>
                                     <input type="text" name="shipping_name" class="co-input"
-                                           value="{{ old('shipping_name', $buyer->business_name) }}" required
+                                           value="{{ old('shipping_name', $buyer?->business_name) }}" required
                                            placeholder="Your Full Name">
                                     @error('shipping_name')<div class="co-error">{{ $message }}</div>@enderror
                                 </div>
@@ -196,7 +216,7 @@
                                     <div class="co-phone">
                                         <span class="co-phone-prefix">88</span>
                                         <input type="text" name="shipping_phone" class="co-input"
-                                               value="{{ old('shipping_phone', $buyer->phone) }}" required
+                                               value="{{ old('shipping_phone', $buyer?->phone) }}" required
                                                placeholder="017xxxxxxxx">
                                     </div>
                                     @error('shipping_phone')<div class="co-error">{{ $message }}</div>@enderror
@@ -204,14 +224,14 @@
                                 <div class="col-12">
                                     <label class="co-label">Email</label>
                                     <input type="email" name="shipping_email" class="co-input"
-                                           value="{{ old('shipping_email', $buyer->email) }}"
+                                           value="{{ old('shipping_email', $buyer?->email) }}"
                                            placeholder="example@gmail.com (Optional)">
                                     @error('shipping_email')<div class="co-error">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-12">
                                     <label class="co-label">Address <span class="co-required">*</span></label>
                                     <input type="text" name="shipping_address" class="co-input"
-                                           value="{{ old('shipping_address', $buyer->address) }}" required
+                                           value="{{ old('shipping_address', $buyer?->address) }}" required
                                            placeholder="ex: House no. / building / street / area">
                                     @error('shipping_address')<div class="co-error">{{ $message }}</div>@enderror
                                 </div>
@@ -222,7 +242,7 @@
                                         @foreach($districts as $district)
                                             <option value="{{ $district->id }}"
                                                     data-charge="{{ $district->delivery_charge }}"
-                                                    {{ (string) old('district_id', $buyer->district_id ?? '') === (string) $district->id ? 'selected' : '' }}>
+                                                    {{ (string) old('district_id', $buyer?->district_id ?? '') === (string) $district->id ? 'selected' : '' }}>
                                                 {{ $district->name }}
                                             </option>
                                         @endforeach
@@ -234,7 +254,7 @@
                                     <select name="thana_id" id="thana_id" class="co-select"
                                             data-placeholder="Select Thana (Optional)"
                                             data-district="#district_id"
-                                            data-selected="{{ old('thana_id', $buyer->thana_id ?? '') }}">
+                                            data-selected="{{ old('thana_id', $buyer?->thana_id ?? '') }}">
                                         <option value=""></option>
                                     </select>
                                     @error('thana_id')<div class="co-error">{{ $message }}</div>@enderror

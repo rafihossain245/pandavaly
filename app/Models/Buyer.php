@@ -32,6 +32,7 @@ class Buyer extends Authenticatable
         'verification_log',
         'district_id',
         'thana_id',
+        'must_set_password',
     ];
 
     protected $hidden = [
@@ -43,6 +44,7 @@ class Buyer extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'must_set_password' => 'boolean',
             'trade_license_expiry' => 'date',
             'verification_log' => 'array',
         ];

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Buyer;
+use App\Models\Company;
 use App\Models\Coupon;
 use App\Models\District;
 use App\Models\Invoice;
@@ -19,10 +21,14 @@ use App\Mail\OrderConfirmed;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller
 {
+    /** Session key letting a guest reopen the order they just placed. */
+    private const GUEST_ORDER_KEY = 'guest_order_id';
+
     private function cartState(): array
     {
         return session()->get('cart', ['items' => [], 'total' => 0, 'count' => 0]);
@@ -88,6 +94,68 @@ class CheckoutController extends Controller
         ));
     }
 
+    /**
+     * The buyer an order belongs to, creating an account for a guest who does
+     * not have one yet.
+     *
+     * Three cases:
+     *  - already signed in                 -> that buyer, untouched
+     *  - guest whose email or phone we know -> the order is attached to that
+     *    existing account so their history stays complete, but the session is
+     *    NOT authenticated: anyone can type someone else's email at checkout,
+     *    and logging them in would hand over the account
+     *  - genuinely new shopper            -> account created and signed in
+     *
+     * @return array{buyer: Buyer, created: bool}
+     */
+    private function resolveBuyer(Request $request): array
+    {
+        if ($buyer = Auth::guard('buyer')->user()) {
+            return ['buyer' => $buyer, 'created' => false];
+        }
+
+        $email = $request->filled('shipping_email') ? trim($request->shipping_email) : null;
+        $phone = trim($request->shipping_phone);
+
+        $existing = Buyer::query()
+            ->when($email, fn ($query) => $query->orWhere('email', $email))
+            ->orWhere('phone', $phone)
+            ->first();
+
+        if ($existing) {
+            return ['buyer' => $existing, 'created' => false];
+        }
+
+        $buyer = Buyer::create([
+            'company_id'      => Company::query()->orderBy('id')->value('id'),
+            'business_name'   => $request->shipping_name,
+            'category'        => 'Retail',
+            'email'           => $email,
+            'phone'           => $phone,
+            // A guest never chose a password. Storing a random one keeps the
+            // hash column valid while leaving the account password-unusable
+            // until the buyer sets one.
+            'password'          => Str::random(40),
+            'must_set_password' => true,
+            'address'         => $request->shipping_address,
+            'district_id'     => $request->district_id,
+            'thana_id'        => $request->thana_id,
+            'country'         => 'Bangladesh',
+            'status'          => 'active',
+            'verification_log' => ['source' => 'guest_checkout'],
+        ]);
+
+        $buyer->contacts()->create([
+            'name'        => $buyer->business_name,
+            'email'       => $buyer->email,
+            'phone'       => $buyer->phone,
+            'designation' => 'Primary Contact',
+            'is_primary'  => true,
+        ]);
+
+        return ['buyer' => $buyer, 'created' => true];
+    }
+
     public function place(Request $request)
     {
         $thanaInDistrict = fn ($districtField) => Rule::exists('thanas', 'id')
@@ -127,7 +195,7 @@ class CheckoutController extends Controller
             return redirect()->route('shop')->with('error', 'Your cart is empty');
         }
 
-        $buyer = Auth::guard('buyer')->user();
+        ['buyer' => $buyer, 'created' => $accountCreated] = $this->resolveBuyer($request);
 
         // Never trust the totals the page rendered — recompute delivery from the
         // district and re-validate the coupon, which may have gone stale since
@@ -273,6 +341,16 @@ class CheckoutController extends Controller
         session()->forget('cart');
         session()->forget(Coupon::SESSION_KEY);
 
+        if ($accountCreated) {
+            // Brand new account, created from this shopper's own details — safe
+            // to sign them straight in so the order lands in their dashboard.
+            Auth::guard('buyer')->login($buyer);
+        }
+
+        // Lets a guest (and anyone whose order attached to a pre-existing
+        // account without signing in) open their own confirmation page.
+        session()->put(self::GUEST_ORDER_KEY, $order->id);
+
         $order->load('items.productSku.product', 'buyer');
         $email = $order->shipping_email ?: $buyer->email;
         if ($email) {
@@ -284,12 +362,16 @@ class CheckoutController extends Controller
         }
 
         return redirect()->route('checkout.confirmation', $order->id)
-            ->with('success', 'Order placed successfully');
+            ->with('success', 'Order placed successfully')
+            ->with('account_created', $accountCreated);
     }
 
     public function confirmation(SalesOrder $order)
     {
-        abort_unless($order->buyer_id === Auth::guard('buyer')->id(), 404);
+        $ownsOrder = Auth::guard('buyer')->check()
+            && $order->buyer_id === Auth::guard('buyer')->id();
+
+        abort_unless($ownsOrder || session(self::GUEST_ORDER_KEY) === $order->id, 404);
 
         $items        = SalesOrderItem::query()->where('sales_order_id', $order->id)->get();
         $productNames = [];

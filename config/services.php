@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
+    ],
+
+    /*
+    | SMS gateway used for OTP sign-in. Driver "log" writes the code to
+    | storage/logs/laravel.log instead of sending, so the flow is usable in
+    | development before a real gateway is wired up.
+    */
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+        'endpoint' => env('SMS_ENDPOINT'),
+        'api_key' => env('SMS_API_KEY'),
+        'sender_id' => env('SMS_SENDER_ID'),
+    ],
+
 ];

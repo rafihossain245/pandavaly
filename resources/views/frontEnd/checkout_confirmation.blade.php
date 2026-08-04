@@ -36,6 +36,12 @@
 
     .confirm-policy { padding: 18px 36px; font-size: 12px; color: #888; line-height: 1.7; text-align: center; border-bottom: 1px solid #f0f0f0; }
 
+    .confirm-account { display: flex; gap: 14px; padding: 18px 36px; background: #f0fdf4; border-bottom: 1px solid #bbf7d0; text-align: left; }
+    .confirm-account i { font-size: 20px; color: #16a34a; flex-shrink: 0; margin-top: 2px; }
+    .confirm-account strong { font-size: 14px; color: #15803d; }
+    .confirm-account p { font-size: 13px; color: #4d7c5a; margin: 4px 0 0; line-height: 1.6; }
+    .confirm-account a { color: #15803d; font-weight: 600; }
+
     .confirm-actions { padding: 24px 36px; display: flex; gap: 12px; justify-content: center; }
     .btn-continue { background: #fff; border: 2px solid #111; color: #111; padding: 12px 28px; font-weight: 700; font-size: 14px; border-radius: 4px; text-decoration: none; transition: all .2s; }
     .btn-continue:hover { background: #111; color: #fff; }
@@ -101,12 +107,36 @@
             It has to be claimed by physically coming to the relative branch.
         </div>
 
+        {{-- Account created for a first-time guest --}}
+        @if(session('account_created'))
+        <div class="confirm-account">
+            <i class="fas fa-user-check"></i>
+            <div>
+                <strong>We created an account for you</strong>
+                <p>
+                    You are signed in, so this order and every future one is saved in your dashboard.
+                    Set a password from
+                    <a href="{{ route('buyer.password.edit') }}">Change Password</a>
+                    so you can log back in later.
+                </p>
+            </div>
+        </div>
+        @endif
+
         {{-- Action Buttons --}}
         <div class="confirm-actions">
             <a href="{{ route('shop') }}" class="btn-continue">Continue Shopping</a>
-            <a href="{{ route('buyer.orders.show', $order) }}" class="btn-track">
-                <i class="fas fa-map-marker-alt me-1"></i> Track Your Order
-            </a>
+            @auth('buyer')
+                <a href="{{ route('buyer.orders.show', $order) }}" class="btn-track">
+                    <i class="fas fa-map-marker-alt me-1"></i> Track Your Order
+                </a>
+            @else
+                {{-- Guest whose order attached to an existing account: the public
+                     tracker works without a session. --}}
+                <a href="{{ route('track-order', ['order_no' => $order->order_no, 'phone' => $order->shipping_phone]) }}" class="btn-track">
+                    <i class="fas fa-map-marker-alt me-1"></i> Track Your Order
+                </a>
+            @endauth
         </div>
 
     </div>

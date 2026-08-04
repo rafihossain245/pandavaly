@@ -21,16 +21,26 @@ class BuyerAuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $validated = $request->validate([
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
+        ], [
+            'login.required' => 'Enter your email address or mobile number.',
         ]);
 
-        $credentials['status'] = 'active';
+        // Shoppers sign up with either, so accept either here rather than making
+        // them remember which one this account used.
+        $field = filter_var($validated['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+
+        $credentials = [
+            $field => $validated['login'],
+            'password' => $validated['password'],
+            'status' => 'active',
+        ];
 
         if (! Auth::guard('buyer')->attempt($credentials, $request->boolean('remember'))) {
-            return back()->withInput($request->only('email'))
-                ->withErrors(['email' => 'The provided credentials do not match an active buyer account.']);
+            return back()->withInput($request->only('login'))
+                ->withErrors(['login' => 'Those details do not match an active account.']);
         }
 
         $request->session()->regenerate();

@@ -87,30 +87,45 @@
 
 <div class="buyer-panel bo-page" style="background:transparent; padding: 0">
 
-    {{-- Back + order title --}}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <a href="{{ route('buyer.orders') }}" class="small text-muted">&larr; My Orders</a>
-            <h4 class="mt-1 mb-0 fw-bold">{{ $order->order_no }}</h4>
-            <small class="text-muted">Placed {{ $order->created_at->format('d M Y, h:i A') }}</small>
+    {{-- Header: title bar + order id / status / totals --}}
+    <div class="ba-panel">
+        <div class="ba-panel-head">
+            <h3 class="ba-panel-title">Order details</h3>
+            <a href="{{ route('buyer.orders') }}" class="ba-panel-action">&larr; Back to orders</a>
         </div>
-        @if(in_array($order->status, ['delivered', 'completed']))
-            <form action="{{ route('buyer.orders.reorder', $order) }}" method="POST">
-                @csrf
-                <button type="submit" class="btn btn-outline-secondary">Reorder</button>
-            </form>
-        @endif
+        <div class="ba-panel-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h4 class="mb-1 fw-bold" style="font-size:19px">
+                        Order id #{{ $order->order_no }}
+                        @include('frontEnd.buyer.partials.status-pill', ['status' => $order->status])
+                    </h4>
+                    <div style="font-size:12.5px; color:#9ca3af">
+                        Placed on: {{ $order->created_at->format('F d, Y h:i A') }}
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div style="font-size:13px; color:#6b7280">
+                        Total amount: <strong style="color:#111827">{{ number_format($order->total, 2) }} TK</strong>
+                    </div>
+                    <div style="font-size:13px; color:#6b7280; margin-top:2px">
+                        Delivery: <strong style="color:#111827">Standard (3-7 days)</strong>
+                    </div>
+                    <div class="mt-2 d-flex gap-2 justify-content-end flex-wrap">
+                        @if(in_array($order->status, ['delivered', 'completed']))
+                            <form action="{{ route('buyer.orders.reorder', $order) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="ba-btn-sm">Reorder</button>
+                            </form>
+                        @endif
+                        @if($isBankTransfer && $order->payment_status !== 'verified' && !$isCancelled)
+                            <a href="#pay-now" class="ba-btn-sm ba-btn-primary">PAY NOW</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    @if(session('success'))
-        <div class="status-notice sn-verified mb-3"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="status-notice sn-cancelled mb-3"><i class="fas fa-times-circle"></i> {{ session('error') }}</div>
-    @endif
-    @if(session('warning'))
-        <div class="status-notice sn-pending mb-3"><i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}</div>
-    @endif
 
     {{-- Timeline --}}
     @if(!$isCancelled)
@@ -139,6 +154,7 @@
     @endif
 
     {{-- Bank Transfer Payment Section --}}
+    <div id="pay-now"></div>
     @if($isBankTransfer && !$isCancelled)
 
         @if($order->status === 'approved' || $order->status === 'payment_requested')
@@ -220,91 +236,177 @@
         </div>
     @endif
 
-    {{-- Items Table --}}
-    <div class="bo-card">
-        <div class="bo-card-header"><i class="fas fa-list me-2 text-blue-600"></i>Order Items</div>
-        <div class="bo-card-body p-0">
-            <table class="order-table w-100" style="border-collapse:collapse">
+    {{-- Information cards + tracking call-out --}}
+    <div class="row g-3 mb-3">
+        <div class="col-md-6 col-lg-4">
+            <div class="ba-card">
+                <div class="ba-card-head">
+                    <i class="fas fa-user" style="background:#3b82f6"></i> Personal information
+                </div>
+                <div class="ba-card-body">
+                    <div class="ba-kv"><span class="ba-kv-k">Name</span><span class="ba-kv-v">{{ $order->shipping_name ?: $order->contact_person }}</span></div>
+                    <div class="ba-kv"><span class="ba-kv-k">Email</span><span class="ba-kv-v">{{ $order->shipping_email ?: '—' }}</span></div>
+                    <div class="ba-kv"><span class="ba-kv-k">Phone</span><span class="ba-kv-v">{{ $order->shipping_phone }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="ba-card">
+                <div class="ba-card-head">
+                    <i class="fas fa-truck-fast" style="background:#0ea5e9"></i> Shipping information
+                </div>
+                <div class="ba-card-body">
+                    <div class="ba-kv"><span class="ba-kv-k">Address</span><span class="ba-kv-v">{{ $order->shipping_address }}</span></div>
+                    <div class="ba-kv"><span class="ba-kv-k">District</span><span class="ba-kv-v">{{ $order->district->name ?? '—' }}</span></div>
+                    <div class="ba-kv"><span class="ba-kv-k">Thana</span><span class="ba-kv-v">{{ $order->thana->name ?? '—' }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="ba-card">
+                <div class="ba-card-head">
+                    <i class="fas fa-location-dot" style="background:#8b5cf6"></i> Delivery information
+                </div>
+                <div class="ba-card-body">
+                    <div class="ba-kv"><span class="ba-kv-k">Address</span><span class="ba-kv-v">{{ $order->shipping_address_line }}</span></div>
+                    <div class="ba-kv">
+                        <span class="ba-kv-k">Method</span>
+                        <span class="ba-kv-v">{{ $isBankTransfer ? 'Bank Transfer' : 'COD (Cash on delivery)' }}</span>
+                    </div>
+                    <div class="ba-kv"><span class="ba-kv-k">Cost</span><span class="ba-kv-v">{{ number_format($order->shipping_charge, 2) }} BDT</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="ba-card">
+                <div class="ba-card-head">
+                    <i class="fas fa-credit-card" style="background:#f97316"></i> Payment information
+                </div>
+                <div class="ba-card-body">
+                    <div class="ba-kv">
+                        <span class="ba-kv-k">Status</span>
+                        <span class="ba-kv-v">
+                            <span class="ba-pill {{ $order->payment_status === 'verified' ? 'ba-pill-paid' : 'ba-pill-unpaid' }}">
+                                {{ $order->payment_status === 'verified' ? 'Paid' : 'Unpaid' }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="ba-kv"><span class="ba-kv-k">Method</span><span class="ba-kv-v">{{ $isBankTransfer ? 'Bank Transfer' : 'Cod' }}</span></div>
+                    <div class="ba-kv"><span class="ba-kv-k">TRXN ID</span><span class="ba-kv-v">{{ $order->payment_transaction_id ?: '—' }}</span></div>
+                    <div class="ba-kv"><span class="ba-kv-k">Date</span><span class="ba-kv-v">{{ $order->created_at->format('jS M, Y h:i A') }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="ba-card">
+                <div class="ba-card-head">
+                    <i class="fas fa-note-sticky" style="background:#14b8a6"></i> Special Notes
+                </div>
+                <div class="ba-card-body">
+                    <div style="font-size:13px; color:{{ $order->note ? '#374151' : '#9ca3af' }}; line-height:1.6">
+                        {{ $order->note ?: 'No special notes for this order.' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="ba-card">
+                <div class="ba-card-body text-center">
+                    <i class="fas fa-map-location-dot" style="font-size:34px; color:#3b82f6"></i>
+                    <div class="fw-bold mt-3 mb-1" style="font-size:14.5px">Track your order instantly!</div>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{{ route('buyer.orders.tracking', $order) }}" class="ba-btn-sm ba-btn-dark">Track order</a>
+                        @if($isBankTransfer && $order->payment_status !== 'verified' && !$isCancelled)
+                            <a href="#pay-now" class="ba-btn-sm ba-btn-primary">Complete Payment</a>
+                        @elseif($order->invoice)
+                            <a href="{{ route('buyer.invoices.show', $order->invoice) }}" class="ba-btn-sm ba-btn-primary">View Invoice</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Order summary --}}
+    <div class="ba-panel">
+        <div class="ba-panel-head">
+            <h3 class="ba-panel-title"><i class="fas fa-circle-info me-2"></i>Order summary</h3>
+        </div>
+        <div class="ba-panel-body is-flush">
+            <table class="ba-table">
                 <thead>
                     <tr>
-                        <th style="text-align:left">Product</th>
-                        <th style="text-align:center">Qty</th>
-                        <th style="text-align:right">Price</th>
-                        <th style="text-align:right">Total</th>
+                        <th>Product name</th>
+                        <th class="num">Price</th>
+                        <th class="num">Quantity</th>
+                        <th class="num">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($order->items as $item)
+                    @php $product = $item->productSku?->product; @endphp
                     <tr>
                         <td>
-                            {{ $item->productSku?->product?->name ?? 'Product' }}
+                            @if($product)
+                                <a href="{{ route('product.details', $product->slug) }}" style="color:var(--primary,#f4801f); font-weight:600; text-decoration:none">
+                                    {{ $product->name }}
+                                </a>
+                            @else
+                                Product
+                            @endif
                             @if($item->productSku?->variant_label)
-                                <div class="text-muted small">{{ $item->productSku->variant_label }}</div>
+                                <div style="font-size:11.5px; color:#9ca3af">{{ $item->productSku->variant_label }}</div>
                             @endif
                         </td>
-                        <td style="text-align:center">{{ $item->qty }}</td>
-                        <td style="text-align:right">৳{{ number_format($item->price, 2) }}</td>
-                        <td style="text-align:right; font-weight:700">৳{{ number_format($item->line_total, 2) }}</td>
+                        <td class="num">{{ number_format($item->price, 2) }} BDT</td>
+                        <td class="num">{{ $item->qty }}</td>
+                        <td class="num" style="font-weight:700; color:#111827">{{ number_format($item->line_total, 2) }} BDT</td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
-        <div class="bo-card-body" style="border-top:1px solid #f0f0f0">
-            <div class="sum-row"><span>Subtotal</span><span>৳{{ number_format($order->subtotal, 2) }}</span></div>
-            <div class="sum-row">
-                <span>Discount{{ $order->coupon_code ? ' (' . $order->coupon_code . ')' : '' }}</span>
-                <span>-৳{{ number_format($order->discount, 2) }}</span>
-            </div>
-            <div class="sum-row"><span>Tax</span><span>৳{{ number_format($order->tax, 2) }}</span></div>
-            <div class="sum-row"><span>Delivery cost</span><span>৳{{ number_format($order->shipping_charge, 2) }}</span></div>
-            <div class="sum-row grand"><span>Grand Total</span><span>৳{{ number_format($order->total, 2) }}</span></div>
-        </div>
-    </div>
-
-    {{-- Delivery Info --}}
-    <div class="bo-card">
-        <div class="bo-card-header"><i class="fas fa-map-marker-alt me-2 text-blue-600"></i>Delivery Details</div>
-        <div class="bo-card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="text-muted small mb-1">Name</div>
-                    <div class="fw-bold">{{ $order->shipping_name ?: $order->contact_person }}</div>
-                </div>
-                <div class="col-md-6">
-                    <div class="text-muted small mb-1">Phone</div>
-                    <div class="fw-bold">{{ $order->shipping_phone }}</div>
-                </div>
-                <div class="col-12">
-                    <div class="text-muted small mb-1">Shipping Address</div>
-                    <div>{{ $order->shipping_address_line }}</div>
-                </div>
-                <div class="col-12">
-                    <div class="text-muted small mb-1">Billing Address</div>
-                    <div>
-                        {{ $order->billing_address_line }}
-                        @if($order->billing_same_as_shipping)
-                            <span class="text-muted small">(same as shipping)</span>
-                        @endif
+        <div class="ba-panel-body" style="border-top:1px solid #f1f2f4">
+            <div class="row justify-content-end">
+                <div class="col-md-6 col-lg-5">
+                    <div class="ba-sum-row"><span>Subtotal</span><span>{{ number_format($order->subtotal, 2) }} BDT</span></div>
+                    @if($order->discount > 0)
+                    <div class="ba-sum-row">
+                        <span>Discount{{ $order->coupon_code ? ' (' . $order->coupon_code . ')' : '' }}</span>
+                        <span>&minus;{{ number_format($order->discount, 2) }} BDT</span>
+                    </div>
+                    @endif
+                    <div class="ba-sum-row"><span>Delivery Fee</span><span>+ {{ number_format($order->shipping_charge, 2) }} BDT</span></div>
+                    @if($order->tax > 0)
+                    <div class="ba-sum-row"><span>Tax</span><span>{{ number_format($order->tax, 2) }} BDT</span></div>
+                    @endif
+                    <div class="ba-sum-row is-total"><span>Grand Total</span><span>{{ number_format($order->total, 2) }} BDT</span></div>
+                    <div class="ba-sum-row is-paid"><span>Total Paid</span><span>{{ number_format($order->advance_paid, 2) }} BDT</span></div>
+                    <div class="ba-sum-row is-due">
+                        <span>Amount Due</span>
+                        <span>{{ number_format(max(0, $order->total - $order->advance_paid), 2) }} BDT</span>
                     </div>
                 </div>
-                @if($order->purchase_ref_no)
-                <div class="col-md-6">
-                    <div class="text-muted small mb-1">Purchase Ref No</div>
-                    <div class="fw-bold">{{ $order->purchase_ref_no }}</div>
-                </div>
-                @endif
             </div>
         </div>
     </div>
 
-    @if($order->invoice)
-    <div class="text-end">
-        <a class="btn btn-outline-primary btn-sm" href="{{ route('buyer.invoices.show', $order->invoice) }}">
-            <i class="fas fa-file-invoice me-1"></i> View Invoice
-        </a>
+    {{-- Billing address, when it differs from shipping --}}
+    @unless($order->billing_same_as_shipping)
+    <div class="ba-card mb-3">
+        <div class="ba-card-head"><i class="fas fa-file-invoice-dollar" style="background:#64748b"></i> Billing address</div>
+        <div class="ba-card-body">
+            <div class="ba-kv"><span class="ba-kv-k">Name</span><span class="ba-kv-v">{{ $order->billing_name }}</span></div>
+            <div class="ba-kv"><span class="ba-kv-k">Phone</span><span class="ba-kv-v">{{ $order->billing_phone }}</span></div>
+            <div class="ba-kv"><span class="ba-kv-k">Address</span><span class="ba-kv-v">{{ $order->billing_address_line }}</span></div>
+        </div>
     </div>
-    @endif
+    @endunless
 
 </div>
 

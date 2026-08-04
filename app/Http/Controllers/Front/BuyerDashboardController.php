@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Front\CartController;
 use App\Models\Buyer;
 use App\Models\BuyerDocument;
+use App\Models\Coupon;
+use App\Models\District;
 use App\Models\Invoice;
 use App\Models\MediaFile;
+use App\Models\ProductReview;
 use App\Models\SalesOrder;
+use App\Models\Thana;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -21,18 +25,140 @@ class BuyerDashboardController extends Controller
         return Auth::guard('buyer')->user();
     }
 
+    /** Statuses that still count as "running" for the buyer. */
+    private const RUNNING_STATUSES = [
+        'pending', 'approved', 'payment_requested', 'payment_verified',
+        'processing', 'confirmed', 'packed', 'shipped',
+    ];
+
     public function index()
     {
         $buyer = $this->buyer();
-        $stats = [
-            'orders' => $buyer->orders()->count(),
-            'pending' => $buyer->orders()->whereIn('status', ['pending', 'confirmed', 'packed'])->count(),
-            'invoices' => $buyer->invoices()->count(),
-            'outstanding' => $buyer->invoices()->whereIn('status', ['unpaid', 'partial'])->sum('balance'),
-        ];
-        $recentOrders = $buyer->orders()->latest()->limit(5)->get();
 
-        return view('frontEnd.buyer.dashboard', compact('buyer', 'stats', 'recentOrders'));
+        $stats = [
+            'orders'      => $buyer->orders()->count(),
+            'running'     => $buyer->orders()->whereIn('status', self::RUNNING_STATUSES)->count(),
+            'cart_items'  => (int) (session('cart')['count'] ?? 0),
+            'wishlist'    => $buyer->wishlists()->count(),
+            'spent'       => (float) $buyer->orders()->whereNot('status', 'cancelled')->sum('total'),
+            'tickets'     => 0, // support tickets are not built yet
+            'invoices'    => $buyer->invoices()->count(),
+            'outstanding' => (float) $buyer->invoices()->whereIn('status', ['unpaid', 'partial'])->sum('balance'),
+        ];
+
+        $recentOrders = $buyer->orders()->withCount('items')->latest()->limit(5)->get();
+
+        $wishlistProducts = $buyer->wishlists()
+            ->with('product.product_prices')
+            ->latest()
+            ->limit(4)
+            ->get()
+            ->pluck('product')
+            ->filter();
+
+        return view('frontEnd.buyer.dashboard', compact('buyer', 'stats', 'recentOrders', 'wishlistProducts'));
+    }
+
+    /**
+     * Coupons the buyer can use right now — the same validity rules the
+     * checkout box enforces, so nothing unusable is advertised here.
+     */
+    public function coupons()
+    {
+        $coupons = Coupon::active()
+            ->where(fn ($query) => $query->whereNull('starts_at')->orWhere('starts_at', '<=', now()))
+            ->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>=', now()))
+            ->where(fn ($query) => $query->whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit'))
+            ->orderByDesc('id')
+            ->get();
+
+        return view('frontEnd.buyer.coupons', compact('coupons'));
+    }
+
+    public function address()
+    {
+        return view('frontEnd.buyer.address', [
+            'buyer'            => $this->buyer(),
+            'districts'        => District::active()->get(['id', 'name', 'delivery_charge']),
+            'thanasByDistrict' => Thana::orderBy('name')->get(['id', 'district_id', 'name'])->groupBy('district_id'),
+        ]);
+    }
+
+    public function updateAddress(Request $request)
+    {
+        $buyer = $this->buyer();
+
+        $validated = $request->validate([
+            'address'     => ['required', 'string', 'max:2000'],
+            'district_id' => ['required', 'exists:districts,id'],
+            'thana_id'    => [
+                'nullable',
+                Rule::exists('thanas', 'id')->where(
+                    fn ($query) => $query->where('district_id', $request->input('district_id'))
+                ),
+            ],
+            'city'        => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:50'],
+        ], [
+            'thana_id.exists' => 'The selected thana does not belong to the chosen district.',
+        ]);
+
+        $buyer->update($validated);
+
+        return back()->with('success', 'Your default delivery address has been saved.');
+    }
+
+    public function payments()
+    {
+        $buyer = $this->buyer();
+
+        $orders = $buyer->orders()
+            ->with('invoice')
+            ->latest()
+            ->paginate(10);
+
+        $totals = [
+            'paid' => (float) $buyer->orders()->sum('advance_paid'),
+            'due'  => (float) $buyer->invoices()->whereIn('status', ['unpaid', 'partial'])->sum('balance'),
+        ];
+
+        return view('frontEnd.buyer.payments', compact('orders', 'totals'));
+    }
+
+    public function reviews()
+    {
+        $reviews = ProductReview::with('product')
+            ->where('buyer_id', $this->buyer()->id)
+            ->latest()
+            ->paginate(10);
+
+        return view('frontEnd.buyer.reviews', compact('reviews'));
+    }
+
+    public function editPassword()
+    {
+        return view('frontEnd.buyer.password', ['buyer' => $this->buyer()]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $buyer = $this->buyer();
+
+        // An account created by guest checkout has a random password nobody
+        // knows, so the current-password check only applies once one is set.
+        $hasUsablePassword = ! empty($buyer->password) && ! $buyer->must_set_password;
+
+        $request->validate([
+            'current_password' => $hasUsablePassword ? ['required', 'current_password:buyer'] : ['nullable'],
+            'password'         => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        $buyer->update([
+            'password'          => $request->password,
+            'must_set_password' => false,
+        ]);
+
+        return back()->with('success', 'Your password has been updated.');
     }
 
     public function orders()
@@ -48,6 +174,31 @@ class BuyerDashboardController extends Controller
         $order->load(['items.productSku.product', 'invoice']);
 
         return view('frontEnd.buyer.orders.show', compact('order'));
+    }
+
+    /**
+     * The condensed 4-stage tracker the buyer sees, mapped from the internal
+     * workflow (the public /track-order page uses the 6-step version).
+     */
+    public function trackOrder(SalesOrder $order)
+    {
+        abort_unless($order->buyer_id === $this->buyer()->id, 404);
+
+        $stage = match ($order->status) {
+            'pending', 'approved', 'payment_requested', 'payment_verified' => 1,
+            'processing', 'confirmed', 'packed' => 2,
+            'shipped' => 3,
+            'delivered', 'completed' => 4,
+            default => 1, // cancelled orders show as placed and nothing further
+        };
+
+        return view('frontEnd.buyer.orders.tracking', [
+            'order'      => $order->loadCount('items'),
+            'stage'      => $stage,
+            'cancelled'  => $order->status === 'cancelled',
+            'stages'     => ['Order Placed', 'Processing', 'In Transit', 'Delivered'],
+            'estimated'  => $order->created_at?->copy()->addDays(3),
+        ]);
     }
 
     public function reorder(SalesOrder $order)
