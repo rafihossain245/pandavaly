@@ -108,6 +108,84 @@
         .user-dropdown {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+
+        /* Pagination.
+           AppServiceProvider calls Paginator::useBootstrapFive(), so every ->links()
+           emits Bootstrap 5 markup. The storefront loads bootstrap.min.css and renders
+           it fine, but the admin never loads Bootstrap — so the responsive wrappers
+           never collapsed and both the mobile ("Previous/Next") and desktop (numbered)
+           blocks rendered at once, stacked as bare bullet lists. These rules cover only
+           the utilities that template actually uses. */
+        .pagination {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .pagination .page-item .page-link {
+            display: block;
+            min-width: 34px;
+            padding: 6px 11px;
+            text-align: center;
+            font-size: .85rem;
+            line-height: 1.35;
+            color: #374151;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            text-decoration: none;
+            transition: background .12s, border-color .12s, color .12s;
+        }
+
+        .pagination .page-item .page-link:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: #b6bcc6;
+            background: #fafafa;
+            border-color: #f1f2f4;
+            cursor: default;
+        }
+
+        /* Bootstrap display/flex utilities the paginator relies on. No other admin
+           view uses these class names, so defining them here is self-contained. */
+        .d-flex { display: flex; }
+        .d-none { display: none; }
+        .flex-fill { flex: 1 1 auto; }
+        .justify-content-between { justify-content: space-between; }
+        .justify-items-center { justify-items: center; }
+        .pagination + .pagination { margin-top: 0; }
+
+        @media (min-width: 576px) {
+            .d-sm-none { display: none; }
+            .d-sm-flex { display: flex; }
+            .flex-sm-fill { flex: 1 1 auto; }
+            .align-items-sm-center { align-items: center; }
+            .justify-content-sm-between { justify-content: space-between; }
+        }
+
+        /* The "Showing 1 to 20 of 31 results" line. Scoped to the paginator's <nav>
+           because invoices/show and orders/show also use .text-muted.small. */
+        nav .small.text-muted {
+            font-size: .82rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        nav .fw-semibold { font-weight: 600; color: #374151; }
     </style>
     @include('change-password-css')
 </head>

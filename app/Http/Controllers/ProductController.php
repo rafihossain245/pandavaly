@@ -36,7 +36,12 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $req_subdatas = [];
+        // The joins below exist for filtering and ordering only — the select is
+        // products.*, so without this eager load the list issued a query per row
+        // per relation (12 columns x 20 rows).
         $query = Product::select('products.*')
+            ->with(['category', 'sub_category', 'brand', 'product_prices'])
+            ->withCount('skus')
             ->leftJoin('users', 'users.id', '=', 'products.user_id')
             ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
             ->leftJoin('units', 'units.id', '=', 'products.unit_id')
@@ -79,8 +84,17 @@ class ProductController extends Controller
             });
         }
 
+        // whereDate() here compared a boolean column as a date, so the Status
+        // filter silently matched nothing whichever option was chosen.
         if ($request->filled('is_active')) {
-            $query->whereDate('products.is_active', $request->is_active);
+            $query->where('products.is_active', (int) $request->is_active);
+        }
+
+        // The Stock dropdown has always been in the form but was never read.
+        if ($request->filled('stock_qty')) {
+            $request->stock_qty == '1'
+                ? $query->where('products.stock_qty', '>', 0)
+                : $query->where(fn ($q) => $q->whereNull('products.stock_qty')->orWhere('products.stock_qty', '<=', 0));
         }
 
         $datas = $query->paginate(20);
@@ -154,6 +168,10 @@ class ProductController extends Controller
                     'thumbnail' => $thumbnail ?? null,
                     'description' => $request->content,
                     'moq' => max(1, (int) ($request->moq ?? 1)),
+                    // Checkout enforces and decrements this, so it has to be settable
+                    // here; for a product with variants syncProductStockFromSkus()
+                    // overwrites it with the SKU total further down.
+                    'stock_qty' => max(0, (int) ($request->stock_qty ?? 0)),
                     'is_trending' => $request->is_trending ? 1 : 0,
                     'is_popular' => $request->is_popular ? 1 : 0,
                     'is_recommended' => $request->is_recommended ? 1 : 0,
@@ -166,6 +184,10 @@ class ProductController extends Controller
                         'product_id' => $data->id,
                         'pricing_tier_id' => null,
                         'purchase_price' => $request->purchase_price ?? $request->selling_price,
+                        // update() already stored this; leaving it out here meant a
+                        // compare-at price typed on the create form was silently lost
+                        // until the admin saved the product a second time.
+                        'previous_price' => $request->previous_price,
                         'selling_price' => $request->selling_price,
                         'valid_from' => now(),
                         'created_at' => now(),
@@ -327,6 +349,7 @@ class ProductController extends Controller
             'purchase_price' => 'nullable|numeric|min:0',
             'previous_price' => 'nullable|numeric|min:0',
             'moq' => 'nullable|integer|min:1',
+            'stock_qty' => 'nullable|integer|min:0',
             'content' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:' . FileLimit::uploadMaxKilobytes(),
             'images' => 'nullable|array|max:10',
@@ -503,6 +526,7 @@ class ProductController extends Controller
                     'thumbnail' => $thumbnail,
                     'description' => $request->content,
                     'moq' => max(1, (int) ($request->moq ?? 1)),
+                    'stock_qty' => max(0, (int) ($request->stock_qty ?? 0)),
                     'is_trending' => $request->is_trending ? 1 : 0,
                     'is_popular' => $request->is_popular ? 1 : 0,
                     'is_recommended' => $request->is_recommended ? 1 : 0,

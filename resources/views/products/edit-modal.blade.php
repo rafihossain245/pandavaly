@@ -1,6 +1,6 @@
 @extends('layout.app')
 @section('meta-information')
-    <title>Add New Sale</title>
+    <title>Edit Product</title>
 @endsection
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -498,392 +498,461 @@
     </style>
 @endsection
 @section('main-content')
-    <div class="states-table bg-white rounded-lg shadow-md overflow-hidden" style="margin-top: 0">
-        <div class="states-table-container">
-            <div class="states-table-header bg-blue-600 px-6 pb-4 flex justify-between items-center">
-                <h2 class="states-table-title text-white text-xl font-semibold" style="color: white">
-                    <i class="fas fa-plus mr-2"></i> Edit Product
+    @php
+        $roleSlug = Str::slug(Auth::user()->getRoleNames()->first());
+        $price = $data->product_prices->first();
+
+        // Repeated chrome, held in variables so the utility strings stay in one place.
+        // Tailwind scans raw file text, so these literals are still picked up at build.
+        $card = 'mb-5 rounded-xl border border-gray-200 bg-white';
+        $cardHead = 'flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4';
+        $cardTitle = 'flex items-center gap-2 text-base font-semibold text-gray-900';
+        $cardSub = 'mt-1 text-xs leading-relaxed text-gray-500';
+        $cardBody = 'p-5';
+        $label = 'mb-1.5 block text-xs font-semibold text-gray-700';
+        $input = 'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20';
+        $inputOk = $input . ' border-gray-300 focus:border-blue-600';
+        $inputBad = $input . ' border-red-500 focus:border-red-500';
+        $help = 'mt-1 text-xs text-gray-500';
+        $errorText = 'mt-1 text-xs text-red-600';
+        $switchTrack =
+            'relative h-5 w-9 shrink-0 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-blue-600 peer-checked:after:translate-x-4';
+    @endphp
+
+    <div class="mx-auto max-w-[1440px]">
+        <div class="mb-5 overflow-hidden rounded-xl shadow-sm">
+            <div class="flex items-center justify-between bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-4">
+                <h2 class="text-xl font-semibold text-white">
+                    <i class="fas fa-pen-to-square mr-2"></i> Edit Product
                 </h2>
-                <a href="{{ route('role.products.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}"
-                    class="btn btn-primary create-new-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">
+                <a href="{{ route('role.products.index', ['role' => $roleSlug]) }}"
+                    class="rounded-md bg-blue-500 px-4 py-2 text-white transition duration-200 hover:bg-blue-600">
                     <i class="fas fa-list mr-2"></i> Products List
                 </a>
             </div>
+        </div>
 
-            <div class="states-table-content" style="padding: 15px;">
-                <div class="sale-modal-body modal-body overflow-y-auto mt-2">
-                    <form class="closest" id="createForm"
-                        action="{{ route('role.products.update', ['role' => Str::slug(Auth::user()->getRoleNames()->first()), 'product' => $data->id]) }}"
-                        method="POST" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
+        <form class="closest" id="createForm"
+            action="{{ route('role.products.update', ['role' => $roleSlug, 'product' => $data->id]) }}" method="POST"
+            enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
-                        {{-- The detail sits under each field; this only tells the admin where to look
-                             when the failing field is scrolled out of view. --}}
-                        @if ($errors->any())
-                            <div class="mt-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                <strong>{{ $errors->count() }}
-                                    {{ Str::plural('field', $errors->count()) }}</strong>
-                                need{{ $errors->count() === 1 ? 's' : '' }} your attention. The details are shown
-                                in red under each one.
-                            </div>
-                        @endif
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                            <div class="mb-2">
-                                <label for="create_category_id"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Category</label>
-                                <select id="create_category_id" name="category_id"
-                                    onchange="getSubCategory(this, '#create_sub_category_id')"
-                                    data-action="{{ route('role.get-sub-category', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}"
-                                    class="select2 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('category_id') border-red-500 @else border-gray-300 @enderror"
-                                    style="width: 100%">
-                                    <option value="">All</option>
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}"
-                                            @selected(old('category_id', $data->category_id) == $category->id)>
-                                            {{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('category_id')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_sub_category_id" class="block text-gray-700 text-sm font-bold mb-2">Sub
-                                    Category</label>
-                                <select id="create_sub_category_id" name="sub_category_id"
-                                    data-selected="{{ old('sub_category_id', $data->sub_category_id) }}"
-                                    class="select2 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('sub_category_id') border-red-500 @else border-gray-300 @enderror"
-                                    style="width: 100%">
-                                    <option value="">All</option>
-                                </select>
-                                @error('sub_category_id')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_brand_id"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Brand</label>
-                                <select id="create_brand_id" name="brand_id"
-                                    class="form-select w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('brand_id') border-red-500 @else border-gray-300 @enderror"
-                                    style="width: 100%">
-                                    <option value="">All</option>
-                                    @foreach ($brands as $brand)
-                                        <option value="{{ $brand->id }}"
-                                            @selected(old('brand_id', $data->brand_id) == $brand->id)>{{ $brand->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('brand_id')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_unit_id" class="block text-gray-700 text-sm font-bold mb-2">Unit</label>
-                                <select id="create_unit_id" name="unit_id"
-                                    class="form-select w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('unit_id') border-red-500 @else border-gray-300 @enderror"
-                                    style="width: 100%">
-                                    <option value="">All</option>
-                                    @foreach ($units as $unit)
-                                        <option value="{{ $unit->id }}"
-                                            @selected(old('unit_id', $data->unit_id) == $unit->id)>{{ $unit->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('unit_id')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_supplier_id"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Supplier</label>
-                                <select id="create_supplier_id" name="supplier_id"
-                                    class="form-select w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2 @error('supplier_id') border-red-500 @else border-gray-300 @enderror"
-                                    style="width: 100%">
-                                    <option value="">All</option>
-                                    @foreach ($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}"
-                                            @selected(old('supplier_id', $data->supplier_id) == $supplier->id)>
-                                            {{ $supplier->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('supplier_id')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
+            {{-- The detail sits under each field; this only tells the admin where to look
+                 when the failing field is scrolled out of view. --}}
+            @if ($errors->any())
+                <div id="form_error_summary"
+                    class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <strong>{{ $errors->count() }} {{ Str::plural('field', $errors->count()) }}</strong>
+                    need{{ $errors->count() === 1 ? 's' : '' }} your attention — the details are shown in red under
+                    each one.
+                </div>
+            @endif
 
-                        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-
-                            <div class="mb-2">
-                                <label for="create_name" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
-                                <input type="text" id="create_name" name="name"
-                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('name') border-red-500 @else border-gray-300 @enderror"
-                                    placeholder="Enter a Name" value="{{ old('name', $data->name) }}">
-                                @error('name')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="mb-2">
-                                <label for="create_sku" class="block text-gray-700 text-sm font-bold mb-2">SKU</label>
-                                <input type="text" id="create_sku" name="sku"
-                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('sku') border-red-500 @else border-gray-300 @enderror"
-                                    placeholder="Enter a SKU" value="{{ old('sku', $data->sku) }}">
-                                @error('sku')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_purchase_price"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Purchase Price</label>
-                                <input type="number" step="0.01" min="0" id="create_purchase_price"
-                                    name="purchase_price"
-                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('purchase_price') border-red-500 @else border-gray-300 @enderror"
-                                    placeholder="Enter a amount"
-                                    value="{{ old('purchase_price', optional($data->product_prices->first())->purchase_price) }}">
-                                @error('purchase_price')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_previous_price"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Previous Price</label>
-                                <input type="number" step="0.01" min="0" id="create_previous_price"
-                                    name="previous_price"
-                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('previous_price') border-red-500 @else border-gray-300 @enderror"
-                                    placeholder="Enter a amount"
-                                    value="{{ old('previous_price', optional($data->product_prices->first())->previous_price) }}">
-                                @error('previous_price')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_selling_price"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Selling Price</label>
-                                <input type="number" step="0.01" min="0" id="create_selling_price"
-                                    name="selling_price"
-                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('selling_price') border-red-500 @else border-gray-300 @enderror"
-                                    placeholder="Enter a amount"
-                                    value="{{ old('selling_price', optional($data->product_prices->first())->selling_price) }}">
-                                @error('selling_price')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-2">
-                                <label for="create_moq"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Minimum Order Qty</label>
-                                <input type="number" id="create_moq" name="moq" min="1"
-                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('moq') border-red-500 @else border-gray-300 @enderror"
-                                    placeholder="Enter minimum order quantity" value="{{ old('moq', $data->moq) }}">
-                                @error('moq')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mb-4">
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="create_is_active" name="is_active"
-                                        class="form-checkbox h-5 w-5 text-blue-600"
-                                        @checked(old('is_active', $errors->any() ? null : $data->is_active))>
-                                    <span class="ml-2 text-gray-700">Active</span>
-                                </label>
-                            </div>
-                            <div class="mb-4">
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="create_is_trending" name="is_trending"
-                                        class="form-checkbox h-5 w-5 text-blue-600"
-                                        @checked(old('is_trending', $errors->any() ? null : $data->is_trending))>
-                                    <span class="ml-2 text-gray-700">Is Trending</span>
-                                </label>
-                            </div>
-                            <div class="mb-4">
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="create_is_popular" name="is_popular"
-                                        class="form-checkbox h-5 w-5 text-blue-600"
-                                        @checked(old('is_popular', $errors->any() ? null : $data->is_popular))>
-                                    <span class="ml-2 text-gray-700">Is Popular</span>
-                                </label>
-                            </div>
-                            <div class="mb-4">
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="create_is_recommended" name="is_recommended"
-                                        class="form-checkbox h-5 w-5 text-blue-600"
-                                        @checked(old('is_recommended', $errors->any() ? null : $data->is_recommended))>
-                                    <span class="ml-2 text-gray-700">Is Recommended</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">
-                                Specifications
-                            </label>
-
-                            <!-- Container -->
-                            <div id="specification-container" class="space-y-3">
-
-                                <!-- Row -->
-                                @foreach ($product_spec as $item)
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center spec-row">
-
-                                        <input type="text" name="specification_name[]"
-                                            class="form-input w-full px-3 py-2 border rounded-md"
-                                            placeholder="Specification Name" value="{{ $item->specification_name }}">
-
-                                        <input type="text" name="specification_value[]"
-                                            class="form-input w-full px-3 py-2 border rounded-md"
-                                            placeholder="Specification Value" value="{{ $item->specification_value }}">
-
-                                    </div>
-                                @endforeach
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center spec-row">
-                                    <input type="text" name="specification_name[]"
-                                        class="form-input w-full px-3 py-2 border rounded-md"
-                                        placeholder="Specification Name">
-
-                                    <input type="text" name="specification_value[]"
-                                        class="form-input w-full px-3 py-2 border rounded-md"
-                                        placeholder="Specification Value">
-
-                                    <button type="button"
-                                        class="remove-spec px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 hidden">
-                                        Remove
-                                    </button>
-                                </div>
-
-                            </div>
-
-                            <!-- Add Button -->
-                            <button type="button" id="add-spec"
-                                class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                                + Add Specification
-                            </button>
-                        </div>
-
-                        <div class="mt-4">
-                            @include('products._variants', ['attributes' => $attributes ?? collect(), 'skus' => $skus ?? []])
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-
+            <div class="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+                {{-- ============================ main column ============================ --}}
+                <div class="min-w-0">
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Description
-                                </label>
+                                <h3 class="{{ $cardTitle }}"><i class="fas fa-box text-sm text-gray-400"></i> Product
+                                    details</h3>
+                                <p class="{{ $cardSub }}">The name and description your customers will see.</p>
+                            </div>
+                        </div>
+                        <div class="{{ $cardBody }}">
+                            <div class="mb-4">
+                                <label for="create_name" class="{{ $label }}">Product name <span
+                                        class="text-red-500">*</span></label>
+                                <input type="text" id="create_name" name="name" value="{{ old('name', $data->name) }}"
+                                    class="@error('name') {{ $inputBad }} @else {{ $inputOk }} @enderror"
+                                    placeholder="e.g. MacCoffee Original 95gm">
+                                @error('name')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @enderror
+                            </div>
 
+                            <div class="mb-4">
+                                <label class="{{ $label }}">Description</label>
                                 <textarea id="editor" class="hidden" name="content">{!! old('content', $data->description) !!}</textarea>
 
-                                <!-- CKEditor container -->
-                                <div id="editor-wrapper"
-                                    class="border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                                {{-- CKEditor container. Seeded with old() so a validation
+                                     bounce does not wipe a long description. --}}
+                                <div id="editor-wrapper" class="overflow-hidden rounded-lg border border-gray-300"></div>
+                                @error('content')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
+                            <div>
+                                <h3 class="{{ $cardTitle }}"><i class="fas fa-tag text-sm text-gray-400"></i> Pricing
+                                </h3>
+                                <p class="{{ $cardSub }}">Base prices for the product. Variants can override them
+                                    below.</p>
+                            </div>
+                        </div>
+                        <div class="{{ $cardBody }}">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <div>
+                                    <label for="create_selling_price" class="{{ $label }}">Selling price <span
+                                            class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span
+                                            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">৳</span>
+                                        <input type="number" step="0.01" min="0" id="create_selling_price"
+                                            name="selling_price" value="{{ old('selling_price', optional($price)->selling_price) }}"
+                                            class="pl-7 @error('selling_price') {{ $inputBad }} @else {{ $inputOk }} @enderror"
+                                            placeholder="0.00">
+                                    </div>
+                                    @error('selling_price')
+                                        <p class="{{ $errorText }}">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label for="create_previous_price" class="{{ $label }}">Compare at price</label>
+                                    <div class="relative">
+                                        <span
+                                            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">৳</span>
+                                        <input type="number" step="0.01" min="0" id="create_previous_price"
+                                            name="previous_price" value="{{ old('previous_price', optional($price)->previous_price) }}"
+                                            class="pl-7 @error('previous_price') {{ $inputBad }} @else {{ $inputOk }} @enderror"
+                                            placeholder="0.00">
+                                    </div>
+                                    @error('previous_price')
+                                        <p class="{{ $errorText }}">{{ $message }}</p>
+                                    @else
+                                        <p class="{{ $help }}">Shown struck through to signal a discount.</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label for="create_purchase_price" class="{{ $label }}">Purchase price</label>
+                                    <div class="relative">
+                                        <span
+                                            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">৳</span>
+                                        <input type="number" step="0.01" min="0" id="create_purchase_price"
+                                            name="purchase_price" value="{{ old('purchase_price', optional($price)->purchase_price) }}"
+                                            class="pl-7 @error('purchase_price') {{ $inputBad }} @else {{ $inputOk }} @enderror"
+                                            placeholder="0.00">
+                                    </div>
+                                    @error('purchase_price')
+                                        <p class="{{ $errorText }}">{{ $message }}</p>
+                                    @else
+                                        <p class="{{ $help }}">Your cost. Never shown to customers.</p>
+                                    @enderror
                                 </div>
                             </div>
+                            <p class="mt-3 hidden text-xs text-gray-500" id="pf-margin-hint"></p>
                         </div>
-                        {{-- <div class="modal-header flex justify-between items-center pt-4 pb-2"
-                            style="border-bottom: 3px solid #e8e8e8; width: 100%">
-                            <h2 class="text-xl font-semibold">Manage Stock</h2>
+                    </div>
+
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardBody }}">
+                            @include('products._variants', ['attributes' => $attributes ?? collect(), 'skus' => $skus ?? []])
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="mb-2">
-                                <label for="create_available_qty"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Available Qty</label>
-                                <input type="number" id="create_available_qty" name="available_qty"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a quantity qmount" value="{{ $data->available_qty }}">
-                                <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a quantity Amount
-                                </p>
+                    </div>
+
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
+                            <div>
+                                <h3 class="{{ $cardTitle }}"><i class="fas fa-list-check text-sm text-gray-400"></i>
+                                    Specifications</h3>
+                                <p class="{{ $cardSub }}">Facts shown as a table on the product page — weight, origin,
+                                    shelf life and so on.</p>
                             </div>
-                            <div class="mb-2">
-                                <label for="create_reserved_qty"
-                                    class="block text-gray-700 text-sm font-bold mb-2">Reserved Qty</label>
-                                <input type="number" id="create_reserved_qty" name="reserved_qty"
-                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a quantity qmount" value="{{ $data->reserved_qty }}">
-                                <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a a quantity Amount
-                                </p>
+                            <button type="button" id="add-spec"
+                                class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="{{ $cardBody }}">
+                            <div id="pf-spec-empty"
+                                class="mb-3 hidden rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-400">
+                                No specifications yet. Use <strong>Add</strong> to describe this product in detail.
                             </div>
 
-                        </div> --}}
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
+                            <div id="specification-container">
+                                @foreach ($product_spec as $item)
+                                    <div class="mb-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_auto]">
+                                        <input type="text" name="specification_name[]" value="{{ $item->specification_name }}"
+                                            list="pf-spec-names" class="col-span-2 sm:col-span-1 {{ $inputOk }}"
+                                            placeholder="e.g. Net Weight">
+                                        <input type="text" name="specification_value[]"
+                                            value="{{ $item->specification_value }}"
+                                            class="{{ $inputOk }}" placeholder="e.g. 500 g">
+                                        <button type="button"
+                                            class="remove-spec flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-xs text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                                            title="Remove this specification" aria-label="Remove this specification">
+                                            <i class="fas fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="{{ $help }}">Rows left blank are ignored when you save.</p>
                         </div>
-                        <div class="modal-header flex justify-between items-center pt-4 pb-2"
-                            style="border-bottom: 3px solid #e8e8e8; width: 100%">
-                            <h2 class="text-xl font-semibold">Manage Gallery</h2>
+                    </div>
+
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
+                            <div>
+                                <h3 class="{{ $cardTitle }}"><i class="fas fa-images text-sm text-gray-400"></i> Media
+                                </h3>
+                                <p class="{{ $cardSub }}">JPG, PNG, WEBP or GIF &middot; up to
+                                    {{ \App\Helpers\FileLimit::humanUploadMax() }} each.</p>
+                            </div>
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="mb-2">
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Thumbnail Image</label>
-                                <img src="{{ asset($data->thumbnail) }}" class="w-15 h-14 object-cover rounded">
-                                <input type="file" id="thumbnail_image" name="thumbnail" accept="image/*"
-                                    class="form-input w-full px-3 py-2 border rounded-md
-                                    focus:outline-none focus:ring-2 focus:ring-blue-500 @error('thumbnail') border-red-500 @else border-gray-300 @enderror" />
-
+                        <div class="{{ $cardBody }}">
+                            <div class="mb-4">
+                                <label for="thumbnail_image" class="{{ $label }}">Thumbnail</label>
+                                @if ($data->thumbnail)
+                                    <div
+                                        class="mb-2.5 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2.5">
+                                        <img src="{{ asset($data->thumbnail) }}" alt="Current thumbnail"
+                                            class="h-14 w-14 rounded-md border border-gray-200 object-cover">
+                                        <span class="text-xs text-gray-500">Current thumbnail</span>
+                                    </div>
+                                @endif
+                                <div
+                                    class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 hover:border-blue-500 hover:bg-blue-50/40">
+                                    <input type="file" id="thumbnail_image" name="thumbnail" accept="image/*"
+                                        class="w-full cursor-pointer text-xs text-gray-500 @error('thumbnail') border-red-500 @enderror" />
+                                </div>
                                 @error('thumbnail')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @else
+                                    <p class="{{ $help }}">Leave empty to keep the current image.</p>
                                 @enderror
-                                <p class="text-gray-500 text-xs mt-1">Leave empty to keep the current image &middot;
-                                    JPG, PNG, WEBP or GIF up to {{ \App\Helpers\FileLimit::humanUploadMax() }}</p>
-
-                                <!-- Preview -->
                                 <div id="thumbnail_preview" class="mt-3"></div>
                             </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Multiple Images</label>
+
+                            <div>
+                                <label for="create_images" class="{{ $label }}">Gallery images</label>
                                 @if ($product_images->count() > 0)
-                                    {{-- <div class="col-span-3 mt-4"> --}}
-                                    {{-- <label class="block text-gray-700 text-sm font-bold mb-2">Existing Images</label> --}}
-
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
+                                    <div class="mb-3 grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2.5">
                                         @foreach ($product_images as $img)
-                                            <div class="relative group border rounded overflow-hidden shadow-sm p-1">
-
-                                                <img src="{{ asset($img->image_path) }}"
-                                                    class="w-15 h-14 object-cover rounded">
-
-                                                <!-- Delete Button -->
+                                            <div
+                                                class="pf-gallery-item relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                                                <img src="{{ asset($img->image_path) }}" alt="Gallery image"
+                                                    class="block h-[88px] w-full object-cover">
                                                 <button type="button" data-id="{{ $img->id }}"
-                                                    class="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded 
-                                                opacity-0 group-hover:opacity-100 transition delete-existing-image">
-                                                    Delete
+                                                    class="delete-existing-image absolute right-1.5 top-1.5 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-gray-900/70 p-1 text-[0.6rem] text-white hover:bg-red-500"
+                                                    title="Delete image" aria-label="Delete image">
+                                                    <i class="fas fa-xmark"></i>
                                                 </button>
-
                                             </div>
                                         @endforeach
-
                                     </div>
-                                    {{-- </div> --}}
                                 @endif
                                 @php $imagesHaveError = $errors->has('images') || count($errors->get('images.*')) > 0; @endphp
-                                <input type="file" id="create_images" name="images[]" multiple accept="image/*"
-                                    class="form-input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 {{ $imagesHaveError ? 'border-red-500' : 'border-gray-300' }}" />
-
+                                <div
+                                    class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 hover:border-blue-500 hover:bg-blue-50/40">
+                                    <input type="file" id="create_images" name="images[]" multiple accept="image/*"
+                                        class="w-full cursor-pointer text-xs text-gray-500 {{ $imagesHaveError ? 'border-red-500' : '' }}" />
+                                </div>
                                 @error('images')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
                                 @enderror
                                 @foreach ($errors->get('images.*') as $imageErrors)
                                     @foreach ($imageErrors as $imageError)
-                                        <p class="text-red-500 text-xs mt-1">{{ $imageError }}</p>
+                                        <p class="{{ $errorText }}">{{ $imageError }}</p>
                                     @endforeach
                                 @endforeach
-
-                                <p id="image_error" class="text-red-500 text-xs mt-1 hidden">Please upload at least one
-                                    image.</p>
-
-                                <div id="image_preview" class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-
-                                <button id="submit_btn"
-                                    class="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Submit</button>
+                                <p class="{{ $help }}">New images are added to the ones above — up to 10 at a time.</p>
+                                <p id="image_error" class="{{ $errorText }} hidden">Please upload at least one image.</p>
+                                <div id="image_preview"
+                                    class="mt-3 grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2.5"></div>
                             </div>
-
                         </div>
-                    </form>
+                    </div>
                 </div>
+
+                {{-- ============================== sidebar ============================== --}}
+                <aside class="xl:sticky xl:top-4">
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
+                            <h3 class="{{ $cardTitle }}"><i class="fas fa-toggle-on text-sm text-gray-400"></i> Status
+                            </h3>
+                        </div>
+                        <div class="{{ $cardBody }}">
+                            <label class="flex cursor-pointer items-center gap-3 py-2">
+                                {{-- On a validation bounce honour what the admin actually left ticked;
+                                     on a fresh form default to Active. --}}
+                                <input type="checkbox" id="create_is_active" name="is_active" class="peer sr-only"
+                                    @checked(old('is_active', $errors->any() ? null : $data->is_active))>
+                                <span class="{{ $switchTrack }}"></span>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-900">Active</span>
+                                    <span class="block text-xs text-gray-500">Visible in the storefront</span>
+                                </span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-3 border-t border-gray-100 py-2">
+                                <input type="checkbox" id="create_is_trending" name="is_trending" class="peer sr-only"
+                                    @checked(old('is_trending', $errors->any() ? null : $data->is_trending))>
+                                <span class="{{ $switchTrack }}"></span>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-900">Trending</span>
+                                    <span class="block text-xs text-gray-500">Show in the trending row</span>
+                                </span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-3 border-t border-gray-100 py-2">
+                                <input type="checkbox" id="create_is_popular" name="is_popular" class="peer sr-only"
+                                    @checked(old('is_popular', $errors->any() ? null : $data->is_popular))>
+                                <span class="{{ $switchTrack }}"></span>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-900">Popular</span>
+                                    <span class="block text-xs text-gray-500">Show in the popular row</span>
+                                </span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-3 border-t border-gray-100 py-2">
+                                <input type="checkbox" id="create_is_recommended" name="is_recommended"
+                                    class="peer sr-only" @checked(old('is_recommended', $errors->any() ? null : $data->is_recommended))>
+                                <span class="{{ $switchTrack }}"></span>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-900">Recommended</span>
+                                    <span class="block text-xs text-gray-500">Show in recommended picks</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
+                            <h3 class="{{ $cardTitle }}"><i class="fas fa-sitemap text-sm text-gray-400"></i>
+                                Organisation</h3>
+                        </div>
+                        <div class="{{ $cardBody }}">
+                            <div class="mb-4">
+                                <label for="create_category_id" class="{{ $label }}">Category <span
+                                        class="text-red-500">*</span></label>
+                                <select id="create_category_id" name="category_id"
+                                    onchange="getSubCategory(this, '#create_sub_category_id')"
+                                    data-action="{{ route('role.get-sub-category', ['role' => $roleSlug]) }}"
+                                    class="@error('category_id') {{ $inputBad }} @else {{ $inputOk }} @enderror">
+                                    <option value="">Select a category</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}" @selected(old('category_id', $data->category_id) == $category->id)>{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="mb-4">
+                                <label for="create_sub_category_id" class="{{ $label }}">Sub category</label>
+                                <select id="create_sub_category_id" name="sub_category_id"
+                                    data-selected="{{ old('sub_category_id', $data->sub_category_id) }}"
+                                    class="@error('sub_category_id') {{ $inputBad }} @else {{ $inputOk }} @enderror">
+                                    <option value="">Select a category first</option>
+                                </select>
+                                @error('sub_category_id')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="mb-4">
+                                <label for="create_brand_id" class="{{ $label }}">Brand <span
+                                        class="text-red-500">*</span></label>
+                                <select id="create_brand_id" name="brand_id"
+                                    class="@error('brand_id') {{ $inputBad }} @else {{ $inputOk }} @enderror">
+                                    <option value="">Select a brand</option>
+                                    @foreach ($brands as $brand)
+                                        <option value="{{ $brand->id }}" @selected(old('brand_id', $data->brand_id) == $brand->id)>{{ $brand->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('brand_id')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="create_unit_id" class="{{ $label }}">Unit <span
+                                        class="text-red-500">*</span></label>
+                                <select id="create_unit_id" name="unit_id"
+                                    class="@error('unit_id') {{ $inputBad }} @else {{ $inputOk }} @enderror">
+                                    <option value="">Select a unit</option>
+                                    @foreach ($units as $unit)
+                                        <option value="{{ $unit->id }}" @selected(old('unit_id', $data->unit_id) == $unit->id)>{{ $unit->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('unit_id')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
+                            <h3 class="{{ $cardTitle }}"><i class="fas fa-boxes-stacked text-sm text-gray-400"></i>
+                                Inventory</h3>
+                        </div>
+                        <div class="{{ $cardBody }}">
+                            <div class="mb-4">
+                                <label for="create_stock_qty" class="{{ $label }}">Stock quantity</label>
+                                <input type="number" id="create_stock_qty" name="stock_qty" min="0"
+                                    value="{{ old('stock_qty', $data->stock_qty) }}"
+                                    class="@error('stock_qty') {{ $inputBad }} @else {{ $inputOk }} @enderror">
+                                @error('stock_qty')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @else
+                                    <p class="{{ $help }}">Checkout blocks orders above this. If you add variants
+                                        below, their stock replaces this total.</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="create_moq" class="{{ $label }}">Minimum order quantity</label>
+                                <input type="number" id="create_moq" name="moq" min="1"
+                                    value="{{ old('moq', $data->moq) }}"
+                                    class="@error('moq') {{ $inputBad }} @else {{ $inputOk }} @enderror">
+                                @error('moq')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @else
+                                    <p class="{{ $help }}">Fewest units a customer may buy at once.</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="{{ $card }}">
+                        <div class="{{ $cardHead }}">
+                            <h3 class="{{ $cardTitle }}"><i class="fas fa-truck text-sm text-gray-400"></i> Sourcing
+                            </h3>
+                        </div>
+                        <div class="{{ $cardBody }}">
+                            <div>
+                                <label for="create_supplier_id" class="{{ $label }}">Supplier <span
+                                        class="text-red-500">*</span></label>
+                                <select id="create_supplier_id" name="supplier_id"
+                                    class="@error('supplier_id') {{ $inputBad }} @else {{ $inputOk }} @enderror">
+                                    <option value="">Select a supplier</option>
+                                    @foreach ($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}" @selected(old('supplier_id', $data->supplier_id) == $supplier->id)>{{ $supplier->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('supplier_id')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @else
+                                    <p class="{{ $help }}">Back-office only — never shown to customers.</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </aside>
             </div>
-        </div>
+
+            {{-- Sticky so Save stays reachable without scrolling a long form to the end. --}}
+            <div
+                class="sticky bottom-0 z-30 flex items-center justify-end gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-[0_-3px_14px_rgba(17,24,39,0.07)]">
+                <span class="mr-auto text-xs text-gray-500"><span class="text-red-500">*</span> Required fields</span>
+                <a href="{{ route('role.products.index', ['role' => $roleSlug]) }}"
+                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+                <button type="submit" id="submit_btn"
+                    class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                    <i class="fas fa-check"></i> Save changes
+                </button>
+            </div>
+        </form>
     </div>
 @endsection
 @section('js')
@@ -1005,24 +1074,23 @@
                 filesArray.forEach((file, idx) => {
                     const reader = new FileReader();
                     const wrapper = document.createElement('div');
-                    wrapper.className = 'relative group rounded overflow-hidden border';
+                    wrapper.className =
+                        'pf-gallery-item relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50';
 
                     // placeholder while loading
-                    wrapper.innerHTML = `
-        <div class="w-full h-28 bg-gray-100 flex items-center justify-center text-xs text-gray-500">Loading...</div>
-      `;
+                    wrapper.innerHTML =
+                        `<div class="flex h-[88px] items-center justify-center text-xs text-gray-400">Loading…</div>`;
 
                     previewContainer.appendChild(wrapper);
 
                     reader.onload = (ev) => {
                         wrapper.innerHTML = `
-          <img src="${ev.target.result}" alt="${escapeHtml(file.name)}" class="w-full h-28 object-cover"/>
-          <button data-idx="${idx}" title="Remove" class="absolute top-1 right-1 bg-white/80 rounded-full p-1 hover:bg-white">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
+          <img src="${ev.target.result}" alt="${escapeHtml(file.name)}" class="block h-[88px] w-full object-cover"/>
+          <button type="button" data-idx="${idx}" title="Remove"
+                  class="absolute right-1.5 top-1.5 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-gray-900/70 p-1 text-[0.6rem] text-white hover:bg-red-500">
+            <i class="fas fa-xmark"></i>
           </button>
-          <div class="p-1 text-xs truncate text-center">${escapeHtml(file.name)}</div>
+          <div class="truncate px-1 py-1 text-center text-[0.68rem] text-gray-500">${escapeHtml(file.name)}</div>
         `;
 
                         // add remove handler
@@ -1127,12 +1195,47 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 thumbnailPreview.innerHTML = `
-                <img src="${e.target.result}" 
-                     class="w-28 h-28 object-cover border rounded-md" />
+                <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2.5">
+                    <img src="${e.target.result}" alt="Thumbnail preview"
+                         class="h-14 w-14 rounded-md border border-gray-200 object-cover" />
+                    <span class="text-xs text-gray-500">New thumbnail — replaces the current one on save</span>
+                </div>
             `;
             };
             reader.readAsDataURL(file);
         });
+    </script>
+
+    <script>
+        // Live margin readout: the purchase price is only useful next to the selling
+        // price, and working it out by hand for every product is where mistakes creep in.
+        (() => {
+            const selling = document.getElementById('create_selling_price');
+            const cost = document.getElementById('create_purchase_price');
+            const hint = document.getElementById('pf-margin-hint');
+            if (!selling || !cost || !hint) return;
+
+            const render = () => {
+                const sell = parseFloat(selling.value);
+                const buy = parseFloat(cost.value);
+                if (!(sell > 0) || !(buy > 0)) {
+                    hint.classList.add('hidden');
+                    return;
+                }
+                const profit = sell - buy;
+                const margin = (profit / sell) * 100;
+                hint.classList.remove('hidden');
+                hint.classList.toggle('text-red-700', profit < 0);
+                hint.classList.toggle('text-gray-500', profit >= 0);
+                hint.textContent = profit < 0
+                    ? `Selling below cost — you lose ৳${Math.abs(profit).toFixed(2)} per unit.`
+                    : `Profit ৳${profit.toFixed(2)} per unit · ${margin.toFixed(1)}% margin.`;
+            };
+
+            selling.addEventListener('input', render);
+            cost.addEventListener('input', render);
+            render();
+        })();
     </script>
     <script>
         ClassicEditor
@@ -1158,38 +1261,7 @@
                 console.error(error);
             });
     </script>
-    <script>
-        document.getElementById('add-spec').addEventListener('click', function() {
-            const container = document.getElementById('specification-container');
-
-            const row = document.createElement('div');
-            row.className = 'grid grid-cols-1 md:grid-cols-3 gap-4 items-center spec-row';
-
-            row.innerHTML = `
-            <input type="text" name="specification_name[]"
-                   class="form-input w-full px-3 py-2 border rounded-md"
-                   placeholder="Specification Name">
-
-            <input type="text" name="specification_value[]"
-                   class="form-input w-full px-3 py-2 border rounded-md"
-                   placeholder="Specification Value">
-
-            <button type="button"
-                        class="remove-spec inline-flex items-center justify-center w-10 h-10
-                               bg-red-500 text-white text-xl rounded-full hover:bg-red-600">
-                    −
-                </button>
-        `;
-
-            container.appendChild(row);
-        });
-
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-spec')) {
-                e.target.closest('.spec-row').remove();
-            }
-        });
-    </script>
+    @include('products._form_scripts')
     <script>
         function getSubCategory(el, targetSelector) {
             const categoryId = el.value;
@@ -1244,7 +1316,7 @@
         $(document).on('click', '.delete-existing-image', function() {
             let id = $(this).data('id');
             let url = deleteUrlTemplate.replace(':id', id);
-            let box = $(this).closest('.group');
+            let box = $(this).closest('.pf-gallery-item');
 
             Swal.fire({
                 icon: 'warning',

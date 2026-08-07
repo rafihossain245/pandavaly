@@ -430,17 +430,6 @@
                                     </select>
                                 </div>
                                 <div class="filter-group">
-                                    <label for="unit_id">Unit</label>
-                                    <select id="unit_id" name="unit_id" class="form-control select2" style="width: 100%">
-                                        <option value="">All</option>
-                                        @foreach ($units as $unit)
-                                            <option value="{{ $unit->id }}"
-                                                {{ $unit->id == request('unit_id') ? 'selected' : '' }}>{{ $unit->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="filter-group">
                                     <label for="category_id">Category</label>
                                     <select id="category_id" name="category_id"
                                         onchange="getSubCategory(this, '#sub_category_id')"
@@ -471,23 +460,12 @@
                             </div>
                             <div class="closest filter-row">
                                 <div class="filter-group">
-                                    <label for="user_id">Created By</label>
-                                    <select id="user_id" name="user_id" class="form-control select2" style="width: 100%">
-                                        <option value="">All</option>
-                                        @foreach ($users as $user)
-                                            <option value="{{ $user->id }}"
-                                                {{ $user->id == request('user_id') ? 'selected' : '' }}>
-                                                {{ $user->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="filter-group">
                                     <label for="stock_qty">Stock</label>
                                     <select id="stock_qty" name="stock_qty" class="form-control select2"
                                         style="width: 100%">
                                         <option value="">All</option>
-                                        <option value="1">In Stock</option>
-                                        <option value="0">Out Stock</option>
+                                        <option value="1" @selected(request('stock_qty') === '1')>In Stock</option>
+                                        <option value="0" @selected(request('stock_qty') === '0')>Out of Stock</option>
                                     </select>
                                 </div>
                                 <div class="filter-group">
@@ -495,8 +473,8 @@
                                     <select id="is_active" name="is_active" class="form-control select2"
                                         style="width: 100%">
                                         <option value="">All</option>
-                                        <option value="1">Active</option>
-                                        <option value="0">Inactive</option>
+                                        <option value="1" @selected(request('is_active') === '1')>Active</option>
+                                        <option value="0" @selected(request('is_active') === '0')>Draft</option>
                                     </select>
                                 </div>
                                 <div class="filter-group">
@@ -514,99 +492,128 @@
                 </form>
 
                 <!-- Table with Data -->
-                <div class="table-responsive overflow-x-auto" style="padding: 15px">
-                    <table class="table table-hover min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th style="padding-left: 20px"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    SL</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Category</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    SubCategory</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Brand</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Unit</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Supplier</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Created By</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Price</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Current Stock</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions</th>
+                <div class="overflow-x-auto p-4">
+                    <table class="w-full min-w-[820px] text-sm">
+                        <thead>
+                            <tr
+                                class="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-500">
+                                <th class="px-4 py-3 font-semibold">Product</th>
+                                <th class="px-4 py-3 font-semibold">Category</th>
+                                <th class="px-4 py-3 text-right font-semibold">Price</th>
+                                <th class="px-4 py-3 font-semibold">Stock</th>
+                                <th class="px-4 py-3 font-semibold">Status</th>
+                                <th class="px-4 py-3 text-right font-semibold">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse ($datas as $key => $value)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap" style="padding-left: 20px">
-                                        <strong>{{ ($datas->currentPage() - 1) * $datas->perPage() + $key + 1 }}</strong>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $value->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $value->category?->name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $value->sub_category?->name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $value->brand?->name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $value->unit?->name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $value->supplier?->name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $value->user?->name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $value->product_prices[0]->selling_price }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $value->stock_qty }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($value->is_active)
-                                            <span class="badge text-white bg-green-500 px-2 py-1 rounded-full text-xs">
-                                                Active
+                        <tbody>
+                            @forelse ($datas as $value)
+                                @php
+                                    // product_prices[0] threw "Undefined array key 0" for any product
+                                    // whose price row is missing, taking the whole list down.
+                                    $price = $value->product_prices->first();
+                                    $stock = (int) $value->stock_qty;
+                                    $hasVariants = $value->skus_count > 0;
+                                @endphp
+                                <tr class="border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            {{-- Placeholder icon sits underneath, so a missing OR broken
+                                                 file degrades to the icon. alt is empty and the box clips,
+                                                 otherwise a 404 spills alt text across the row. --}}
+                                            <span
+                                                class="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-gray-300">
+                                                <i class="fas fa-image"></i>
+                                                @if ($value->thumbnail)
+                                                    <img src="{{ asset($value->thumbnail) }}" alt=""
+                                                        loading="lazy" onerror="this.remove()"
+                                                        class="absolute inset-0 h-full w-full bg-white object-cover">
+                                                @endif
                                             </span>
-                                        @else
-                                            <span class="badge text-white bg-yellow-500 px-2 py-1 rounded-full text-xs">
-                                                Inactive
-                                            </span>
+                                            <div class="min-w-0">
+                                                <div class="truncate font-medium text-gray-900">{{ $value->name }}</div>
+                                                <div class="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
+                                                    @if ($value->brand?->name)
+                                                        <span>{{ $value->brand->name }}</span>
+                                                        <span class="text-gray-300">&middot;</span>
+                                                    @endif
+                                                    <span class="font-mono">{{ $value->sku }}</span>
+                                                    @if ($hasVariants)
+                                                        <span
+                                                            class="rounded bg-indigo-50 px-1.5 py-0.5 font-medium text-indigo-700">{{ $value->skus_count }}
+                                                            {{ Str::plural('variant', $value->skus_count) }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="text-gray-700">{{ $value->category?->name ?? '—' }}</div>
+                                        @if ($value->sub_category?->name)
+                                            <div class="mt-0.5 text-xs text-gray-400">{{ $value->sub_category->name }}
+                                            </div>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="btn-group btn-group-sm flex space-x-1">
-                                            <a href="{{ route('role.products.edit', [
-                                                'role' => Str::slug(Auth::user()->getRoleNames()->first()),
-                                                'product' => $value->id,
-                                            ]) }}"
-                                                class="btn btn-outline-primary border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded-md transition duration-200">
-                                                <i class="fas fa-edit"></i>
+                                    <td class="whitespace-nowrap px-4 py-3 text-right">
+                                        <div class="font-medium text-gray-900">
+                                            ৳{{ $price ? number_format($price->selling_price, 2) : '—' }}</div>
+                                        @if ($price && $price->previous_price > $price->selling_price)
+                                            <div class="text-xs text-gray-400 line-through">
+                                                ৳{{ number_format($price->previous_price, 2) }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-3">
+                                        {{-- products.stock_qty: typed on the product form for a simple
+                                             product, or rolled up from the variant SKUs. --}}
+                                        @if ($stock <= 0)
+                                            <span
+                                                class="inline-flex rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-200">Out
+                                                of stock</span>
+                                        @elseif ($stock <= 10)
+                                            <span
+                                                class="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">Low
+                                                · {{ $stock }}</span>
+                                        @else
+                                            <span
+                                                class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">{{ $stock }}
+                                                in stock</span>
+                                        @endif
+                                        @if ($hasVariants)
+                                            <div class="mt-0.5 text-xs text-gray-400">across variants</div>
+                                        @endif
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-3">
+                                        @if ($value->is_active)
+                                            <span
+                                                class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">Active</span>
+                                        @else
+                                            <span
+                                                class="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-200">Draft</span>
+                                        @endif
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-3 text-right">
+                                        <div class="flex justify-end gap-1.5">
+                                            <a href="{{ route('role.products.edit', ['role' => Str::slug(Auth::user()->getRoleNames()->first()), 'product' => $value->id]) }}"
+                                                class="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                                title="Edit product">
+                                                <i class="fas fa-pen"></i>
                                             </a>
-                                            <button
-                                                class="btn btn-outline-danger border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded-md transition duration-200"
+                                            <button type="button"
+                                                class="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                                title="Delete product"
                                                 onclick="confirmDelete('{{ $value->id }}', 'this item')"
                                                 data-action="{{ route('role.products.destroy', ['role' => Str::slug(Auth::user()->getRoleNames()->first()), 'product' => $value->id]) }}">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash-can"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="text-center py-8">
-                                        <i class="fas fa-inbox fa-3x text-gray-400 mb-4"></i>
-                                        <h4 class="text-gray-500 text-xl font-medium mb-2">No data found</h4>
-                                        <p class="text-gray-400 mb-4">Try filtering with different datas.</p>
+                                    <td colspan="6" class="px-4 py-14 text-center">
+                                        <i class="fas fa-box-open mb-3 text-4xl text-gray-300"></i>
+                                        <h4 class="mb-1 text-lg font-medium text-gray-500">No products found</h4>
+                                        <p class="text-sm text-gray-400">Try a different filter, or add your first
+                                            product.</p>
                                     </td>
                                 </tr>
                             @endforelse

@@ -105,33 +105,29 @@
             <span>Reviews</span>
         </a>
 
-        {{-- Stock only works as a set: Purchase is the only path that adds stock,
-             Warehouses is the only screen that can create one (and the movement
-             screen's dropdowns are empty without it), and Suppliers is Purchase's
-             master data. Shipping any of them without the others leaves the shop
-             able to sell stock but never restock it. --}}
-        <p class="sidebar-section">Inventory</p>
+        {{--
+            Inventory group removed from the nav — this is a single-warehouse B2C shop.
 
-        <a href="{{ route('role.purchases.index', ['role' => $roleSlug]) }}"
-            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.purchases.*') ? 'active' : '' }}">
-            <i class="fas fa-cart-plus w-6 text-center mr-2"></i>
-            <span>Purchase</span>
-        </a>
-        <a href="{{ route('role.suppliers.index', ['role' => $roleSlug]) }}"
-            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.suppliers.*') ? 'active' : '' }}">
-            <i class="fas fa-truck w-6 text-center mr-2"></i>
-            <span>Suppliers</span>
-        </a>
-        <a href="{{ route('role.warehouses.index', ['role' => $roleSlug]) }}"
-            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.warehouses.*') ? 'active' : '' }}">
-            <i class="fas fa-warehouse w-6 text-center mr-2"></i>
-            <span>Warehouses</span>
-        </a>
-        <a href="{{ route('role.stock-movements.index', ['role' => $roleSlug]) }}"
-            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.stock-movements.*') ? 'active' : '' }}">
-            <i class="fas fa-boxes-stacked w-6 text-center mr-2"></i>
-            <span>Stock Movements</span>
-        </a>
+            The earlier note here claimed the four screens only work as a set, because
+            Purchase was the sole path that adds stock. That is no longer true, and two
+            of the four never worked at all:
+
+              Warehouses      role.warehouses.index       — 500s; the `warehouses` table
+                                                            does not exist in this database
+              Stock Movements role.stock-movements.index  — 500s; depends on Warehouses
+              Purchase        role.purchases.index        — renders, but `purchases` has 0
+                                                            rows; procurement/PO workflow
+              Suppliers       role.suppliers.index        — renders, 1 row; back-office
+                                                            master data, not customer facing
+
+            Stock is now edited directly on the product form (products.stock_qty, and
+            product_skus.stock_qty per variant, which rolls up), so nothing here is
+            needed to restock. Suppliers are still reachable from the product form's
+            Sourcing dropdown; only the nav entry is gone.
+
+            Every route and controller still exists — restoring one is uncommenting
+            its link. Warehouses would additionally need its migration written.
+        --}}
 
         <p class="sidebar-section">Content</p>
 
@@ -193,11 +189,9 @@
             <i class="fas fa-globe w-6 text-center mr-2"></i>
             <span>Website Settings</span>
         </a>
-        <a href="{{ route('role.company-settings.index', ['role' => $roleSlug]) }}"
-            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.company-settings.*') ? 'active' : '' }}">
-            <i class="fas fa-building w-6 text-center mr-2"></i>
-            <span>Company Settings</span>
-        </a>
+        {{-- Company Settings hidden: ERP company/branch master data, duplicated by
+             Website Settings which is what the storefront actually reads. Route and
+             controller kept — role.company-settings.index. --}}
         <a href="{{ route('role.user.index', ['role' => $roleSlug]) }}"
             class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.user.*') ? 'active' : '' }}">
             <i class="fas fa-user-shield w-6 text-center mr-2"></i>
