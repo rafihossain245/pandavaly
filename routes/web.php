@@ -210,9 +210,13 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('suppliers', SupplierController::class)->except('show');
     Route::resource('buyers', BuyerController::class)->except('show');
+    // Declared before the resource so "attributes/reorder" is not swallowed by
+    // the {attribute} wildcard.
+    Route::post('attributes/reorder', [AttributeController::class, 'reorder'])->name('attributes.reorder');
     Route::resource('attributes', AttributeController::class)->except('show');
     Route::get('attributes/{attribute}/values', [AttributeValueController::class, 'index'])->name('attributes.values.index');
     Route::post('attribute-values', [AttributeValueController::class, 'store'])->name('attribute-values.store');
+    Route::post('attribute-values/reorder', [AttributeValueController::class, 'reorder'])->name('attribute-values.reorder');
     Route::put('attribute-values/{attributeValue}', [AttributeValueController::class, 'update'])->name('attribute-values.update');
     Route::delete('attribute-values/{attributeValue}', [AttributeValueController::class, 'destroy'])->name('attribute-values.destroy');
     Route::resource('sliders', SliderController::class)->except('show');

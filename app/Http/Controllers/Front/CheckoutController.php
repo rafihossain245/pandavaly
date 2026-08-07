@@ -215,6 +215,28 @@ class CheckoutController extends Controller
             ) {
                 foreach ($cart['items'] as $item) {
                     $product = Product::lockForUpdate()->find($item['id']);
+
+                    // A variant's own stock is what gets sold; the product-level
+                    // figure is just the sum across variants.
+                    if (!empty($item['sku_id'])) {
+                        $lockedSku = ProductSku::lockForUpdate()->find($item['sku_id']);
+                        $label = $item['variant_label'] ?? null;
+                        $name = $label ? "{$item['name']} ({$label})" : $item['name'];
+
+                        if (!$lockedSku || !$lockedSku->is_active) {
+                            throw new \Exception("\"{$name}\" is no longer available. Please remove it from your cart.");
+                        }
+
+                        if ($lockedSku->stock_qty < $item['qty']) {
+                            throw new \Exception(
+                                "Insufficient stock for \"{$name}\". "
+                                . "Only {$lockedSku->stock_qty} unit(s) available."
+                            );
+                        }
+
+                        continue;
+                    }
+
                     if ($product && $product->stock_qty !== null && $product->stock_qty < $item['qty']) {
                         throw new \Exception(
                             "Insufficient stock for \"{$product->name}\". "
@@ -315,6 +337,10 @@ class CheckoutController extends Controller
                             'ref_type'          => 'SO',
                             'ref_id'            => $order->order_no,
                         ]);
+                    }
+
+                    if (!empty($item['sku_id'])) {
+                        ProductSku::where('id', $item['sku_id'])->decrement('stock_qty', $item['qty']);
                     }
 
                     Product::where('id', $item['id'])->decrement('stock_qty', $item['qty']);

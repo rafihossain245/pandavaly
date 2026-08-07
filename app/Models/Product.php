@@ -92,7 +92,32 @@ class Product extends Model
     }
     public function skus()
     {
-        return $this->hasMany(ProductSku::class);
+        return $this->hasMany(ProductSku::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function activeSkus()
+    {
+        return $this->hasMany(ProductSku::class)->where('is_active', true)->orderBy('position')->orderBy('id');
+    }
+
+    public function hasVariants(): bool
+    {
+        return $this->relationLoaded('skus')
+            ? $this->skus->isNotEmpty()
+            : $this->skus()->exists();
+    }
+
+    /**
+     * The variant a shopper lands on when the product page opens: first active
+     * one that is in stock, else the first active one, so the page always has a
+     * price to show even when everything is sold out.
+     */
+    public function defaultSku(): ?ProductSku
+    {
+        $skus = $this->relationLoaded('skus') ? $this->skus : $this->skus()->get();
+        $active = $skus->where('is_active', true);
+
+        return $active->firstWhere(fn ($sku) => $sku->stock_qty > 0) ?? $active->first();
     }
 
     public function reviews()

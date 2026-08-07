@@ -86,6 +86,95 @@
                 display: none;
             }
         }
+
+        /* ---- Variant selector ---- */
+        .product-variant-selector .variant-attribute-group {
+            margin-bottom: 14px;
+        }
+
+        .product-variant-selector .variant-group-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 7px;
+        }
+
+        .product-variant-selector .variant-chosen {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .product-variant-selector .variant-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .product-variant-selector .variant-pill {
+            min-width: 46px;
+            padding: 7px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 14px;
+            color: #374151;
+            transition: all .15s;
+        }
+
+        .product-variant-selector .variant-pill:hover {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+        .product-variant-selector .variant-pill.is-selected {
+            border-color: #16a34a;
+            background: #16a34a;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .product-variant-selector .variant-swatch {
+            width: 40px;
+            height: 40px;
+            padding: 3px;
+            border: 2px solid #e5e7eb;
+            border-radius: 50%;
+            background: #fff;
+            transition: all .15s;
+        }
+
+        .product-variant-selector .variant-swatch span {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, .12);
+        }
+
+        .product-variant-selector .variant-swatch:hover {
+            border-color: #9ca3af;
+        }
+
+        .product-variant-selector .variant-swatch.is-selected {
+            border-color: #16a34a;
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, .18);
+        }
+
+        .product-variant-selector .variant-select {
+            max-width: 260px;
+        }
+
+        /* Combinations that were never built: visible, but clearly not choices. */
+        .product-variant-selector .is-disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .product-variant-selector .variant-pill.is-disabled {
+            text-decoration: line-through;
+        }
     </style>
 @endsection
 
@@ -118,32 +207,72 @@
                     $discount = ($previous && $previous > $selling) ? round((($previous - $selling) / $previous) * 100) : 0;
                     $inStock  = $product->stock_qty === null || $product->stock_qty > 0;
 
-                    // Build variant attribute groups + sku lookup map for the variant selector
+                    // Build the option groups plus a combination -> SKU lookup the
+                    // selector uses to swap price, stock and photo on the fly.
                     $variantAttributes = [];
                     $skuMap = [];
+                    $defaultKey = null;
+
                     foreach ($product->skus as $sku) {
+                        if (!$sku->is_active) {
+                            continue;
+                        }
+
                         $valueIds = [];
+                        $labels = [];
                         foreach ($sku->productAttributes as $pa) {
                             if (!$pa->attribute || !$pa->attributeValue) {
                                 continue;
                             }
                             $variantAttributes[$pa->attribute_id]['name'] = $pa->attribute->name;
-                            $variantAttributes[$pa->attribute_id]['values'][$pa->attribute_value_id] = $pa->attributeValue->value;
+                            $variantAttributes[$pa->attribute_id]['display_type'] = $pa->attribute->display_type;
+                            $variantAttributes[$pa->attribute_id]['values'][$pa->attribute_value_id] = [
+                                'label' => $pa->attributeValue->value,
+                                'color' => $pa->attributeValue->color_code,
+                            ];
                             $valueIds[] = $pa->attribute_value_id;
+                            $labels[] = $pa->attributeValue->value;
                         }
+
                         if (empty($valueIds)) {
                             continue;
                         }
+
                         sort($valueIds);
-                        $skuMap[implode('-', $valueIds)] = [
+                        $key = implode('-', $valueIds);
+
+                        $skuPrice = $sku->price !== null ? (float) $sku->price : (float) $selling;
+                        $skuCompare = $sku->compare_at_price !== null ? (float) $sku->compare_at_price : null;
+
+                        $skuMap[$key] = [
                             'id' => $sku->id,
-                            'price' => $sku->mrp !== null ? (float) $sku->mrp : null,
-                            'price_formatted' => $sku->mrp !== null ? number_format((float) $sku->mrp, 2) : null,
-                            'barcode' => $sku->barcode,
-                            'is_active' => (bool) $sku->is_active,
+                            'label' => implode(' / ', $labels),
+                            'price' => $skuPrice,
+                            'price_formatted' => number_format($skuPrice, 2),
+                            'compare_at' => $skuCompare,
+                            'compare_at_formatted' => $skuCompare ? number_format($skuCompare, 2) : null,
+                            'discount' => ($skuCompare && $skuCompare > $skuPrice)
+                                ? round((($skuCompare - $skuPrice) / $skuCompare) * 100)
+                                : 0,
+                            'stock' => (int) $sku->stock_qty,
+                            'in_stock' => $sku->stock_qty > 0,
+                            'sku' => $sku->sku,
+                            'image' => $sku->image ? asset($sku->image) : null,
                         ];
+
+                        // Land the shopper on something they can actually buy.
+                        if ($defaultKey === null && $sku->stock_qty > 0) {
+                            $defaultKey = $key;
+                        }
                     }
+
                     $hasVariants = !empty($variantAttributes);
+
+                    if ($hasVariants) {
+                        $defaultKey = $defaultKey ?? array_key_first($skuMap);
+                        // With variants the sellable stock is the SKUs', not the product's.
+                        $inStock = collect($skuMap)->contains(fn ($entry) => $entry['in_stock']);
+                    }
                 @endphp
                 <div class="product-image-part">
                     <div class="exzoom hidden" id="exzoom">
@@ -243,16 +372,42 @@
                         @if($hasVariants)
                             <div class="product-variant-selector mb-3"
                                  data-sku-map='@json($skuMap)'
+                                 data-default-key="{{ $defaultKey }}"
                                  data-base-price="{{ number_format($selling, 2) }}">
                                 @foreach($variantAttributes as $attributeId => $attribute)
-                                    <div class="variant-attribute-group mb-2" data-attribute-id="{{ $attributeId }}">
-                                        <label class="mb-1 fw-semibold d-block">{{ $attribute['name'] }}</label>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach($attribute['values'] as $valueId => $valueLabel)
-                                                <button type="button" class="btn btn-outline-secondary btn-sm variant-value-btn"
-                                                        data-value-id="{{ $valueId }}">{{ $valueLabel }}</button>
-                                            @endforeach
-                                        </div>
+                                    <div class="variant-attribute-group" data-attribute-id="{{ $attributeId }}">
+                                        <label class="variant-group-label">
+                                            {{ $attribute['name'] }}:
+                                            <span class="variant-chosen" data-for="{{ $attributeId }}"></span>
+                                        </label>
+
+                                        @if(($attribute['display_type'] ?? 'pill') === 'dropdown')
+                                            <select class="variant-select form-select form-select-sm">
+                                                @foreach($attribute['values'] as $valueId => $value)
+                                                    <option value="{{ $valueId }}">{{ $value['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                        @else
+                                            <div class="variant-options">
+                                                @foreach($attribute['values'] as $valueId => $value)
+                                                    @if(($attribute['display_type'] ?? 'pill') === 'swatch')
+                                                        <button type="button"
+                                                                class="variant-swatch variant-value-btn"
+                                                                data-value-id="{{ $valueId }}"
+                                                                data-label="{{ $value['label'] }}"
+                                                                title="{{ $value['label'] }}"
+                                                                aria-label="{{ $value['label'] }}">
+                                                            <span style="background: {{ $value['color'] ?: '#d1d5db' }}"></span>
+                                                        </button>
+                                                    @else
+                                                        <button type="button"
+                                                                class="variant-pill variant-value-btn"
+                                                                data-value-id="{{ $valueId }}"
+                                                                data-label="{{ $value['label'] }}">{{ $value['label'] }}</button>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                                 <div class="variant-unavailable-msg text-danger small mt-1" style="display:none;">
@@ -1609,30 +1764,44 @@
             $input.val(value);
         });
 
-        // Variant selector: pick attribute values, look up matching SKU,
-        // and update price / stock display + buy button availability.
+        // Variant selector: pick option values, look up the matching SKU, then
+        // swap price, stock, photo and the buy buttons to match it.
         (function () {
             const $selector = $('.product-variant-selector');
             if (!$selector.length) return;
 
             const skuMap = $selector.data('sku-map') || {};
-            const basePrice = $selector.data('base-price');
+            const defaultKey = String($selector.data('default-key') || '');
             const $price = $('.variant-current-price');
             const $stockInfo = $('.variant-stock-info');
             const $unavailableMsg = $selector.find('.variant-unavailable-msg');
             const $cartBtns = $('.add-to-cart-btn, .buy-now-btn');
             const $skuIdInputs = $('.selected-sku-id');
             const $variantLabelInputs = $('.selected-variant-label');
-            const baseDisabled = {};
-            $cartBtns.each(function (i) {
-                baseDisabled[i] = $(this).is(':disabled');
-            });
+            const $qtyInput = $('.qty-input');
+
+            // Which single-option values can still lead to a real SKU — used to
+            // grey out combinations that were never created.
+            function reachableValueIds() {
+                const reachable = {};
+                Object.keys(skuMap).forEach(function (key) {
+                    key.split('-').forEach(function (id) { reachable[id] = true; });
+                });
+                return reachable;
+            }
+            const reachable = reachableValueIds();
 
             function selectedValueIds() {
                 const ids = [];
                 let allSelected = true;
                 $selector.find('.variant-attribute-group').each(function () {
-                    const $active = $(this).find('.variant-value-btn.active');
+                    const $group = $(this);
+                    const $select = $group.find('.variant-select');
+                    if ($select.length) {
+                        ids.push(parseInt($select.val()));
+                        return;
+                    }
+                    const $active = $group.find('.variant-value-btn.is-selected');
                     if ($active.length) {
                         ids.push(parseInt($active.data('value-id')));
                     } else {
@@ -1642,55 +1811,93 @@
                 return allSelected ? ids.sort((a, b) => a - b) : null;
             }
 
-            function selectedLabel() {
-                const labels = [];
+            function syncChosenLabels() {
                 $selector.find('.variant-attribute-group').each(function () {
-                    const $active = $(this).find('.variant-value-btn.active');
-                    if ($active.length) {
-                        labels.push($active.text().trim());
-                    }
+                    const $group = $(this);
+                    const $select = $group.find('.variant-select');
+                    const label = $select.length
+                        ? $select.find('option:selected').text()
+                        : ($group.find('.variant-value-btn.is-selected').data('label') || '');
+                    $group.find('.variant-chosen').text(label);
                 });
-                return labels.join(' / ');
             }
 
-            function applySku(sku, label) {
-                if (sku) {
-                    if (sku.price !== null && sku.price_formatted) {
-                        $price.text('৳ ' + sku.price_formatted);
-                    }
-                    if (sku.is_active) {
-                        $stockInfo.html('<span class="text-success"><i class="fas fa-check-circle"></i> In Stock</span>');
-                        $cartBtns.each(function (i) {
-                            $(this).prop('disabled', baseDisabled[i] || false);
-                        });
-                    } else {
-                        $stockInfo.html('<span class="text-danger"><i class="fas fa-times-circle"></i> Out of Stock</span>');
-                        $cartBtns.prop('disabled', true);
-                    }
-                    $unavailableMsg.hide();
-                    $skuIdInputs.val(sku.id);
-                    $variantLabelInputs.val(label || '');
-                } else {
+            function applySku(sku) {
+                if (!sku) {
                     $cartBtns.prop('disabled', true);
                     $unavailableMsg.show();
                     $skuIdInputs.val('');
                     $variantLabelInputs.val('');
+                    return;
                 }
+
+                $unavailableMsg.hide();
+                $price.text('৳ ' + sku.price_formatted);
+
+                // Compare-at price lives next to the current price; rebuild it so
+                // a variant without a discount does not keep the previous one.
+                const $compare = $price.siblings('.original-price');
+                const $badge = $price.siblings('.badge');
+                if (sku.compare_at_formatted && sku.discount > 0) {
+                    $compare.text('৳ ' + sku.compare_at_formatted).show();
+                    $badge.text(sku.discount + '% off').show();
+                } else {
+                    $compare.hide();
+                    $badge.hide();
+                }
+
+                if (sku.in_stock) {
+                    $stockInfo.html('<span class="text-success"><i class="fas fa-check-circle"></i> In Stock (' + sku.stock + ' available)</span>');
+                    $cartBtns.prop('disabled', false);
+                    $qtyInput.attr('max', sku.stock);
+                    if (parseInt($qtyInput.val()) > sku.stock) $qtyInput.val(sku.stock);
+                } else {
+                    $stockInfo.html('<span class="text-danger"><i class="fas fa-times-circle"></i> Out of Stock</span>');
+                    $cartBtns.prop('disabled', true);
+                }
+
+                // Swap the main photo when the variant carries its own.
+                if (sku.image) {
+                    $('.exzoom_img_ul li').first().find('img').attr('src', sku.image);
+                    $('.product-image-part img').first().attr('src', sku.image);
+                }
+
+                $skuIdInputs.val(sku.id);
+                $variantLabelInputs.val(sku.label || '');
+            }
+
+            function refresh() {
+                syncChosenLabels();
+                const ids = selectedValueIds();
+                if (!ids) return;
+                applySku(skuMap[ids.join('-')] || null);
             }
 
             $selector.on('click', '.variant-value-btn', function () {
                 const $btn = $(this);
-                $btn.siblings('.variant-value-btn').removeClass('active btn-secondary').addClass('btn-outline-secondary');
-                $btn.addClass('active btn-secondary').removeClass('btn-outline-secondary');
-
-                const ids = selectedValueIds();
-                if (!ids) {
-                    return;
-                }
-
-                const sku = skuMap[ids.join('-')];
-                applySku(sku || null, selectedLabel());
+                if ($btn.hasClass('is-disabled')) return;
+                $btn.closest('.variant-options').find('.variant-value-btn').removeClass('is-selected');
+                $btn.addClass('is-selected');
+                refresh();
             });
+
+            $selector.on('change', '.variant-select', refresh);
+
+            // Values no combination can reach are visibly dead rather than a
+            // dead end the shopper only discovers after clicking.
+            $selector.find('.variant-value-btn').each(function () {
+                if (!reachable[String($(this).data('value-id'))]) $(this).addClass('is-disabled');
+            });
+
+            // Preselect the default variant so the page opens on a buyable price.
+            if (defaultKey) {
+                defaultKey.split('-').forEach(function (id) {
+                    const $btn = $selector.find('.variant-value-btn[data-value-id="' + id + '"]');
+                    if ($btn.length) $btn.addClass('is-selected');
+                    $selector.find('.variant-select option[value="' + id + '"]').prop('selected', true);
+                });
+            }
+            refresh();
         })();
 
         // Buy Now: add to cart then redirect to checkout

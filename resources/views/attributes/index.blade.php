@@ -1,937 +1,546 @@
 @extends('layout.app')
 @section('meta-information')
-    <title>Manage Attributes</title>
+    <title>Attributes</title>
 @endsection
+
 @section('css')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
-    .modal {
-        transition: opacity 0.25s ease;
-    }
-    .modal-backdrop {
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-    .admin-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .admin-stats-grid .admin-stat-card {
-        border-radius: 6px;
-        padding: 1.5rem;
-        color: white;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .admin-stats-grid .admin-stat-card.primary {
-        /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-        background: #f4f4f4;
-        color: #764ba2;
-    }
-    
-    .admin-stats-grid .admin-stat-card.success {
-        /* background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); */
-        background: #f4f4f4;
-        color: #3aa31f;
-    }
-    
-    .admin-stats-grid .admin-stat-card.warning {
-        /* background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); */
-        background: #f4f4f4;
-        color: #f5576c;
-    }
-    
-    .admin-stats-grid .admin-stat-card.info {
-        /* background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); */
-        background: #f4f4f4;
-        color: #129fa7;
-    }
-    
-    .admin-stats-grid .admin-stat-card .position-relative {
-        position: relative;
-    }
-    
-    .admin-stats-grid .admin-stat-card .admin-stat-value {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-    
-    .admin-stats-grid .admin-stat-card .admin-stat-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-    
-    .admin-stats-grid .admin-stat-card .admin-stat-icon {
-        position: absolute;
-        top: 0;
-        right: 0;
-        font-size: 1.5rem;
-        opacity: 0.7;
-    }
-    
-    .states-table {
-        margin-top: 2rem;
-    }
-    
-    .states-table .states-table-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-    }
-    
-    .states-table .states-table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1.5rem;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    .states-table .states-table-header .states-table-title {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #333;
-    }
-    
-    .states-table .states-table-header .btn {
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        font-weight: 500;
-    }
-    
-    .states-table .states-table-content {
-        padding: 0;
-    }
-    
-    .states-table .states-table-content .alert {
-        margin: 1rem;
-        border-radius: 8px;
-        border: none;
-    }
-    
-    .states-table .states-table-content .alert-success {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    
-    .states-table .states-table-content .text-center {
-        padding: 3rem 1rem;
-    }
-    
-    .states-table .states-table-content .text-center .fa-inbox {
-        opacity: 0.5;
-    }
-    
-    .states-table .states-table-content .table-responsive {
-        overflow-x: auto;
-    }
-    
-    .states-table .states-table-content .table {
-        margin-bottom: 0;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-    
-    .states-table .states-table-content .table thead th {
-        background-color: #f8f9fa;
-        border-bottom: 2px solid #e9ecef;
-        padding: 1rem 0.75rem;
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    .states-table .states-table-content .table tbody td {
-        padding: 1rem 0.75rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    .states-table .states-table-content .table tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .states-table .states-table-content .badge {
-        font-size: 0.75rem;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
-        font-weight: 500;
-    }
-    
-    .states-table .states-table-content .badge.bg-light {
-        color: #6c757d !important;
-        background-color: #f8f9fa !important;
-    }
-    
-    .states-table .states-table-content .badge.bg-info {
-        background-color: #17a2b8 !important;
-    }
-    
-    .states-table .states-table-content .badge.bg-success {
-        background-color: #28a745 !important;
-    }
-    
-    .states-table .states-table-content .badge.bg-secondary {
-        background-color: #6c757d !important;
-    }
+    .modal { transition: opacity .25s ease; }
+    .modal-backdrop { background-color: rgba(0,0,0,.5); }
+    .hidden { display: none; }
 
-    .states-table .states-table-content .badge.bg-warning {
-        background-color: orange !important;
-    }
-    
-    .states-table-header {
-        background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);
-        color: white
-    }
+    .attr-page { padding-bottom: 30px; }
 
-    .states-table .states-table-content .btn-group {
-        border-radius: 6px;
-        overflow: hidden;
-    }
-    
-    .states-table .states-table-content .btn-group .btn {
-        border-radius: 0;
-        padding: 0.375rem 0.75rem;
-    }
-    
-    .states-table .states-table-content .btn-group .btn:first-child {
-        border-top-left-radius: 6px;
-        border-bottom-left-radius: 6px;
-    }
-    
-    .states-table .states-table-content .btn-group .btn:last-child {
-        border-top-right-radius: 6px;
-        border-bottom-right-radius: 6px;
-    }
-    
-    .states-table .states-table-content .pagination {
-        margin-bottom: 0;
-        padding: 1rem;
-    }
-    
-    .states-table .states-table-content .pagination .page-link {
-        border-radius: 6px;
-        margin: 0 0.2rem;
-        border: 1px solid #dee2e6;
-        color: #007bff;
-    }
-    
-    .states-table .states-table-content .pagination .page-item.active .page-link {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    
-    @media (max-width: 768px) {
-        .admin-stats-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        
-        .states-table .states-table-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
-        }
-        
-        .states-table .states-table-header .btn {
-            width: 100%;
-        }
-    }
-</style>
-<style>
-    .filter-container {
-        margin: 15px 15px 0 15px;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+    /* ---- Page header ---- */
+    .attr-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+    .attr-header h1 { font-size: 1.35rem; font-weight: 600; margin: 0; color: #111827; }
+    .attr-header p { margin: 4px 0 0; font-size: .85rem; color: #6b7280; }
 
-    .filter-container .filter-header {
-        background-color: #f8f9fa;
-        padding: 16px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-left: 4px solid #3b82f6;
-        transition: background-color 0.3s;
-    }
+    /* ---- Stats ---- */
+    .attr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .attr-stat { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
+    .attr-stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex: 0 0 auto; }
+    .attr-stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; color: #111827; }
+    .attr-stat-label { font-size: .78rem; color: #6b7280; margin-top: 4px; }
+    .attr-i-blue { background: #eff6ff; color: #2563eb; }
+    .attr-i-green { background: #ecfdf5; color: #059669; }
+    .attr-i-amber { background: #fffbeb; color: #d97706; }
+    .attr-i-rose { background: #fef2f2; color: #e11d48; }
 
-    .filter-container .filter-header:hover {
-        background-color: #e9ecef;
-    }
+    /* ---- Filters ---- */
+    .attr-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; }
+    .attr-filters .attr-input, .attr-filters select { width: auto; min-width: 190px; margin: 0; }
 
-    .filter-container .filter-header h3 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #1f2937;
-    }
+    /* ---- Attribute cards ---- */
+    .attr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+    .attr-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; transition: box-shadow .15s, border-color .15s; }
+    .attr-card:hover { border-color: #cbd5e1; box-shadow: 0 3px 10px rgba(0,0,0,.05); }
+    .attr-card.sortable-ghost { opacity: .4; }
+    .attr-card-top { display: flex; align-items: flex-start; gap: 10px; }
+    .attr-drag { cursor: grab; color: #cbd5e1; padding-top: 3px; }
+    .attr-drag:active { cursor: grabbing; }
+    .attr-card-title { font-size: 1rem; font-weight: 600; color: #111827; margin: 0; }
+    .attr-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
-    .filter-container .filter-header .toggle-icon {
-        transition: transform 0.3s;
-    }
+    .attr-tag { font-size: .7rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; letter-spacing: .02em; }
+    .attr-tag-code { background: #f3f4f6; color: #4b5563; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .attr-tag-pill { background: #eff6ff; color: #1d4ed8; }
+    .attr-tag-swatch { background: #fdf2f8; color: #be185d; }
+    .attr-tag-dropdown { background: #f5f3ff; color: #6d28d9; }
+    .attr-tag-use { background: #ecfdf5; color: #047857; }
+    .attr-tag-unused { background: #fffbeb; color: #b45309; }
 
-    .filter-container .filter-header.active .toggle-icon {
-        transform: rotate(180deg);
-    }
+    .attr-values-preview { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; }
+    .attr-vchip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e5e7eb; background: #fafafa; border-radius: 999px; padding: 3px 10px; font-size: .78rem; color: #374151; }
+    .attr-vdot { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+    .attr-vmore { font-size: .78rem; color: #6b7280; align-self: center; }
+    .attr-novalues { font-size: .8rem; color: #b45309; background: #fffbeb; border: 1px dashed #fde68a; border-radius: 6px; padding: 6px 10px; width: 100%; }
 
-    .filter-container .filter-content {
-        background-color: white;
-        padding: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-out, padding 0.3s ease-out;
-    }
+    .attr-card-actions { display: flex; gap: 8px; border-top: 1px solid #f3f4f6; padding-top: 12px; margin-top: auto; }
 
-    .filter-container .filter-content.active {
-        padding: 20px;
-        max-height: 500px;
-    }
+    /* ---- Buttons ---- */
+    .attr-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 7px; padding: 7px 14px; font-size: .84rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; white-space: nowrap; }
+    .attr-btn-primary { background: #2563eb; color: #fff; }
+    .attr-btn-primary:hover { background: #1d4ed8; color: #fff; }
+    .attr-btn-light { background: #fff; border-color: #d1d5db; color: #374151; flex: 1; }
+    .attr-btn-light:hover { background: #f9fafb; border-color: #9ca3af; }
+    .attr-btn-danger-ghost { background: #fff; border-color: #fecaca; color: #dc2626; }
+    .attr-btn-danger-ghost:hover { background: #fef2f2; }
 
-    .filter-container .filter-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 16px;
-    }
+    /* ---- Form fields (shared with the modals) ---- */
+    .attr-field { margin-bottom: 16px; }
+    .attr-field > label { display: block; font-size: .84rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .attr-req { color: #ef4444; }
+    .attr-input { width: 100%; padding: 8px 11px; border: 1px solid #d1d5db; border-radius: 7px; font-size: .88rem; background: #fff; color: #111827; }
+    .attr-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+    .attr-help { font-size: .77rem; color: #6b7280; margin: 5px 0 0; }
+    .attr-advanced { margin-top: 4px; }
+    .attr-advanced summary { cursor: pointer; font-size: .82rem; color: #2563eb; margin-bottom: 10px; }
 
-    .filter-container .filter-group {
-        flex: 1;
-        min-width: 200px;
-    }
+    .attr-display-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .attr-display-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .attr-display-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 12px 8px; cursor: pointer; height: 100%; transition: all .12s; }
+    .attr-display-card i { font-size: 1.05rem; color: #9ca3af; }
+    .attr-display-card strong { font-size: .8rem; color: #374151; }
+    .attr-display-card small { font-size: .68rem; color: #9ca3af; line-height: 1.25; }
+    .attr-display-option input:checked + .attr-display-card { border-color: #2563eb; background: #eff6ff; }
+    .attr-display-option input:checked + .attr-display-card i,
+    .attr-display-option input:checked + .attr-display-card strong { color: #1d4ed8; }
 
-    .filter-container .filter-group label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 500;
-        color: #374151;
-    }
+    /* ---- Values editor ---- */
+    .attr-add-row { display: flex; gap: 8px; align-items: center; }
+    .attr-color { width: 40px; height: 38px; padding: 2px; border: 1px solid #d1d5db; border-radius: 7px; background: #fff; cursor: pointer; flex: 0 0 auto; }
+    .attr-value-list { list-style: none; margin: 14px 0 0; padding: 0; border: 1px solid #e5e7eb; border-radius: 8px; max-height: 340px; overflow-y: auto; }
+    .attr-value-list:empty { display: none; }
+    .attr-value-row { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-bottom: 1px solid #f3f4f6; background: #fff; }
+    .attr-value-row:last-child { border-bottom: none; }
+    .attr-value-row.sortable-ghost { opacity: .4; }
+    .attr-value-row .attr-input { flex: 1; padding: 5px 9px; font-size: .85rem; }
+    .attr-vhandle { cursor: grab; color: #cbd5e1; }
+    .attr-vuse { font-size: .7rem; color: #6b7280; background: #f3f4f6; border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+    .attr-vdel { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px 7px; border-radius: 5px; }
+    .attr-vdel:hover { color: #dc2626; background: #fef2f2; }
+    .attr-empty-note { font-size: .84rem; color: #6b7280; text-align: center; padding: 22px 10px; }
 
-    .filter-container .filter-group select,
-    .filter-container .filter-group input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border-color 0.3s;
-    }
-
-    .filter-container .filter-group select:focus,
-    .filter-container .filter-group input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .filter-container .filter-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 20px;
-    }
-
-    .filter-container .filter-actions button {
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .filter-container .filter-actions .apply-btn {
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-    }
-
-    .filter-container .filter-actions .apply-btn:hover {
-        background-color: #2563eb;
-    }
-
-    .filter-container .filter-actions .reset-btn {
-        background-color: #f8f9fa;
-        color: #6b7280;
-        border: 1px solid #d1d5db;
-    }
-
-    .filter-container .filter-actions .reset-btn:hover {
-        background-color: #e5e7eb;
-    }
-    .select2-container .select2-selection--single {        
-        height: 42px;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 40px;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 42px;
-        position: absolute;
-        top: 1px;
-        right: 3px;
-        width: 20px;
-    }
-    /* Example: change active page background and text */
-    span [aria-current="page"] span{
-        background-color: #2563eb !important;
-        background: #2563eb !important;
-        color: white;
-        border-color: #2563eb;
-    }
+    /* ---- Empty state ---- */
+    .attr-empty { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 48px 24px; text-align: center; }
+    .attr-empty i { font-size: 2.4rem; color: #d1d5db; margin-bottom: 14px; }
+    .attr-empty h4 { font-size: 1.05rem; color: #374151; font-weight: 600; margin-bottom: 6px; }
+    .attr-empty p { color: #6b7280; font-size: .87rem; margin-bottom: 16px; }
 </style>
 @endsection
+
 @section('main-content')
+<div class="attr-page">
+    <div class="attr-header">
+        <div>
+            <h1>Attributes</h1>
+            <p>Options a product can vary by &mdash; size, colour, weight. Add the values here, then pick them on a product.</p>
+        </div>
+        <button class="attr-btn attr-btn-primary create-new-btn">
+            <i class="fas fa-plus"></i> New attribute
+        </button>
+    </div>
 
-    <!-- States Table -->    
-    <div class="states-table bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="states-table-container">
-            <div class="states-table-header bg-blue-600 px-6 py-4 flex justify-between items-center">
-                <h2 class="states-table-title text-white text-xl font-semibold" style="color: white">
-                    <i class="fas fa-list mr-2"></i>Attribute List
-                </h2>
-                <button class="btn btn-primary create-new-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">
-                    <i class="fas fa-plus mr-2"></i>Add New Attribute
-                </button>
+    <div class="attr-stats">
+        <div class="attr-stat">
+            <div class="attr-stat-icon attr-i-blue"><i class="fas fa-tags"></i></div>
+            <div>
+                <div class="attr-stat-value">{{ $stats['attributes'] }}</div>
+                <div class="attr-stat-label">Attributes</div>
             </div>
-
-            <div class="states-table-content">
-                <!-- Success Alert -->
-                <form action="" method="get">
-                    <div class="filter-container">
-                        <div class="filter-header">
-                            <h3><i class="fas fa-filter mr-2"></i>Filter Options</h3>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="filter-content">
-                            <div class="closest filter-row">                             
-        
-                                <div class="filter-group">
-                                    <label for="code">Code</label>
-                                    <input type="text" name="code" value="{{ request('code') }}" id="code" class="form-control" placeholder="Enter code">
-                                </div>
-              
-                            </div>
-                            <div class="filter-actions">
-                                <button type="button" class="reset-btn">Reset</button>
-                                <button type="submit" class="apply-btn">Apply Filters</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
-                <!-- Table with Data -->                 
-                <div class="table-responsive overflow-x-auto" style="padding: 15px">
-                    <table class="table table-hover min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th style="padding-left: 20px" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SL</th>                                
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>	                                	
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbol</th>	                                	
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse ($attributes as $key => $value)                       
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap" style="padding-left: 20px">
-                                        <strong>{{ ($attributes->currentPage() - 1) * $attributes->perPage() + $key + 1 }}</strong>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $value->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $value->code }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($value->type === 'text')
-                                        <span class="badge text-white bg-green-500 px-2 py-1 rounded-full text-xs">
-                                            Text
-                                        </span>
-                                        @elseif($value->type === 'number')
-                                        <span class="badge text-white bg-yellow-500 px-2 py-1 rounded-full text-xs">
-                                            Number
-                                        </span>
-                                        @else
-                                        <span class="badge text-white bg-blue-500 px-2 py-1 rounded-full text-xs">
-                                            Select
-                                        </span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="btn-group btn-group-sm flex space-x-1">
-                                            @if ($value->type === 'select')
-                                            <button class="btn btn-outline-secondary manage-values-btn border border-gray-400 text-gray-700 hover:bg-gray-200 px-3 py-1 rounded-md transition duration-200"
-                                                data-attribute_id="{{ $value->id }}"
-                                                data-attribute_name="{{ $value->name }}"
-                                                title="Manage Values">
-                                                <i class="fas fa-list-ul"></i> Values
-                                            </button>
-                                            @endif
-                                            <button class="btn btn-outline-primary edit-item-btn border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded-md transition duration-200"
-                                                data-item_id="{{ $value->id }}"
-                                                data-name="{{ $value->name }}"
-                                                data-code="{{ $value->code }}"
-                                                data-type="{{ $value->type }}"
-                                                title="Edit Item">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded-md transition duration-200" onclick="confirmDelete('{{ $value->id }}', 'this item')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                            <tr>
-                                <td colspan="10" class="text-center py-8">
-                                    <i class="fas fa-inbox fa-3x text-gray-400 mb-4"></i>
-                                    <h4 class="text-gray-500 text-xl font-medium mb-2">No data found</h4>
-                                    <p class="text-gray-400 mb-4">Try filtering with different datas.</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="p-3 border-t border-gray-200">                    
-                    {{ $attributes->appends(request()->all())->links() }}
-                </div>
+        </div>
+        <div class="attr-stat">
+            <div class="attr-stat-icon attr-i-green"><i class="fas fa-list-ul"></i></div>
+            <div>
+                <div class="attr-stat-value">{{ $stats['values'] }}</div>
+                <div class="attr-stat-label">Values</div>
+            </div>
+        </div>
+        <div class="attr-stat">
+            <div class="attr-stat-icon attr-i-rose"><i class="fas fa-palette"></i></div>
+            <div>
+                <div class="attr-stat-value">{{ $stats['swatches'] }}</div>
+                <div class="attr-stat-label">Colour swatches</div>
+            </div>
+        </div>
+        <div class="attr-stat">
+            <div class="attr-stat-icon attr-i-amber"><i class="fas fa-box-open"></i></div>
+            <div>
+                <div class="attr-stat-value">{{ $stats['in_use'] }}</div>
+                <div class="attr-stat-label">Used on products</div>
             </div>
         </div>
     </div>
-    
-    @include('attributes.create-modal')
-    @include('attributes.edit-modal')
-    @include('attributes.delete-modal')
-    @include('attributes.values-modal')
 
-@endsection
-@section('js')
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
+    <form method="get" class="attr-filters">
+        <input type="text" name="search" value="{{ request('search') }}" class="attr-input"
+               placeholder="Search name or code…">
+        <select name="display_type" class="attr-input">
+            <option value="">All display types</option>
+            @foreach (\App\Models\Attribute::DISPLAY_TYPES as $value => $label)
+                <option value="{{ $value }}" @selected(request('display_type') === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <button type="submit" class="attr-btn attr-btn-primary"><i class="fas fa-filter"></i> Filter</button>
+        @if (request()->hasAny(['search', 'display_type']))
+            <a href="{{ route('role.attributes.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}"
+               class="attr-btn attr-btn-light" style="flex:0 0 auto;">Reset</a>
+        @endif
+    </form>
 
-            // initialized select2
-            $('.select2').select2();
-
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            // Show create modal
-            $('.create-new-btn').click(function() {
-                $('#createModal').removeClass('hidden');
-            });
-
-            // Show edit modal
-            $('.edit-item-btn').click(function() {
-                const item_id = $(this).data('item_id');
-                const name = $(this).data('name');
-                const code = $(this).data('code');
-                const type = $(this).data('type');
-                
-                // Set values in the edit form
-                $('#editItemId').val(item_id);              
-                $('#edit_name').val(name);
-                $('#edit_code').val(code);
-                if (type) {
-                    $('#edit_type').val(type).trigger('change');
-                } else {
-                    $('#edit_type').val('').trigger('change');
-                }
-                $('#editModal').removeClass('hidden'); 
-            });
-
-            // Close modals
-            $('.modal-close-create, .modal-backdrop').click(function(e) {
-                if ($(e.target).closest('.modal-close-create').length || $(e.target).hasClass('modal-backdrop')) {
-                    $('#createModal').addClass('hidden');
-                }
-            });
-
-            $('.modal-close-edit, .modal-backdrop').click(function(e) {
-                if ($(e.target).hasClass('modal-backdrop') || $(e.target).closest('.modal-close-edit').length) {
-                    $('#editModal').addClass('hidden');
-                }
-            });
-
-            $('.modal-close-delete, .modal-backdrop').click(function(e) {
-                if ($(e.target).hasClass('modal-backdrop') || $(e.target).closest('.modal-close-delete').length) {
-                    $('#deleteModal').addClass('hidden');
-                }
-            });
-
-            $('.modal-close-values, .modal-backdrop').click(function(e) {
-                if ($(e.target).hasClass('modal-backdrop') || $(e.target).closest('.modal-close-values').length) {
-                    $('#valuesModal').addClass('hidden');
-                }
-            });
-
-            // ----- Manage attribute values -----
-            const attributeBaseUrl = '{{ url(Str::slug(Auth::user()->getRoleNames()->first()) . '/attributes') }}';
-            const attributeValueBaseUrl = '{{ url(Str::slug(Auth::user()->getRoleNames()->first()) . '/attribute-values') }}';
-
-            function renderValues(values) {
-                const $list = $('#valuesList');
-                $list.empty();
-                if (!values.length) {
-                    $('#valuesEmptyMsg').removeClass('hidden');
-                    return;
-                }
-                $('#valuesEmptyMsg').addClass('hidden');
-                values.forEach(function (v) {
-                    $list.append(`
-                        <li class="flex items-center justify-between px-3 py-2 value-item" data-id="${v.id}">
-                            <span class="value-text flex-grow">${v.value}</span>
-                            <input type="text" class="value-edit-input form-input px-2 py-1 border border-gray-300 rounded-md hidden flex-grow" value="${v.value}">
-                            <div class="flex gap-1 ml-2">
-                                <button class="btn btn-outline-primary edit-value-btn border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-2 py-1 rounded-md" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-outline-success save-value-btn border border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-2 py-1 rounded-md hidden" title="Save">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-outline-danger delete-value-btn border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-2 py-1 rounded-md" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+    @if ($attributes->isEmpty())
+        <div class="attr-empty">
+            <i class="fas fa-tags"></i>
+            <h4>No attributes yet</h4>
+            <p>Start with <strong>Size</strong> or <strong>Colour</strong> &mdash; then products can be sold in variants.</p>
+            <button class="attr-btn attr-btn-primary create-new-btn"><i class="fas fa-plus"></i> Create your first attribute</button>
+        </div>
+    @else
+        <div class="attr-grid" id="attributeGrid">
+            @foreach ($attributes as $attribute)
+                @php $used = $usageCounts[$attribute->id] ?? 0; @endphp
+                <div class="attr-card" data-id="{{ $attribute->id }}">
+                    <div class="attr-card-top">
+                        <span class="attr-drag" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                        <div style="flex:1;">
+                            <h3 class="attr-card-title">{{ $attribute->name }}</h3>
+                            <div class="attr-card-meta">
+                                <span class="attr-tag attr-tag-code">{{ $attribute->code }}</span>
+                                <span class="attr-tag attr-tag-{{ $attribute->display_type }}">
+                                    {{ \App\Models\Attribute::DISPLAY_TYPES[$attribute->display_type] ?? $attribute->display_type }}
+                                </span>
+                                @if ($used > 0)
+                                    <span class="attr-tag attr-tag-use">{{ $used }} {{ Str::plural('product', $used) }}</span>
+                                @else
+                                    <span class="attr-tag attr-tag-unused">Not used yet</span>
+                                @endif
                             </div>
-                        </li>
-                    `);
-                });
+                        </div>
+                    </div>
+
+                    <div class="attr-values-preview">
+                        @forelse ($attribute->values->take(8) as $value)
+                            <span class="attr-vchip">
+                                @if ($attribute->isSwatch())
+                                    <span class="attr-vdot" style="background: {{ $value->swatchColor() }}"></span>
+                                @endif
+                                {{ $value->value }}
+                            </span>
+                        @empty
+                            <span class="attr-novalues">
+                                <i class="fas fa-triangle-exclamation"></i>
+                                No values yet — this attribute will not appear on the product form.
+                            </span>
+                        @endforelse
+
+                        @if ($attribute->values_count > 8)
+                            <span class="attr-vmore">+{{ $attribute->values_count - 8 }} more</span>
+                        @endif
+                    </div>
+
+                    <div class="attr-card-actions">
+                        <button class="attr-btn attr-btn-light manage-values-btn"
+                                data-attribute_id="{{ $attribute->id }}"
+                                data-attribute_name="{{ $attribute->name }}"
+                                data-display_type="{{ $attribute->display_type }}">
+                            <i class="fas fa-list-ul"></i> Values ({{ $attribute->values_count }})
+                        </button>
+                        <button class="attr-btn attr-btn-light edit-item-btn"
+                                data-item_id="{{ $attribute->id }}"
+                                data-name="{{ $attribute->name }}"
+                                data-code="{{ $attribute->code }}"
+                                data-display_type="{{ $attribute->display_type }}">
+                            <i class="fas fa-pen"></i> Edit
+                        </button>
+                        <button class="attr-btn attr-btn-danger-ghost"
+                                onclick="confirmDelete('{{ $attribute->id }}', '{{ $attribute->name }}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mt-4">
+            {{ $attributes->appends(request()->all())->links() }}
+        </div>
+    @endif
+</div>
+
+@include('attributes.create-modal')
+@include('attributes.edit-modal')
+@include('attributes.delete-modal')
+@include('attributes.values-modal')
+@endsection
+
+@section('js')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+$(function () {
+    const roleSlug = @json(Str::slug(Auth::user()->getRoleNames()->first()));
+    const valuesUrl = @json(route('role.attribute-values.store', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]));
+    const valuesReorderUrl = @json(route('role.attribute-values.reorder', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]));
+    const attributesReorderUrl = @json(route('role.attributes.reorder', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]));
+    const valuesIndexTemplate = @json(route('role.attributes.values.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first()), 'attribute' => '__ID__']));
+    const destroyTemplate = @json(route('role.attributes.destroy', ['role' => Str::slug(Auth::user()->getRoleNames()->first()), 'attribute' => '__ID__']));
+
+    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+
+    const toast = Swal.mixin({
+        toast: true, position: 'top-end', showConfirmButton: false, timer: 2200, timerProgressBar: true
+    });
+
+    function fail(xhr, fallback) {
+        const message = xhr?.responseJSON?.message
+            || (xhr?.responseJSON?.errors ? Object.values(xhr.responseJSON.errors)[0][0] : null)
+            || fallback;
+        Swal.fire({ icon: 'error', title: 'Could not continue', text: message });
+    }
+
+    /* ---------------------------------------------------------- modal plumbing */
+
+    $('.create-new-btn').on('click', () => $('#createModal').removeClass('hidden'));
+    $('.modal-close-create').on('click', () => $('#createModal').addClass('hidden'));
+    $('.modal-close-edit').on('click', () => $('#editModal').addClass('hidden'));
+    $('.modal-close-delete').on('click', () => $('#deleteModal').addClass('hidden'));
+    $('.modal-close-values').on('click', function () {
+        $('#valuesModal').addClass('hidden');
+        // Value counts and chips on the cards are rendered server-side.
+        if ($('#valuesModal').data('dirty')) window.location.reload();
+    });
+
+    /* ---------------------------------------------------------- create */
+
+    $('#createSubmit').on('click', function () {
+        const $btn = $(this).prop('disabled', true);
+
+        $.post($('#createForm').attr('action'), $('#createForm').serialize())
+            .done(function (response) {
+                if (!response.success) {
+                    $btn.prop('disabled', false);
+                    return Swal.fire({ icon: 'error', title: 'Oops…', text: response.message });
+                }
+                toast.fire({ icon: 'success', title: 'Attribute created' });
+                setTimeout(() => window.location.reload(), 700);
+            })
+            .fail(function (xhr) {
+                $btn.prop('disabled', false);
+                fail(xhr, 'Failed to create the attribute.');
+            });
+    });
+
+    /* ---------------------------------------------------------- edit */
+
+    $('.edit-item-btn').on('click', function () {
+        const $btn = $(this);
+        $('#editItemId').val($btn.data('item_id'));
+        $('#edit_name').val($btn.data('name'));
+        $('#edit_code').val($btn.data('code'));
+        $('#editForm input[name="display_type"][value="' + $btn.data('display_type') + '"]').prop('checked', true);
+        $('#editModal').removeClass('hidden');
+    });
+
+    $('#editSubmit').on('click', function () {
+        const $btn = $(this).prop('disabled', true);
+        const url = $('#editForm').data('action-template').replace('__ID__', $('#editItemId').val());
+
+        $.post(url, $('#editForm').serialize())
+            .done(function (response) {
+                if (!response.success) {
+                    $btn.prop('disabled', false);
+                    return Swal.fire({ icon: 'error', title: 'Oops…', text: response.message });
+                }
+                toast.fire({ icon: 'success', title: 'Attribute updated' });
+                setTimeout(() => window.location.reload(), 700);
+            })
+            .fail(function (xhr) {
+                $btn.prop('disabled', false);
+                fail(xhr, 'Failed to update the attribute.');
+            });
+    });
+
+    /* ---------------------------------------------------------- delete */
+
+    window.confirmDelete = function (id, name) {
+        $('#deleteName').text(name);
+        $('#confirmDeleteBtn').data('target-id', id);
+        $('#deleteModal').removeClass('hidden');
+    };
+
+    $('#confirmDeleteBtn').on('click', function () {
+        const id = $(this).data('target-id');
+
+        $.ajax({
+            url: destroyTemplate.replace('__ID__', id),
+            method: 'POST',
+            data: { _method: 'DELETE', item_id: id }
+        })
+        .done(function (response) {
+            $('#deleteModal').addClass('hidden');
+            if (!response.success) {
+                return Swal.fire({ icon: 'error', title: 'Cannot delete', text: response.message });
+            }
+            toast.fire({ icon: 'success', title: 'Attribute deleted' });
+            setTimeout(() => window.location.reload(), 700);
+        })
+        .fail(function (xhr) {
+            $('#deleteModal').addClass('hidden');
+            fail(xhr, 'Failed to delete the attribute.');
+        });
+    });
+
+    /* ---------------------------------------------------------- values editor */
+
+    function isSwatch() { return $('#valuesDisplayType').val() === 'swatch'; }
+
+    function renderValues(values) {
+        const $list = $('#valuesList').empty();
+        $('#valuesEmptyMsg').toggleClass('hidden', values.length > 0);
+
+        values.forEach(function (value) {
+            const $row = $('<li class="attr-value-row"></li>').attr('data-id', value.id);
+            $row.append('<span class="attr-vhandle"><i class="fas fa-grip-vertical"></i></span>');
+
+            if (isSwatch()) {
+                $row.append(
+                    $('<input type="color" class="attr-color attr-v-color">')
+                        .val(value.color_code || '#d1d5db')
+                );
             }
 
-            function loadValues(attributeId) {
-                $.get(`${attributeBaseUrl}/${attributeId}/values`, function (response) {
-                    if (response.success) {
-                        renderValues(response.values);
-                    }
-                });
+            $row.append($('<input type="text" class="attr-input attr-v-text">').val(value.value));
+
+            if (value.in_use > 0) {
+                $row.append($('<span class="attr-vuse"></span>').text(value.in_use + ' in use'));
             }
 
-            $(document).on('click', '.manage-values-btn', function () {
-                const attributeId = $(this).data('attribute_id');
-                const attributeName = $(this).data('attribute_name');
-                $('#valuesAttributeId').val(attributeId);
-                $('#valuesAttributeName').text(attributeName);
-                $('#newValueInput').val('');
-                loadValues(attributeId);
-                $('#valuesModal').removeClass('hidden');
-            });
-
-            $('#addValueBtn').click(function () {
-                const attributeId = $('#valuesAttributeId').val();
-                const value = $('#newValueInput').val().trim();
-                if (!value) return;
-
-                $.post(attributeValueBaseUrl, {
-                    attribute_id: attributeId,
-                    value: value
-                }, function (response) {
-                    if (response.success) {
-                        $('#newValueInput').val('');
-                        loadValues(attributeId);
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Oops...', text: response.message || 'Something went wrong.' });
-                    }
-                });
-            });
-
-            // Edit value (inline)
-            $(document).on('click', '.edit-value-btn', function () {
-                const $li = $(this).closest('.value-item');
-                $li.find('.value-text').addClass('hidden');
-                $li.find('.value-edit-input').removeClass('hidden');
-                $li.find('.edit-value-btn').addClass('hidden');
-                $li.find('.save-value-btn').removeClass('hidden');
-            });
-
-            // Save edited value
-            $(document).on('click', '.save-value-btn', function () {
-                const $li = $(this).closest('.value-item');
-                const id = $li.data('id');
-                const value = $li.find('.value-edit-input').val().trim();
-                if (!value) return;
-
-                $.ajax({
-                    url: `${attributeValueBaseUrl}/${id}`,
-                    method: 'PUT',
-                    data: { value: value },
-                    success: function (response) {
-                        if (response.success) {
-                            loadValues($('#valuesAttributeId').val());
-                        } else {
-                            Swal.fire({ icon: 'error', title: 'Oops...', text: response.message || 'Something went wrong.' });
-                        }
-                    }
-                });
-            });
-
-            // Delete value
-            $(document).on('click', '.delete-value-btn', function () {
-                const $li = $(this).closest('.value-item');
-                const id = $li.data('id');
-
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Are you sure?',
-                    text: 'This value will be permanently removed.',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: `${attributeValueBaseUrl}/${id}`,
-                            method: 'DELETE',
-                            success: function (response) {
-                                if (response.success) {
-                                    loadValues($('#valuesAttributeId').val());
-                                } else {
-                                    Swal.fire({ icon: 'error', title: 'Oops...', text: response.message || 'Something went wrong.' });
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-
-            // Close success alert
-            $('.close-btn').click(function() {
-                $(this).closest('.alert').addClass('hidden');
-            });
-
-            // Create state form submission
-            $('#createSubmit').click(function(e) {
-                e.preventDefault();
-                console.log(validateCreateForm());                
-                if (validateCreateForm()) {
-                    let formData = new FormData($('#createForm')[0]);
-                    $.ajax({
-                        url: $('#createForm').attr('action'),
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Done',
-                                    text: 'Data created successfully!'
-                                });
-                                $('#createModal').addClass('hidden');
-                                $('#createForm')[0].reset();
-                                setTimeout(() => window.location.reload(), 800);
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Oops...',
-                                    text: response.message || 'Something went wrong.'
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            console.error(xhr.responseText);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Failed to create data.'
-                            });
-                        }
-                    });                                     
-                }
-            });
-
-            // Edit state form submission
-            $('#editSubmit').click(function() {
-                if (validateEditForm()) {
-                    let formData = new FormData($('#editForm')[0]);
-                    $.ajax({
-                        url: $(this).data('action'),
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    icon: "success",
-                                    title: "Done",
-                                    text: "Data updated successfully!",
-                                });
-                                $('#editModal').addClass('hidden');
-                                setTimeout(() => window.location.reload(), 800);
-                            } else {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Oops...",
-                                    text: response.message || "Update failed.",
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            console.error('❌ Error:', xhr.responseText);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Something went wrong!'
-                            });
-                        }
-                    }); 
-                }
-            });
-
-            // Delete confirmation
-            $('#confirmDeleteBtn').click(function() {
-                const dataId = $(this).data('item-id');
-                const deleteUrl = $(this).data('action');
-                $.ajax({
-                    url: deleteUrl,
-                    method: 'DELETE',
-                    data: {
-                        item_id: dataId,
-                    },
-                    success: function (response) {
-                        console.log(response);
-                        if (response.success) {
-                            Swal.fire({
-                                icon: "success",
-                                title: "Done",
-                                text: "Data deleted successfully!",
-                            });
-                            $('#deleteModal').addClass('hidden');
-                            console.log('trigger reload');                                
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        } else {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Opps...",
-                                text: response.message,
-                            });
-                        }
-                    },
-                    error: function (xhr) {
-                        console.error('❌ Error:', xhr.responseText);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Something went wrong!'
-                        });
-                    }
-                });  
-            });
+            $row.append('<button type="button" class="attr-vdel" title="Delete value"><i class="fas fa-trash"></i></button>');
+            $list.append($row);
         });
 
-        function select2SetValueNoEvent(selectId, value) {
-            var $select = $(selectId);
+        makeValuesSortable();
+    }
 
-            // Set the underlying value
-            $select.val(value);
+    function loadValues(attributeId) {
+        $.get(valuesIndexTemplate.replace('__ID__', attributeId))
+            .done(function (response) {
+                $('#valuesDisplayType').val(response.attribute.display_type || 'pill');
+                $('#newValueColor').toggle(isSwatch());
+                $('#valuesAddHint').text(isSwatch()
+                    ? 'Pick a colour, type the name, then Add. Paste several names at once to add them without colours.'
+                    : 'Separate several values with commas to add them all at once.');
+                renderValues(response.values || []);
+            })
+            .fail((xhr) => fail(xhr, 'Failed to load values.'));
+    }
 
-            // Find the selected option text
-            var text = $select.find('option:selected').text() || '';
+    $('.manage-values-btn').on('click', function () {
+        const $btn = $(this);
+        $('#valuesAttributeId').val($btn.data('attribute_id'));
+        $('#valuesDisplayType').val($btn.data('display_type'));
+        $('#valuesAttributeName').text($btn.data('attribute_name'));
+        $('#newValueInput').val('');
+        $('#valuesModal').removeClass('hidden').data('dirty', false);
+        loadValues($btn.data('attribute_id'));
+    });
 
-            // Update the visible Select2 box manually
-            $select.data('select2').$container.find('.select2-selection__rendered').text(text);
-        }
-        
-        // Form validation functions
-        function validateCreateForm() {
-            let isValid = true;
-            
-            // Reset error messages
-            $('#createForm .error-message').addClass('hidden');
-            $('#createForm .form-select, #createForm .form-input').removeClass('border-red-500');                                                
-                        
-            if (!$('#create_name').val().trim()) {
-                $('#create_name').next('.error-message').removeClass('hidden');
-                $('#create_name').addClass('border-red-500');
-                isValid = false;
-            }                                                                           
-                        
-            if (!$('#create_code').val().trim()) {
-                $('#create_code').next('.error-message').removeClass('hidden');
-                $('#create_code').addClass('border-red-500');
-                isValid = false;
-            }                                                                           
-            
-            return isValid;
-        }
+    function addValue() {
+        const attributeId = $('#valuesAttributeId').val();
+        const value = $('#newValueInput').val().trim();
+        if (!value) return;
 
-        function validateEditForm() {
-            let isValid = true;
-            
-            // Reset error messages
-            $('#editForm .error-message').addClass('hidden');
-            $('#editForm .form-select, #editForm .form-input').removeClass('border-red-500');
-            
-            if (!$('#edit_name').val().trim()) {
-                $('#edit_name').next('.error-message').removeClass('hidden');
-                $('#edit_name').addClass('border-red-500');
-                isValid = false;
-            }                    
-            
-            if (!$('#edit_code').val().trim()) {
-                $('#edit_code').next('.error-message').removeClass('hidden');
-                $('#edit_code').addClass('border-red-500');
-                isValid = false;
-            }        
-            
-            return isValid;
-        }
+        $.post(valuesUrl, {
+            attribute_id: attributeId,
+            value: value,
+            color_code: isSwatch() ? $('#newValueColor').val() : null
+        })
+        .done(function (response) {
+            if (!response.success) {
+                return Swal.fire({ icon: 'error', title: 'Oops…', text: response.message });
+            }
+            $('#newValueInput').val('');
+            $('#valuesModal').data('dirty', true);
+            loadValues(attributeId);
+        })
+        .fail((xhr) => fail(xhr, 'Failed to add the value.'));
+    }
 
-        // Reset create form
-        function resetCreateForm() {
-            $('#createForm')[0].reset();
-            $('#createForm .error-message').addClass('hidden');
-            $('#createForm .form-select, #createForm .form-input').removeClass('border-red-500');
-        }
+    $('#addValueBtn').on('click', addValue);
+    $('#newValueInput').on('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); addValue(); }
+    });
 
-        // Delete confirmation
-        function confirmDelete(id, name=null) {
-            $('#deleteName').text(name);
-            $('#confirmDeleteBtn').data('item-id', id);
-            $('#deleteModal').removeClass('hidden');
-        }
+    // Inline edits save when the field loses focus — no per-row save button.
+    function saveValue($row) {
+        const id = $row.data('id');
+        const value = $row.find('.attr-v-text').val().trim();
+        if (!value) return;
 
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterHeader = document.querySelector('.filter-container .filter-header');
-            const filterContent = document.querySelector('.filter-container .filter-content');
-            
-            filterHeader.addEventListener('click', function() {
-                this.classList.toggle('active');
-                filterContent.classList.toggle('active');
-            });
-            
-            // Reset button functionality
-            document.querySelector('.filter-container .reset-btn').addEventListener('click', function() {
-                const inputs = document.querySelectorAll('.filter-container select, .filter-container input');
-                inputs.forEach(input => {
-                    if (input.type === 'date') {
-                        input.value = '';
-                    } else {
-                        input.selectedIndex = 0;
-                    }
-                });
-            });
-            document.querySelector('.reset-btn').addEventListener('click', function (e) {
-                e.preventDefault();
-                window.location = '{{ route('role.units.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}';
-            });
+        $.ajax({
+            url: '/' + roleSlug + '/attribute-values/' + id,
+            method: 'POST',
+            data: {
+                _method: 'PUT',
+                value: value,
+                color_code: isSwatch() ? $row.find('.attr-v-color').val() : null
+            }
+        })
+        .done(function (response) {
+            if (!response.success) {
+                Swal.fire({ icon: 'error', title: 'Oops…', text: response.message });
+                return loadValues($('#valuesAttributeId').val());
+            }
+            $('#valuesModal').data('dirty', true);
+        })
+        .fail((xhr) => fail(xhr, 'Failed to save the value.'));
+    }
+
+    $('#valuesList').on('change blur', '.attr-v-text', function () { saveValue($(this).closest('.attr-value-row')); });
+    $('#valuesList').on('change', '.attr-v-color', function () { saveValue($(this).closest('.attr-value-row')); });
+
+    $('#valuesList').on('click', '.attr-vdel', function () {
+        const $row = $(this).closest('.attr-value-row');
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Delete this value?',
+            text: 'It will be removed from the list shoppers can choose from.',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it',
+            confirmButtonColor: '#dc2626'
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+
+            $.ajax({
+                url: '/' + roleSlug + '/attribute-values/' + $row.data('id'),
+                method: 'POST',
+                data: { _method: 'DELETE' }
+            })
+            .done(function (response) {
+                if (!response.success) {
+                    return Swal.fire({ icon: 'error', title: 'Cannot delete', text: response.message });
+                }
+                $('#valuesModal').data('dirty', true);
+                loadValues($('#valuesAttributeId').val());
+            })
+            .fail((xhr) => fail(xhr, 'Failed to delete the value.'));
         });
-    </script>
+    });
+
+    /* ---------------------------------------------------------- reordering */
+
+    let valuesSortable = null;
+    function makeValuesSortable() {
+        if (valuesSortable) valuesSortable.destroy();
+        valuesSortable = Sortable.create(document.getElementById('valuesList'), {
+            handle: '.attr-vhandle',
+            animation: 150,
+            onEnd: function () {
+                const ids = $('#valuesList .attr-value-row').map(function () { return $(this).data('id'); }).get();
+                $.post(valuesReorderUrl, { ids: ids })
+                    .done(() => $('#valuesModal').data('dirty', true))
+                    .fail((xhr) => fail(xhr, 'Failed to save the new order.'));
+            }
+        });
+    }
+
+    const grid = document.getElementById('attributeGrid');
+    if (grid) {
+        Sortable.create(grid, {
+            handle: '.attr-drag',
+            animation: 150,
+            onEnd: function () {
+                const ids = $('#attributeGrid .attr-card').map(function () { return $(this).data('id'); }).get();
+                $.post(attributesReorderUrl, { ids: ids })
+                    .done(() => toast.fire({ icon: 'success', title: 'Order saved' }))
+                    .fail((xhr) => fail(xhr, 'Failed to save the new order.'));
+            }
+        });
+    }
+});
+</script>
 @endsection

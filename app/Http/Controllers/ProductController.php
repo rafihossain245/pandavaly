@@ -113,7 +113,7 @@ class ProductController extends Controller
         $units = Unit::orderBy('name')->where('is_active', 1)->get();
         $suppliers = Supplier::orderBy('name')->where('is_active', 1)->get();
         $branches = Branch::orderBy('name')->where('is_active', 1)->get();
-        $attributes = Attribute::with('values')->where('type', 'select')->whereHas('values')->orderBy('name')->get();
+        $attributes = Attribute::with('values')->usableForVariants()->ordered()->get();
         return view('products.create', compact('categories', 'brands', 'branches', 'suppliers', 'units', 'attributes'));
     }
 
@@ -201,7 +201,7 @@ class ProductController extends Controller
                     }
                 }
 
-                $this->syncProductVariants($data->id, $request->input('variants_json'));
+                $this->syncProductVariants($data->id, $request);
 
 
                 //-------- update/create stock        			
@@ -336,6 +336,8 @@ class ProductController extends Controller
             'specification_value' => 'nullable|array',
             'specification_value.*' => 'nullable|string|max:500',
             'variants_json' => 'nullable|json',
+            'variant_images' => 'nullable|array',
+            'variant_images.*' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:' . FileLimit::uploadMaxKilobytes(),
         ];
     }
 
@@ -352,6 +354,7 @@ class ProductController extends Controller
             'numeric' => 'The :attribute must be a number.',
             'min.numeric' => 'The :attribute cannot be negative.',
             'variants_json.json' => 'The variant data is corrupted. Please rebuild the variants and try again.',
+            'variant_images.*.image' => 'Each variant photo must be an image file (JPG, PNG, WEBP or GIF).',
         ];
     }
 
@@ -439,8 +442,8 @@ class ProductController extends Controller
         $data = Product::with(['product_prices'])->findOrFail($id);
         $product_spec = DB::table('product_specifications')->where('product_id', $id)->get();
         $product_images = DB::table('productwise_images')->where('product_id', $id)->get();
-        $attributes = Attribute::with('values')->where('type', 'select')->whereHas('values')->orderBy('name')->get();
-        $skus = ProductSku::with('productAttributes')->where('product_id', $id)->get();
+        $attributes = Attribute::with('values')->usableForVariants()->ordered()->get();
+        $skus = ProductSku::with('productAttributes')->where('product_id', $id)->ordered()->get();
         return view('products.edit-modal', compact('brands', 'units', 'categories', 'data', 'suppliers', 'branches', 'product_spec', 'product_images', 'attributes', 'skus'));
     }
 
@@ -565,7 +568,7 @@ class ProductController extends Controller
                  * 6️⃣ SYNC ATTRIBUTE VARIANTS
                  * -------------------------------------
                  */
-                $this->syncProductVariants($data->id, $request->input('variants_json'));
+                $this->syncProductVariants($data->id, $request);
             });
 
             Cache::forget("product_details_{$oldSlug}");
@@ -610,6 +613,12 @@ class ProductController extends Controller
                 DB::table('productwise_images')->where('product_id', $id)->delete();
                 DB::table('stocks')->where('product_id', $id)->delete(); // if exists
 
+                // The SKU rows themselves go with the product via the foreign
+                // key cascade; their uploaded photos would otherwise be orphaned.
+                foreach (ProductSku::where('product_id', $id)->pluck('image') as $variantImage) {
+                    $this->deleteImageFile($variantImage);
+                }
+
                 // Delete the product
                 Product::where('id', $id)->delete();
             });
@@ -646,8 +655,8 @@ class ProductController extends Controller
             }
             $product_spec = DB::table('product_specifications')->where('product_id', $product->id)->get();
             $product_images = DB::table('productwise_images')->where('product_id', $product->id)->get();
-            $attributes = Attribute::with('values')->where('type', 'select')->whereHas('values')->orderBy('name')->get();
-            $skus = ProductSku::with('productAttributes')->where('product_id', $product->id)->get();
+            $attributes = Attribute::with('values')->usableForVariants()->ordered()->get();
+            $skus = ProductSku::with('productAttributes')->where('product_id', $product->id)->ordered()->get();
             $data['modal_view'] = view('products.edit-modal', [
                 'data' => $product,
                 'product' => $product,
@@ -709,36 +718,53 @@ class ProductController extends Controller
     }
 
     /**
-     * Create/update product SKUs and their attribute assignments based on
-     * the variant matrix submitted from the create/edit forms.
+     * Create/update product SKUs and their attribute assignments from the
+     * variant grid submitted by the create/edit forms.
      *
-     * @param  int  $productId
-     * @param  string|null  $variantsJson
-     * @return void
+     * Each variant carries a `key` (its sorted attribute-value ids) which is
+     * also the array key of its optional image upload, so a row's photo can be
+     * matched back to the row without threading indexes through the JSON.
      */
-    private function syncProductVariants($productId, $variantsJson)
+    private function syncProductVariants($productId, Request $request)
     {
-        $variants = json_decode($variantsJson ?? '', true);
+        $variants = json_decode($request->input('variants_json') ?? '', true);
         if (!is_array($variants)) {
             $variants = [];
         }
 
+        $uploads = (array) $request->file('variant_images', []);
         $keptSkuIds = [];
 
-        foreach ($variants as $variant) {
-            $skuData = [
-                'product_id' => $productId,
-                'barcode' => $variant['barcode'] ?? null,
-                'mrp' => $variant['mrp'] !== '' ? ($variant['mrp'] ?? null) : null,
-                'cost' => $variant['cost'] !== '' ? ($variant['cost'] ?? null) : null,
-                'weight' => $variant['weight'] !== '' ? ($variant['weight'] ?? null) : null,
-                'is_active' => !empty($variant['is_active']) ? 1 : 0,
-            ];
-
+        foreach (array_values($variants) as $position => $variant) {
             $sku = null;
             if (!empty($variant['id'])) {
                 $sku = ProductSku::where('product_id', $productId)->find($variant['id']);
             }
+
+            $key = $variant['key'] ?? null;
+            $image = $sku?->image;
+
+            if ($key && isset($uploads[$key]) && $uploads[$key] instanceof \Illuminate\Http\UploadedFile) {
+                $this->deleteImageFile($image);
+                $image = $this->storeUploadedImage($uploads[$key], 'images/variant');
+            } elseif (!empty($variant['remove_image'])) {
+                $this->deleteImageFile($image);
+                $image = null;
+            }
+
+            $skuData = [
+                'product_id' => $productId,
+                'sku' => $this->blankToNull($variant['sku'] ?? null),
+                'barcode' => $this->blankToNull($variant['barcode'] ?? null),
+                'price' => $this->blankToNull($variant['price'] ?? null),
+                'compare_at_price' => $this->blankToNull($variant['compare_at_price'] ?? null),
+                'cost' => $this->blankToNull($variant['cost'] ?? null),
+                'stock_qty' => max(0, (int) ($variant['stock_qty'] ?? 0)),
+                'weight' => $this->blankToNull($variant['weight'] ?? null),
+                'image' => $image,
+                'position' => $position + 1,
+                'is_active' => !empty($variant['is_active']) ? 1 : 0,
+            ];
 
             if ($sku) {
                 $sku->update($skuData);
@@ -764,8 +790,70 @@ class ProductController extends Controller
             }
         }
 
-        ProductSku::where('product_id', $productId)
+        $this->discardRemovedVariants($productId, $keptSkuIds);
+        $this->rollUpVariantStock($productId, count($keptSkuIds) > 0);
+    }
+
+    /**
+     * Variants the admin took off the grid. Ones that were never ordered are
+     * deleted outright; ones with order history are only deactivated so past
+     * invoices can still resolve what was bought.
+     */
+    private function discardRemovedVariants($productId, array $keptSkuIds): void
+    {
+        $removed = ProductSku::where('product_id', $productId)
             ->whereNotIn('id', $keptSkuIds ?: [0])
-            ->update(['is_active' => 0]);
+            ->get();
+
+        if ($removed->isEmpty()) {
+            return;
+        }
+
+        $ordered = DB::table('sales_order_items')
+            ->whereIn('product_sku_id', $removed->pluck('id'))
+            ->distinct()
+            ->pluck('product_sku_id')
+            ->all();
+
+        foreach ($removed as $sku) {
+            if (in_array($sku->id, $ordered)) {
+                $sku->update(['is_active' => 0]);
+                continue;
+            }
+
+            $this->deleteImageFile($sku->image);
+            ProductAttribute::where('product_sku_id', $sku->id)->delete();
+            $sku->delete();
+        }
+    }
+
+    /**
+     * With variants the sellable quantity lives on the SKUs, so the product's
+     * own stock_qty becomes their sum — that keeps product cards, the cart's
+     * stock guard and the listing filters honest without special-casing them.
+     */
+    private function rollUpVariantStock($productId, bool $hasVariants): void
+    {
+        if (!$hasVariants) {
+            return;
+        }
+
+        $total = ProductSku::where('product_id', $productId)
+            ->where('is_active', 1)
+            ->sum('stock_qty');
+
+        Product::where('id', $productId)->update(['stock_qty' => $total]);
+    }
+
+    private function blankToNull($value)
+    {
+        return ($value === '' || $value === null) ? null : $value;
+    }
+
+    private function deleteImageFile(?string $path): void
+    {
+        if ($path && file_exists(public_path($path))) {
+            @unlink(public_path($path));
+        }
     }
 }

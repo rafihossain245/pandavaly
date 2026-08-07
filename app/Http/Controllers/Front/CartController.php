@@ -59,10 +59,18 @@ class CartController extends Controller
     {
         $price = $product->product_prices->first();
         $selling = $price->selling_price ?? ($product->selling_price ?? 0);
+        $thumbnail = $product->thumbnail;
 
         if ($sku) {
-            $selling = $sku->mrp;
+            // A variant carries its own price and photo; fall back to the
+            // product's when the admin left them blank.
+            $selling = $sku->price ?? $selling;
+            $thumbnail = $sku->image ?: $thumbnail;
             $variantLabel = $variantLabel ?: $this->variantLabelFor($sku);
+
+            if (! $sku->is_active) {
+                return ['error' => "That option of {$product->name} is no longer available."];
+            }
         }
 
         $key = $sku ? $product->id . '_' . $sku->id : (string) $product->id;
@@ -76,12 +84,17 @@ class CartController extends Controller
             return ['error' => "Minimum order quantity for {$product->name} is {$moq} unit(s)."];
         }
 
-        if ($product->stock_qty !== null && $product->stock_qty < $totalNeeded) {
-            $available = max(0, $product->stock_qty - $currentCartQty);
+        // With a variant chosen the sellable quantity is that variant's, not the
+        // product-wide total, which is only the sum across every variant.
+        $availableStock = $sku ? $sku->stock_qty : $product->stock_qty;
+        $itemName = $variantLabel ? "{$product->name} ({$variantLabel})" : $product->name;
+
+        if ($availableStock !== null && $availableStock < $totalNeeded) {
+            $available = max(0, $availableStock - $currentCartQty);
             return [
                 'error' => $available > 0
-                    ? "Only {$available} more unit(s) available for {$product->name}."
-                    : "No more stock available for {$product->name}."
+                    ? "Only {$available} more unit(s) available for {$itemName}."
+                    : "No more stock available for {$itemName}."
             ];
         }
 
@@ -96,7 +109,7 @@ class CartController extends Controller
                 'name' => $product->name,
                 'price' => $selling,
                 'qty' => $requestedQty,
-                'thumbnail' => $product->thumbnail,
+                'thumbnail' => $thumbnail,
             ];
         }
 
@@ -170,6 +183,19 @@ class CartController extends Controller
             if ($request->qty < $moq) {
                 return response()->json([
                     'error' => "Minimum order quantity for {$cart['items'][$key]['name']} is {$moq} unit(s)."
+                ], 422);
+            }
+
+            // Typing a quantity straight into the cart must respect the same
+            // stock ceiling the add-to-cart path enforces.
+            $sku = !empty($cart['items'][$key]['sku_id'])
+                ? ProductSku::find($cart['items'][$key]['sku_id'])
+                : null;
+            $availableStock = $sku ? $sku->stock_qty : $product->stock_qty;
+
+            if ($availableStock !== null && $request->qty > $availableStock) {
+                return response()->json([
+                    'error' => "Only {$availableStock} unit(s) available for {$cart['items'][$key]['name']}."
                 ], 422);
             }
 

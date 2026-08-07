@@ -8,16 +8,34 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Guarded column-by-column: these were also applied by hand on some
+        // installs, and an unguarded add aborts the whole migration queue.
         Schema::table('buyers', function (Blueprint $table) {
-            // Google's subject id. Unique so two accounts can never claim the
-            // same Google identity, nullable so password-only accounts are fine.
-            $table->string('google_id')->nullable()->unique()->after('password');
-            $table->string('avatar')->nullable()->after('google_id');
-            $table->timestamp('phone_verified_at')->nullable()->after('phone');
+            if (! Schema::hasColumn('buyers', 'google_id')) {
+                // Google's subject id. Unique so two accounts can never claim the
+                // same Google identity, nullable so password-only accounts are fine.
+                $table->string('google_id')->nullable()->unique()->after('password');
+            }
+
+            if (! Schema::hasColumn('buyers', 'avatar')) {
+                $table->string('avatar')->nullable()->after('google_id');
+            }
+
+            if (! Schema::hasColumn('buyers', 'phone_verified_at')) {
+                $table->timestamp('phone_verified_at')->nullable()->after('phone');
+            }
 
             // OTP sign-in looks a buyer up by phone on every attempt.
-            $table->index('phone');
+            if (! $this->hasIndex('buyers', 'buyers_phone_index')) {
+                $table->index('phone');
+            }
         });
+    }
+
+    private function hasIndex(string $table, string $index): bool
+    {
+        return collect(Schema::getIndexes($table))
+            ->contains(fn ($existing) => ($existing['name'] ?? null) === $index);
     }
 
     public function down(): void
