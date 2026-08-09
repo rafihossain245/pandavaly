@@ -26,8 +26,15 @@ use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller
 {
-    /** Session key letting a guest reopen the order they just placed. */
-    private const GUEST_ORDER_KEY = 'guest_order_id';
+    /**
+     * Session key letting a guest reopen the order they just placed. Public
+     * because the order tracker reads it to waive the phone challenge for the
+     * shopper who placed the order in this session.
+     */
+    public const GUEST_ORDER_KEY = 'guest_order_id';
+
+    /** Flash key that pops the "Order Placed!" dialog once, on arrival. */
+    public const JUST_PLACED_KEY = 'just_placed_order_id';
 
     private function cartState(): array
     {
@@ -387,7 +394,11 @@ class CheckoutController extends Controller
             }
         }
 
-        return redirect()->route('checkout.confirmation', $order->id)
+        // Land the shopper on the live tracker rather than a dead-end receipt: the
+        // order number is already in the URL, so the page they were sent to is the
+        // same one they will come back to later to check progress.
+        return redirect()->route('track-order', ['order_no' => $order->order_no])
+            ->with(self::JUST_PLACED_KEY, $order->id)
             ->with('success', 'Order placed successfully')
             ->with('account_created', $accountCreated);
     }

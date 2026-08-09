@@ -22,7 +22,9 @@
     <link rel="shortcut icon" href="{{asset($setting->favicon_path ?? 'frontEnd/assets/image/favicon.png')}}" type="assets/image/x-icon">
     @include('frontEnd.layouts.css')
     @yield('css')
-    <title>{{ $setting->title ?? 'Home - An Ecommerce Journey!' }}</title>
+    {{-- Pages that have their own identity (content pages, product details) can
+         override this; everything else keeps the site-wide title. --}}
+    <title>@yield('page-title', $setting->title ?? 'Home - An Ecommerce Journey!')</title>
     <style>
         /* ===== CART SIDEBAR ===== */
         .cart-sidebar { width: 340px !important; background: #f5f5f5; display: flex; flex-direction: column; }
@@ -113,19 +115,16 @@
                 <div class="headline-text">
                     <span>50% discount in accessories products special for October!</span>
                 </div>
+                {{-- Managed in Website Settings. Font Awesome brand icons rather
+                     than the theme's PNGs, so a platform with no bundled image
+                     (LinkedIn, TikTok) still renders. --}}
                 <div class="headline-socials">
-                    <a href="#" class="social-item">
-                        <img src="{{asset('frontEnd/assets/')}}/image/facebook.png" alt="">
-                    </a>
-                    <a href="#" class="social-item">
-                        <img src="{{asset('frontEnd/assets/')}}/image/instagram.png" alt="">
-                    </a>
-                    <a href="#" class="social-item">
-                        <img src="{{asset('frontEnd/assets/')}}/image/twitter.png" alt="">
-                    </a>
-                    <a href="#" class="social-item">
-                        <img src="{{asset('frontEnd/assets/')}}/image/youtube.png" alt="">
-                    </a>
+                    @foreach ($setting?->socialLinks() ?? [] as $social)
+                        <a href="{{ $social['url'] }}" class="social-item" target="_blank" rel="noopener"
+                           aria-label="{{ $social['label'] }}" title="{{ $social['label'] }}">
+                            <i class="{{ $social['icon'] }}"></i>
+                        </a>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -350,6 +349,7 @@
     </section>
 
     @include('frontEnd.layouts.js')
+    @include('frontEnd.partials.search-suggest')
 </body>
 
 </html>

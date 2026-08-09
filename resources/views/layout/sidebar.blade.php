@@ -151,6 +151,16 @@
             <i class="fas fa-gift w-6 text-center mr-2"></i>
             <span>Combo Deals</span>
         </a>
+        <a href="{{ route('role.pages.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.pages.*') ? 'active' : '' }}">
+            <i class="fas fa-file-lines w-6 text-center mr-2"></i>
+            <span>Pages</span>
+        </a>
+        <a href="{{ route('role.page-categories.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.page-categories.*') ? 'active' : '' }}">
+            <i class="fas fa-layer-group w-6 text-center mr-2"></i>
+            <span>Footer Columns</span>
+        </a>
 
         <p class="sidebar-section">Marketing</p>
 
@@ -216,11 +226,6 @@
             States          role.states.index              districts/thanas, not these
             Airport Mgmt.   role.airport.index           — travel template
 
-            Pages           role.pages.index             — BROKEN, do not restore yet:
-            Page Categories role.page-categories.index     PageController's store/update/destroy are
-                                                           empty, and pages/edit-modal.blade.php posts
-                                                           to role.expenses.update with expense => 1,
-                                                           so saving a page edits expense #1.
         --}}
 
     </nav>

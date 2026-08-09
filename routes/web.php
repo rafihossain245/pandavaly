@@ -85,8 +85,13 @@ use App\Http\Controllers\Dashboard\ProductReviewController as DashboardProductRe
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
+// Live suggestions for the header search box; full results are /shop?q=…
+Route::get('/search/suggestions', [\App\Http\Controllers\Front\SearchController::class, 'suggestions'])
+    ->name('search.suggestions');
 Route::get('/product-details/{slug}', [HomeController::class, 'product_details'])->name('product.details');
 Route::get('/track-order', [\App\Http\Controllers\Front\TrackOrderController::class, 'index'])->name('track-order');
+// Admin-managed content pages (About us, Refund Policy, …) — these back the footer columns.
+Route::get('/page/{slug}', [\App\Http\Controllers\Front\PageController::class, 'show'])->name('page.show');
 Route::post('/newsletter/subscribe', [\App\Http\Controllers\Front\NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
 // Cart routes (frontend)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -228,6 +233,8 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     Route::get('newsletter-subscribers', [\App\Http\Controllers\Dashboard\NewsletterSubscriberController::class, 'index'])->name('newsletter-subscribers.index');
     Route::delete('newsletter-subscribers/{id}', [\App\Http\Controllers\Dashboard\NewsletterSubscriberController::class, 'destroy'])->name('newsletter-subscribers.destroy');
     Route::resource('page-categories', PageCategoryController::class)->except('show');
+    // Before the resource so "pages/reorder" is not caught by the {page} wildcard.
+    Route::post('pages/reorder', [PageController::class, 'reorder'])->name('pages.reorder');
     Route::resource('pages', PageController::class)->except('show');
     Route::get('website-settings', [SettingController::class, 'index'])->name('website-settings');
     Route::post('website-settings', [SettingController::class, 'store'])->name('website-settings.store');

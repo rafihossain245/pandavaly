@@ -63,7 +63,7 @@
 
         {{-- Header --}}
         <div class="confirm-header">
-            <div class="confirm-brand">epal<span>shop</span></div>
+            <div class="confirm-brand">Go<span>eBazar</span></div>
             <div class="confirm-check"><i class="fas fa-check"></i></div>
             <div class="confirm-order-no">Order# {{ $order->order_no }}</div>
             <div class="confirm-thank">Thank you for your order!</div>

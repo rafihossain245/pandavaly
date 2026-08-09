@@ -4,9 +4,20 @@
         ->orderBy('name')
         ->take(7)
         ->get();
+
+    // Footer link columns are admin-managed: each active page category is a
+    // column, its active pages are the links. Manage under Content > Pages.
+    $footerColumns = \App\Models\PageCategory::active()
+        ->ordered()
+        ->with('activePages')
+        ->get()
+        ->filter(fn ($column) => $column->activePages->isNotEmpty());
 @endphp
 <footer>
-    <div class="container footer-top">
+    {{-- Tells the grid how many link columns it has to lay out: "Shop By" plus
+         however many page categories are being rendered. Set as a custom property
+         rather than grid-template-columns so the mobile media queries still win. --}}
+    <div class="container footer-top" style="--footer-link-cols: {{ 1 + $footerColumns->count() }}">
         <div class="footer-brand">
             <a class="footer-logo" href="{{ route('home') }}">
                 <img src="{{ asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
@@ -33,42 +44,19 @@
                 @endif
             </ul>
 
-            <div class="social-icons">
-                <a href="#" class="social-icon" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                <a href="#" class="social-icon" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
-                <a href="#" class="social-icon" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-            </div>
-
-            <div class="download-app">
-                <h3 class="footer-heading">Download App on Mobile :</h3>
-                <div class="app-badges">
-                    {{-- Only the square store logos ship with this theme, not the
-                         official "Get it on Google Play" / "Download on the App
-                         Store" badge artwork, so these are rendered as labelled
-                         buttons. Swap in the official badges when available. --}}
-                    <a href="#" class="app-badge">
-                        <img src="{{ asset('frontEnd/assets/') }}/image/google-play.png" alt="">
-                        <span><small>GET IT ON</small>Google Play</span>
-                    </a>
-                    <a href="#" class="app-badge">
-                        <img src="{{ asset('frontEnd/assets/') }}/image/app-store.png" alt="">
-                        <span><small>Download on the</small>App Store</span>
-                    </a>
+            {{-- Managed in Website Settings; the block disappears entirely when no
+                 profile has been filled in, rather than showing dead links. --}}
+            @if ($setting?->hasSocialLinks())
+                <div class="social-icons">
+                    @foreach ($setting->socialLinks() as $social)
+                        <a href="{{ $social['url'] }}" class="social-icon" target="_blank" rel="noopener"
+                           aria-label="{{ $social['label'] }}" title="{{ $social['label'] }}">
+                            <i class="{{ $social['icon'] }}"></i>
+                        </a>
+                    @endforeach
                 </div>
-            </div>
-        </div>
+            @endif
 
-        <div class="footer-section">
-            <h3>Information</h3>
-            <ul>
-                <li><a href="#">About us</a></li>
-                <li><a href="#">Contact us</a></li>
-                <li><a href="#">Company Information</a></li>
-                <li><a href="#">Our Stories</a></li>
-                <li><a href="#">Terms &amp; Conditions</a></li>
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Careers</a></li>
-            </ul>
         </div>
 
         <div class="footer-section">
@@ -82,29 +70,16 @@
             </ul>
         </div>
 
-        <div class="footer-section">
-            <h3>Support</h3>
-            <ul>
-                <li><a href="#">Support Center</a></li>
-                <li><a href="#">How to Order</a></li>
-                <li><a href="{{ route('track-order') }}">Order Tracking</a></li>
-                <li><a href="#">Payment</a></li>
-                <li><a href="#">Shipping</a></li>
-                <li><a href="#">FAQ</a></li>
-            </ul>
-        </div>
-
-        <div class="footer-section">
-            <h3>Consumer Policy</h3>
-            <ul>
-                <li><a href="#">Happy Return</a></li>
-                <li><a href="#">Refund Policy</a></li>
-                <li><a href="#">Exchange</a></li>
-                <li><a href="#">Cancellation</a></li>
-                <li><a href="#">Pre-Order</a></li>
-                <li><a href="#">Extra Discount</a></li>
-            </ul>
-        </div>
+        @foreach($footerColumns as $column)
+            <div class="footer-section">
+                <h3>{{ $column->name }}</h3>
+                <ul>
+                    @foreach($column->activePages as $page)
+                        <li><a href="{{ $page->url() }}">{{ $page->title }}</a></li>
+                    @endforeach
+                </ul>
+            </div>
+        @endforeach
     </div>
 
     <div class="container footer-bottom">
