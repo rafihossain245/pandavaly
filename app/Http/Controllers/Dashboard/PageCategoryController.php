@@ -14,7 +14,7 @@ class PageCategoryController extends Controller
     public function index()
     {
      try {
-         $datas = PageCategory::paginate(10);
+         $datas = PageCategory::withCount('pages')->ordered()->paginate(10);
          return view('page_categories.index', compact('datas'));
      } catch (\Exception $e) {
          return redirect()->back()->with('error', $e->getMessage());
@@ -37,10 +37,15 @@ class PageCategoryController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
+                'position' => 'nullable|integer|min:0',
             ]);
 
             PageCategory::create([
                 'name' => $request->name,
+                // Blank display order means "put it last".
+                'position' => $request->filled('position')
+                    ? (int) $request->position
+                    : (int) PageCategory::max('position') + 1,
                 'is_active' => $request->has('is_active') ? true : false,
             ]);
 
@@ -74,11 +79,15 @@ class PageCategoryController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
+                'position' => 'nullable|integer|min:0',
             ]);
 
             $pageCategory = PageCategory::findOrFail($request->id);
             $pageCategory->update([
                 'name' => $request->name,
+                'position' => $request->filled('position')
+                    ? (int) $request->position
+                    : $pageCategory->position,
                 'is_active' => $request->has('is_active') ? true : false,
             ]);
 

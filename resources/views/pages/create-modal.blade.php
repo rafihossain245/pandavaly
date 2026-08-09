@@ -1,59 +1,84 @@
 <div id="createModal" class="modal fixed inset-0 flex items-center justify-center z-50 hidden">
     <div class="modal-backdrop fixed inset-0 bg-black opacity-50"></div>
-    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto" style="min-width: 800px">
-        <div class="modal-content py-4 text-left px-6">
-            <div class="modal-header flex justify-between items-center pb-3">
-                <h3 class="text-xl font-semibold">Add New </h3>
-                <button class="modal-close-create z-50">
-                    <i class="fas fa-times"></i>
-                </button>
+    <div class="cms-modal bg-white mx-auto rounded-lg shadow-lg z-50">
+        <div class="cms-modal-head">
+            <div>
+                <h3>New Page</h3>
+                <p>Appears as a link in the footer column you choose.</p>
             </div>
-            <div class="modal-body">
-                <form class="closest" id="createForm" action="{{ route('role.pages.store', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="mb-2">
-                            <label for="create_user_id" class="block text-gray-700 text-sm font-bold mb-2">Users</label>
-                            <select id="create_user_id" name="user_id" class="form-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2" style="width: 100%">
-                                <option value="" selected disabled>All</option>
-                                @foreach ($categories as $item)
-                                    <option value="{{ $item->id }}">{{ $item->name }}</option>                                            
-                                @endforeach
-                            </select>
-                            <p id="create_user_msg" class="text-red-500 text-xs mt-1 hidden error-message">Please select a user</p>
-                        </div>
-                        
-                        
-                        <div class="mb-2">
-                            <label for="create_title" class="block text-gray-700 text-sm font-bold mb-2">Title</label>
-                            <input type="text" id="create_title" name="title" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Title">
-                            <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a Title</p>
-                        </div>
-                        <div class="mb-2">
-                            <label for="create_status" class="block text-gray-700 text-sm font-bold mb-2">Status</label>
-                            <select id="create_status" name="status" class="form-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 select2" style="width: 100%">
-                                <option value="1">Active</option>                                                                        
-                                <option value="0">Inactive</option>                                                                        
-                            </select>
-                        </div>
+            <button class="modal-close-create"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="cms-modal-body">
+            <form id="createForm"
+                  action="{{ route('role.pages.store', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}"
+                  method="POST">
+                @csrf
+
+                <div class="cms-grid-2">
+                    <div class="cms-field">
+                        <label for="create_title">Title <span class="cms-req">*</span></label>
+                        <input type="text" id="create_title" name="title" class="cms-input"
+                               placeholder="e.g. Refund Policy">
+                        <p class="cms-help">The link text shown in the footer.</p>
                     </div>
-                    
-                    <div class="mb-2">
-                        <label for="create_description" class="block text-gray-700 text-sm font-medium mb-2">Description</label>
-                        <textarea id="create_description" name="description" rows="4" placeholder="Enter Description"
-                            class="w-full rounded-md border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 p-3 text-sm text-gray-700 outline-none resize-none transition duration-150"></textarea>
-                        <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter an Description</p>
+
+                    <div class="cms-field">
+                        <label for="create_category_id">Footer column</label>
+                        <select id="create_category_id" name="category_id" class="cms-input">
+                            <option value="">— Not shown in the footer —</option>
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="cms-help">
+                            Manage columns under
+                            <a href="{{ route('role.page-categories.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}"
+                               target="_blank">Page Categories</a>.
+                        </p>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer flex justify-end pt-2">
-                <button type="button" class="btn btn-secondary px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200 mr-2 modal-close-create">
-                    Cancel
-                </button>
-                <button id="createSubmit" type="button" class="btn btn-primary px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">
-                    Submit
-                </button>
-            </div>
+                </div>
+
+                <div class="cms-field">
+                    <label for="create_content">Content</label>
+                    <textarea id="create_content" name="content" class="cms-editor"></textarea>
+                    <p class="cms-help">Leave empty for now if you want to write it later — the page will say it is being written.</p>
+                </div>
+
+                <details class="cms-advanced">
+                    <summary>Advanced</summary>
+
+                    <div class="cms-field">
+                        <label for="create_link_url">Link to an existing page instead</label>
+                        <input type="text" id="create_link_url" name="link_url" class="cms-input"
+                               placeholder="/track-order">
+                        <p class="cms-help">
+                            Set this and the footer link points here instead of showing content.
+                            Use it for real features (like Order Tracking) rather than writing a page.
+                        </p>
+                    </div>
+
+                    <div class="cms-field" style="margin-bottom:0;">
+                        <label for="create_slug">URL slug</label>
+                        <div class="cms-slug-row">
+                            <span>/page/</span>
+                            <input type="text" id="create_slug" name="slug" class="cms-input"
+                                   placeholder="generated from the title">
+                        </div>
+                        <p class="cms-help">Letters, numbers and dashes only.</p>
+                    </div>
+                </details>
+
+                <label class="cms-check">
+                    <input type="checkbox" name="is_active" value="1" checked>
+                    <span>Visible on the storefront</span>
+                </label>
+            </form>
+        </div>
+
+        <div class="cms-modal-foot">
+            <button type="button" class="cms-btn cms-btn-light modal-close-create">Cancel</button>
+            <button type="button" id="createSubmit" class="cms-btn cms-btn-primary">Create page</button>
         </div>
     </div>
 </div>

@@ -16,7 +16,10 @@
                 <button class="btn btn-secondary px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition duration-200 mr-2 modal-close-delete">
                     Cancel
                 </button>
-                <button id="confirmDeleteBtn" data-action="{{ route('role.expenses.destroy', ['role' => Str::slug(Auth::user()->getRoleNames()->first()), 'expense' => 1]) }}" class="btn btn-danger px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200">
+                {{-- The target id is set when the modal opens; the endpoint is built
+                     in index.blade.php. This used to carry a copy-pasted
+                     role.expenses.destroy action. --}}
+                <button id="confirmDeleteBtn" class="btn btn-danger px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200">
                     Delete
                 </button>
             </div>

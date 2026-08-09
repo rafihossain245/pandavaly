@@ -464,8 +464,9 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="btn-group btn-group-sm flex space-x-1">
                                             <button class="btn btn-outline-primary edit-item-btn border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded-md transition duration-200" 
-                                                data-item_id="{{ $value->id }}" 
+                                                data-item_id="{{ $value->id }}"
                                                 data-name="{{ $value->name }}"
+                                                data-position="{{ $value->position }}"
                                                 data-is_active="{{ $value->is_active }}"
                                                 title="Edit Item">
                                                 <i class="fas fa-edit"></i>
@@ -531,9 +532,10 @@
                 const is_active = $(this).data('is_active');
                 
                 // Set values in the edit form
-                $('#editItemId').val(item_id);              
+                $('#editItemId').val(item_id);
                 $('#edit_name').val(name);
-                $('#edit_is_active').prop('checked', is_active); 
+                $('#edit_position').val($(this).data('position'));
+                $('#edit_is_active').prop('checked', is_active);
                 $('#editModal').removeClass('hidden'); 
             });
 

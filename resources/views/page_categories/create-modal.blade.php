@@ -13,9 +13,15 @@
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-1 gap-0">
                         <div class="mb-4">
-                            <label for="create_name" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
-                            <input type="text" id="create_name" name="name" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Name">
+                            <label for="create_name" class="block text-gray-700 text-sm font-bold mb-2">Column heading</label>
+                            <input type="text" id="create_name" name="name" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Consumer Policy">
+                            <p class="text-gray-500 text-xs mt-1">Shown as the heading above this column in the storefront footer.</p>
                             <p class="text-red-500 text-xs mt-1 hidden error-message">Please enter a Name</p>
+                        </div>
+                        <div class="mb-4">
+                            <label for="create_position" class="block text-gray-700 text-sm font-bold mb-2">Display order</label>
+                            <input type="number" min="0" step="1" id="create_position" name="position" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Leave blank to add last">
+                            <p class="text-gray-500 text-xs mt-1">Lower numbers appear further left in the footer.</p>
                         </div>
                         <div class="mb-4">
                             <label class="flex items-center">

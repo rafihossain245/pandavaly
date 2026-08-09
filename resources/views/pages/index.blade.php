@@ -1,948 +1,390 @@
 @extends('layout.app')
 @section('meta-information')
-    <title>Manage Expenses</title>
+    <title>Pages</title>
 @endsection
+
 @section('css')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 <style>
-    .modal {
-        transition: opacity 0.25s ease;
-    }
-    .modal-backdrop {
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-    .admin-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .admin-stats-grid .admin-stat-card {
-        border-radius: 6px;
-        padding: 1.5rem;
-        color: white;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .admin-stats-grid .admin-stat-card.primary {
-        /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-        background: #f4f4f4;
-        color: #764ba2;
-    }
-    
-    .admin-stats-grid .admin-stat-card.success {
-        /* background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); */
-        background: #f4f4f4;
-        color: #3aa31f;
-    }
-    
-    .admin-stats-grid .admin-stat-card.warning {
-        /* background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); */
-        background: #f4f4f4;
-        color: #f5576c;
-    }
-    
-    .admin-stats-grid .admin-stat-card.info {
-        /* background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%); */
-        background: #f4f4f4;
-        color: #129fa7;
-    }
-    
-    .admin-stats-grid .admin-stat-card .position-relative {
-        position: relative;
-    }
-    
-    .admin-stats-grid .admin-stat-card .admin-stat-value {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-    
-    .admin-stats-grid .admin-stat-card .admin-stat-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-    
-    .admin-stats-grid .admin-stat-card .admin-stat-icon {
-        position: absolute;
-        top: 0;
-        right: 0;
-        font-size: 1.5rem;
-        opacity: 0.7;
-    }
-    
-    .states-table {
-        margin-top: 2rem;
-    }
-    
-    .states-table .states-table-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-    }
-    
-    .states-table .states-table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1.5rem;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    .states-table .states-table-header .states-table-title {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #333;
-    }
-    
-    .states-table .states-table-header .btn {
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        font-weight: 500;
-    }
-    
-    .states-table .states-table-content {
-        padding: 0;
-    }
-    
-    .states-table .states-table-content .alert {
-        margin: 1rem;
-        border-radius: 8px;
-        border: none;
-    }
-    
-    .states-table .states-table-content .alert-success {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    
-    .states-table .states-table-content .text-center {
-        padding: 3rem 1rem;
-    }
-    
-    .states-table .states-table-content .text-center .fa-inbox {
-        opacity: 0.5;
-    }
-    
-    .states-table .states-table-content .table-responsive {
-        overflow-x: auto;
-    }
-    
-    .states-table .states-table-content .table {
-        margin-bottom: 0;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-    
-    .states-table .states-table-content .table thead th {
-        background-color: #f8f9fa;
-        border-bottom: 2px solid #e9ecef;
-        padding: 1rem 0.75rem;
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    .states-table .states-table-content .table tbody td {
-        padding: 1rem 0.75rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    .states-table .states-table-content .table tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .states-table .states-table-content .badge {
-        font-size: 0.75rem;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
-        font-weight: 500;
-    }
-    
-    .states-table .states-table-content .badge.bg-light {
-        color: #6c757d !important;
-        background-color: #f8f9fa !important;
-    }
-    
-    .states-table .states-table-content .badge.bg-info {
-        background-color: #17a2b8 !important;
-    }
-    
-    .states-table .states-table-content .badge.bg-success {
-        background-color: #28a745 !important;
-    }
-    
-    .states-table .states-table-content .badge.bg-secondary {
-        background-color: #6c757d !important;
-    }
+    .modal { transition: opacity .25s ease; }
+    .modal-backdrop { background-color: rgba(0,0,0,.5); }
+    .hidden { display: none; }
 
-    .states-table .states-table-content .badge.bg-warning {
-        background-color: orange !important;
-    }
-    
-    .states-table-header {
-        background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);
-        color: white
-    }
+    .cms-page { padding-bottom: 30px; }
 
-    .states-table .states-table-content .btn-group {
-        border-radius: 6px;
-        overflow: hidden;
-    }
-    
-    .states-table .states-table-content .btn-group .btn {
-        border-radius: 0;
-        padding: 0.375rem 0.75rem;
-    }
-    
-    .states-table .states-table-content .btn-group .btn:first-child {
-        border-top-left-radius: 6px;
-        border-bottom-left-radius: 6px;
-    }
-    
-    .states-table .states-table-content .btn-group .btn:last-child {
-        border-top-right-radius: 6px;
-        border-bottom-right-radius: 6px;
-    }
-    
-    .states-table .states-table-content .pagination {
-        margin-bottom: 0;
-        padding: 1rem;
-    }
-    
-    .states-table .states-table-content .pagination .page-link {
-        border-radius: 6px;
-        margin: 0 0.2rem;
-        border: 1px solid #dee2e6;
-        color: #007bff;
-    }
-    
-    .states-table .states-table-content .pagination .page-item.active .page-link {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-    
-    @media (max-width: 768px) {
-        .admin-stats-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        
-        .states-table .states-table-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
-        }
-        
-        .states-table .states-table-header .btn {
-            width: 100%;
-        }
-    }
-</style>
-<style>
-    .filter-container {
-        margin: 15px 15px 0 15px;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+    .cms-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+    .cms-header h1 { font-size: 1.35rem; font-weight: 600; margin: 0; color: #111827; }
+    .cms-header p { margin: 4px 0 0; font-size: .85rem; color: #6b7280; }
+    .cms-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    .filter-container .filter-header {
-        background-color: #f8f9fa;
-        padding: 16px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-left: 4px solid #3b82f6;
-        transition: background-color 0.3s;
-    }
+    .cms-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .cms-stat { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
+    .cms-stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    .cms-stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; color: #111827; }
+    .cms-stat-label { font-size: .78rem; color: #6b7280; margin-top: 4px; }
+    .cms-i-blue { background: #eff6ff; color: #2563eb; }
+    .cms-i-green { background: #ecfdf5; color: #059669; }
+    .cms-i-violet { background: #f5f3ff; color: #7c3aed; }
+    .cms-i-amber { background: #fffbeb; color: #d97706; }
 
-    .filter-container .filter-header:hover {
-        background-color: #e9ecef;
-    }
+    .cms-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; }
+    .cms-filters .cms-input { width: auto; min-width: 190px; }
 
-    .filter-container .filter-header h3 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #1f2937;
-    }
+    /* ---- Column groups ---- */
+    .cms-column { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+    .cms-column-head { display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-bottom: 1px solid #f1f2f4; background: #fafafa; }
+    .cms-column-head h2 { font-size: .98rem; font-weight: 600; margin: 0; color: #111827; }
+    .cms-column-count { font-size: .72rem; background: #eff6ff; color: #1d4ed8; border-radius: 999px; padding: 2px 9px; font-weight: 600; }
+    .cms-column-hidden { font-size: .72rem; background: #fffbeb; color: #b45309; border-radius: 999px; padding: 2px 9px; font-weight: 600; }
+    .cms-column-hint { margin-left: auto; font-size: .76rem; color: #9ca3af; }
 
-    .filter-container .filter-header .toggle-icon {
-        transition: transform 0.3s;
-    }
+    .cms-rows { list-style: none; margin: 0; padding: 0; }
+    .cms-row { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid #f6f7f8; }
+    .cms-row:last-child { border-bottom: none; }
+    .cms-row.sortable-ghost { opacity: .4; }
+    .cms-handle { cursor: grab; color: #d1d5db; }
+    .cms-handle:active { cursor: grabbing; }
+    .cms-row-main { flex: 1; min-width: 0; }
+    .cms-row-title { font-size: .9rem; font-weight: 500; color: #111827; }
+    .cms-row-url { font-size: .76rem; color: #9ca3af; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 2px; word-break: break-all; }
+    .cms-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .cms-badge { font-size: .68rem; font-weight: 600; border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+    .cms-b-live { background: #ecfdf5; color: #047857; }
+    .cms-b-hidden { background: #f3f4f6; color: #6b7280; }
+    .cms-b-empty { background: #fffbeb; color: #b45309; }
+    .cms-b-link { background: #f5f3ff; color: #6d28d9; }
+    .cms-row-actions { display: flex; gap: 6px; }
 
-    .filter-container .filter-header.active .toggle-icon {
-        transform: rotate(180deg);
-    }
+    /* ---- Buttons / fields ---- */
+    .cms-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 7px; padding: 7px 13px; font-size: .84rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; white-space: nowrap; text-decoration: none; }
+    .cms-btn-primary { background: #2563eb; color: #fff; }
+    .cms-btn-primary:hover { background: #1d4ed8; color: #fff; }
+    .cms-btn-light { background: #fff; border-color: #d1d5db; color: #374151; }
+    .cms-btn-light:hover { background: #f9fafb; border-color: #9ca3af; color: #374151; }
+    .cms-btn-icon { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px 7px; border-radius: 6px; }
+    .cms-btn-icon:hover { color: #2563eb; background: #eff6ff; }
+    .cms-btn-icon.danger:hover { color: #dc2626; background: #fef2f2; }
 
-    .filter-container .filter-content {
-        background-color: white;
-        padding: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-out, padding 0.3s ease-out;
-    }
+    .cms-field { margin-bottom: 16px; }
+    .cms-field > label { display: block; font-size: .84rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .cms-req { color: #ef4444; }
+    .cms-input { width: 100%; padding: 8px 11px; border: 1px solid #d1d5db; border-radius: 7px; font-size: .88rem; background: #fff; color: #111827; }
+    .cms-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+    .cms-help { font-size: .77rem; color: #6b7280; margin: 5px 0 0; }
+    .cms-help a { color: #2563eb; }
+    .cms-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cms-advanced summary { cursor: pointer; font-size: .82rem; color: #2563eb; margin-bottom: 12px; }
+    .cms-slug-row { display: flex; align-items: center; gap: 0; }
+    .cms-slug-row span { font-size: .82rem; color: #6b7280; background: #f3f4f6; border: 1px solid #d1d5db; border-right: none; border-radius: 7px 0 0 7px; padding: 8px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .cms-slug-row .cms-input { border-radius: 0 7px 7px 0; }
+    .cms-check { display: flex; align-items: center; gap: 9px; margin: 4px 0 0; cursor: pointer; font-size: .87rem; color: #374151; }
+    .cms-check input { width: 16px; height: 16px; cursor: pointer; }
 
-    .filter-container .filter-content.active {
-        padding: 20px;
-        max-height: 500px;
-    }
+    /* ---- Modal shell ---- */
+    .cms-modal { width: 94%; max-width: 780px; max-height: 92vh; display: flex; flex-direction: column; }
+    .cms-modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 22px; border-bottom: 1px solid #f1f2f4; }
+    .cms-modal-head h3 { font-size: 1.1rem; font-weight: 600; margin: 0; color: #111827; }
+    .cms-modal-head p { margin: 3px 0 0; font-size: .8rem; color: #6b7280; }
+    .cms-modal-head button { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1rem; }
+    .cms-modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+    .cms-modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px; border-top: 1px solid #f1f2f4; background: #fafafa; }
+    .ck-editor__editable_inline { min-height: 220px; }
 
-    .filter-container .filter-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin-bottom: 16px;
-    }
+    .cms-empty { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 48px 24px; text-align: center; }
+    .cms-empty i { font-size: 2.4rem; color: #d1d5db; margin-bottom: 14px; }
+    .cms-empty h4 { font-size: 1.05rem; color: #374151; font-weight: 600; margin-bottom: 6px; }
+    .cms-empty p { color: #6b7280; font-size: .87rem; margin-bottom: 16px; }
 
-    .filter-container .filter-group {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .filter-container .filter-group label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 500;
-        color: #374151;
-    }
-
-    .filter-container .filter-group select,
-    .filter-container .filter-group input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border-color 0.3s;
-    }
-
-    .filter-container .filter-group select:focus,
-    .filter-container .filter-group input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .filter-container .filter-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 20px;
-    }
-
-    .filter-container .filter-actions button {
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .filter-container .filter-actions .apply-btn {
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-    }
-
-    .filter-container .filter-actions .apply-btn:hover {
-        background-color: #2563eb;
-    }
-
-    .filter-container .filter-actions .reset-btn {
-        background-color: #f8f9fa;
-        color: #6b7280;
-        border: 1px solid #d1d5db;
-    }
-
-    .filter-container .filter-actions .reset-btn:hover {
-        background-color: #e5e7eb;
-    }
-    .select2-container .select2-selection--single {        
-        height: 42px;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 40px;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 42px;
-        position: absolute;
-        top: 1px;
-        right: 3px;
-        width: 20px;
-    }
-    /* Example: change active page background and text */
-    span [aria-current="page"] span{
-        background-color: #2563eb !important;
-        background: #2563eb !important;
-        color: white;
-        border-color: #2563eb;
-    }
+    @media (max-width: 640px) { .cms-grid-2 { grid-template-columns: 1fr; } }
 </style>
 @endsection
+
 @section('main-content')
+@php $roleSlug = Str::slug(Auth::user()->getRoleNames()->first()); @endphp
+<div class="cms-page">
+    <div class="cms-header">
+        <div>
+            <h1>Pages</h1>
+            <p>The footer's link columns. Each column is a page category; the pages inside it are its links.</p>
+        </div>
+        <div class="cms-header-actions">
+            <a href="{{ route('role.page-categories.index', ['role' => $roleSlug]) }}" class="cms-btn cms-btn-light">
+                <i class="fas fa-layer-group"></i> Footer columns
+            </a>
+            <button class="cms-btn cms-btn-primary create-new-btn"><i class="fas fa-plus"></i> New page</button>
+        </div>
+    </div>
 
-    <!-- States Table -->    
-    <div class="states-table bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="states-table-container">
-            <div class="states-table-header bg-blue-600 px-6 py-4 flex justify-between items-center">
-                <h2 class="states-table-title text-white text-xl font-semibold" style="color: white">
-                    <i class="fas fa-list mr-2"></i>Page List
-                </h2>
-                <button class="btn btn-primary create-new-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200">
-                    <i class="fas fa-plus mr-2"></i>Add New Page
-                </button>
+    <div class="cms-stats">
+        <div class="cms-stat">
+            <div class="cms-stat-icon cms-i-blue"><i class="far fa-file-lines"></i></div>
+            <div>
+                <div class="cms-stat-value">{{ $stats['pages'] }}</div>
+                <div class="cms-stat-label">Pages</div>
             </div>
-
-            <div class="states-table-content">
-
-                <!-- Table with Data -->                 
-                <div class="table-responsive overflow-x-auto" style="padding: 15px">
-                    <table class="table table-hover min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th style="padding-left: 20px" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SL</th>                                
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>	                                	
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>	                                	
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse ($datas as $key => $value)                       
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap" style="padding-left: 20px">
-                                        <strong>{{ ($datas->currentPage() - 1) * $datas->perPage() + $key + 1 }}</strong>
-                                    </td>                                  
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $value->title }}</td>                                                               
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $value->category?->name }}                                                                                                                        
-                                    </td>  
-                                    
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($value->status)
-                                        <span class="badge text-white bg-green-500 px-2 py-1 rounded-full text-xs">
-                                            Active
-                                        </span>                                            
-                                        @else                                            
-                                        <span class="badge text-white bg-yellow-500 px-2 py-1 rounded-full text-xs">
-                                            Inactive
-                                        </span>
-                                        @endif          
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="btn-group btn-group-sm flex space-x-1">
-                                            <button class="btn btn-outline-primary edit-item-btn border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-3 py-1 rounded-md transition duration-200" 
-                                                data-item_id="{{ $value->id }}" 
-                                                data-expense_category_id="{{ $value->category_id }}"                                                                                                                                                 
-                                                data-title="{{ $value->title }}"
-                                                data-status="{{ $value->status }}"
-                                                title="Edit Item">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1 rounded-md transition duration-200" onclick="confirmDelete('{{ $value->id }}', 'this item')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                            <tr>
-                                <td colspan="12" class="text-center py-8">
-                                    <i class="fas fa-inbox fa-3x text-gray-400 mb-4"></i>
-                                    <h4 class="text-gray-500 text-xl font-medium mb-2">No data found</h4>
-                                    <p class="text-gray-400 mb-4">Try filtering with different datas.</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="p-3 border-t border-gray-200">                    
-                    {{ $datas->appends(request()->all())->links() }}
-                </div>
+        </div>
+        <div class="cms-stat">
+            <div class="cms-stat-icon cms-i-green"><i class="fas fa-eye"></i></div>
+            <div>
+                <div class="cms-stat-value">{{ $stats['live'] }}</div>
+                <div class="cms-stat-label">Visible on site</div>
+            </div>
+        </div>
+        <div class="cms-stat">
+            <div class="cms-stat-icon cms-i-violet"><i class="fas fa-layer-group"></i></div>
+            <div>
+                <div class="cms-stat-value">{{ $stats['columns'] }}</div>
+                <div class="cms-stat-label">Footer columns</div>
+            </div>
+        </div>
+        <div class="cms-stat">
+            <div class="cms-stat-icon cms-i-amber"><i class="fas fa-pen-to-square"></i></div>
+            <div>
+                <div class="cms-stat-value">{{ $stats['empty'] }}</div>
+                <div class="cms-stat-label">Still to be written</div>
             </div>
         </div>
     </div>
-    
-    @include('pages.create-modal')
-    @include('pages.edit-modal')
-    @include('pages.delete-modal')
 
+    <form method="get" class="cms-filters">
+        <input type="text" name="search" value="{{ request('search') }}" class="cms-input" placeholder="Search title or slug…">
+        <select name="category_id" class="cms-input">
+            <option value="">All columns</option>
+            @foreach ($categories as $category)
+                <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>{{ $category->name }}</option>
+            @endforeach
+        </select>
+        <select name="is_active" class="cms-input">
+            <option value="">Any status</option>
+            <option value="1" @selected(request('is_active') === '1')>Visible</option>
+            <option value="0" @selected(request('is_active') === '0')>Hidden</option>
+        </select>
+        <button type="submit" class="cms-btn cms-btn-primary"><i class="fas fa-filter"></i> Filter</button>
+        @if (request()->hasAny(['search', 'category_id', 'is_active']))
+            <a href="{{ route('role.pages.index', ['role' => $roleSlug]) }}" class="cms-btn cms-btn-light">Reset</a>
+        @endif
+    </form>
+
+    @if ($pages->isEmpty())
+        <div class="cms-empty">
+            <i class="far fa-file-lines"></i>
+            <h4>No pages found</h4>
+            <p>
+                @if (request()->hasAny(['search', 'category_id', 'is_active']))
+                    Nothing matches that filter.
+                @else
+                    Create pages like About us or Refund Policy and group them into footer columns.
+                @endif
+            </p>
+            <button class="cms-btn cms-btn-primary create-new-btn"><i class="fas fa-plus"></i> New page</button>
+        </div>
+    @else
+        {{-- One block per footer column, in the order the storefront renders them,
+             then anything not filed into a column. --}}
+        @foreach ($categories as $category)
+            @php $columnPages = $grouped[$category->id] ?? collect(); @endphp
+            @if ($columnPages->isNotEmpty())
+                <div class="cms-column">
+                    <div class="cms-column-head">
+                        <h2>{{ $category->name }}</h2>
+                        <span class="cms-column-count">{{ $columnPages->count() }} {{ Str::plural('link', $columnPages->count()) }}</span>
+                        @unless ($category->is_active)
+                            <span class="cms-column-hidden">Column hidden</span>
+                        @endunless
+                        <span class="cms-column-hint">Drag to reorder</span>
+                    </div>
+                    <ul class="cms-rows cms-sortable">
+                        @include('pages._rows', ['rows' => $columnPages])
+                    </ul>
+                </div>
+            @endif
+        @endforeach
+
+        @php $unfiled = $grouped[''] ?? collect(); @endphp
+        @if ($unfiled->isNotEmpty())
+            <div class="cms-column">
+                <div class="cms-column-head">
+                    <h2>Not in any footer column</h2>
+                    <span class="cms-column-count">{{ $unfiled->count() }}</span>
+                    <span class="cms-column-hint">Reachable by direct link only</span>
+                </div>
+                <ul class="cms-rows">
+                    @include('pages._rows', ['rows' => $unfiled])
+                </ul>
+            </div>
+        @endif
+    @endif
+</div>
+
+@include('pages.create-modal')
+@include('pages.edit-modal')
+@include('pages.delete-modal')
 @endsection
+
 @section('js')
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+$(function () {
+    const roleSlug = @json($roleSlug);
+    const reorderUrl = @json(route('role.pages.reorder', ['role' => $roleSlug]));
+    const destroyTemplate = @json(route('role.pages.destroy', ['role' => $roleSlug, 'page' => '__ID__']));
+    const pageUrlTemplate = @json(url('/page/__SLUG__'));
 
-            // initialized select2
-            $('.select2').select2();
+    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    const toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2200, timerProgressBar: true });
+
+    function fail(xhr, fallback) {
+        const message = xhr?.responseJSON?.message
+            || (xhr?.responseJSON?.errors ? Object.values(xhr.responseJSON.errors)[0][0] : null)
+            || fallback;
+        Swal.fire({ icon: 'error', title: 'Could not continue', text: message });
+    }
+
+    /* ---------------------------------------------------- rich text editors */
+
+    // CKEditor is created when a modal opens and destroyed when it closes, so
+    // reopening never stacks a second instance on the same textarea.
+    const editors = {};
+
+    function openEditor(id) {
+        if (editors[id]) return Promise.resolve(editors[id]);
+        return ClassicEditor.create(document.querySelector('#' + id))
+            .then(function (editor) { editors[id] = editor; return editor; })
+            .catch(function (e) { console.error(e); });
+    }
+
+    function closeEditor(id) {
+        if (!editors[id]) return Promise.resolve();
+        return editors[id].destroy().then(function () { delete editors[id]; });
+    }
+
+    /** CKEditor keeps its value out of the textarea, so sync before serializing. */
+    function syncEditor(id) {
+        if (editors[id]) $('#' + id).val(editors[id].getData());
+    }
+
+    /* ---------------------------------------------------- create */
+
+    $('.create-new-btn').on('click', function () {
+        $('#createForm')[0].reset();
+        $('#createModal').removeClass('hidden');
+        openEditor('create_content').then(function (editor) { if (editor) editor.setData(''); });
+    });
+
+    $('.modal-close-create').on('click', function () {
+        $('#createModal').addClass('hidden');
+        closeEditor('create_content');
+    });
+
+    $('#createSubmit').on('click', function () {
+        const $btn = $(this).prop('disabled', true);
+        syncEditor('create_content');
+
+        $.post($('#createForm').attr('action'), $('#createForm').serialize())
+            .done(function (response) {
+                if (!response.success) {
+                    $btn.prop('disabled', false);
+                    return Swal.fire({ icon: 'error', title: 'Oops…', text: response.message });
                 }
-            });
+                toast.fire({ icon: 'success', title: 'Page created' });
+                setTimeout(() => window.location.reload(), 700);
+            })
+            .fail(function (xhr) { $btn.prop('disabled', false); fail(xhr, 'Failed to create the page.'); });
+    });
 
-            // Show create modal
-            $('.create-new-btn').click(function() {
-                $('#createModal').removeClass('hidden');
-            });
+    /* ---------------------------------------------------- edit */
 
-            // Show edit modal
-            $('.edit-item-btn').click(function() {
-                const item_id = $(this).data('item_id');                
-                const user_id = $(this).data('user_id');
-                const bank_id = $(this).data('bank_id');
-                const company_id = $(this).data('company_id');
-                const expense_category_id = $(this).data('expense_category_id');
-                const expense_sub_category_id = $(this).data('expense_sub_category_id');
-                const title = $(this).data('title');
-                const description = $(this).data('description');
-                const amount = $(this).data('amount');
-                const payment_mode = $(this).data('payment_mode');
-                const attachment = $(this).data('attachment');
-                const reference = $(this).data('reference');
-                const expense_date = $(this).data('expense_date');
-                const status = $(this).data('status');
-                
-                // Set values in the edit form
-                $('#editItemId').val(item_id);
-                $('#edit_user_id').val(user_id).trigger('change');
-                $('#edit_bank_id').val(bank_id).trigger('change'); 
-                $('#edit_company_id').val(company_id).trigger('change');                 
-                $('#edit_title').val(title);
-                $('#edit_description').val(description);
-                $('#edit_amount').val(amount);
-                $('#edit_payment_mode').val(payment_mode).trigger('change');
-                if (attachment) {                    
-                    $('#preview_attc').show();
-                    $('#preview_attc').attr('src', (window.location.origin)+'/'+attachment);
-                } else {
-                    $('#preview_attc').hide();
+    $(document).on('click', '.edit-item-btn', function () {
+        const $btn = $(this);
+        const slug = $btn.data('slug');
+
+        $('#editItemId').val($btn.data('item_id'));
+        $('#edit_title').val($btn.data('title'));
+        $('#edit_slug').val(slug);
+        $('#edit_link_url').val($btn.data('link_url') || '');
+        $('#edit_category_id').val($btn.data('category_id') || '');
+        $('#edit_is_active').prop('checked', String($btn.data('is_active')) === '1');
+
+        const url = pageUrlTemplate.replace('__SLUG__', slug);
+        $('.cms-modal-url').text(url);
+        $('.cms-view-link').attr('href', $btn.data('link_url') || url);
+
+        $('#editModal').removeClass('hidden');
+
+        // The body is held on the button as an encoded attribute rather than
+        // fetched, so opening the editor costs no extra request.
+        const content = $btn.attr('data-content') || '';
+        openEditor('edit_content').then(function (editor) { if (editor) editor.setData(content); });
+    });
+
+    $('.modal-close-edit').on('click', function () {
+        $('#editModal').addClass('hidden');
+        closeEditor('edit_content');
+    });
+
+    $('#editSubmit').on('click', function () {
+        const $btn = $(this).prop('disabled', true);
+        syncEditor('edit_content');
+        const url = $('#editForm').data('action-template').replace('__ID__', $('#editItemId').val());
+
+        $.post(url, $('#editForm').serialize())
+            .done(function (response) {
+                if (!response.success) {
+                    $btn.prop('disabled', false);
+                    return Swal.fire({ icon: 'error', title: 'Oops…', text: response.message });
                 }
-                $('#edit_reference').val(reference);
-                $('#edit_expense_date').val(expense_date);
-                $('#edit_status').val(status).trigger('change');
-                $('#editModal').removeClass('hidden'); 
-                select2SetValueNoEvent('#edit_expense_category_id', expense_category_id);
-                if (expense_category_id) {
-                    $.ajax({
-                        url: $(this).data('action'),
-                        method: 'GET',
-                        data: {
-                            expense_category_id: expense_category_id
-                        },
-                        success: function (response) {
-                            console.log(response);
-                            if (response.success) {                                                            
-                                const targetSelect = $('#edit_expense_sub_category_id');
-                                console.log(targetSelect);                        
-                                targetSelect.empty();
-                                targetSelect.append('<option value="">Select an Item</option>');
-                                $.each(response.data, function(index, item) {
-                                    targetSelect.append(
-                                        `<option value="${item.id}" ${expense_sub_category_id && (expense_sub_category_id == item.id) ? 'selected' : ''}>${item.name}</option>`
-                                    );
-                                });
-                                if (targetSelect.hasClass('select2-hidden-accessible')) {
-                                    targetSelect.trigger('change.select2');
-                                }
-                            } else{
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Opps...",
-                                    text: response.message,
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            console.error('❌ Error:', xhr.responseText);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Something went wrong!'
-                            });
-                        }
-                    });                                                                
-                } else {
-                    $('#edit_expense_sub_category_id').val('').trigger('change');  
-                }  
-            });
+                toast.fire({ icon: 'success', title: 'Page updated' });
+                setTimeout(() => window.location.reload(), 700);
+            })
+            .fail(function (xhr) { $btn.prop('disabled', false); fail(xhr, 'Failed to update the page.'); });
+    });
 
-            // Close modals
-            $('.modal-close-create, .modal-backdrop').click(function(e) {
-                if ($(e.target).closest('.modal-close-create').length || $(e.target).hasClass('modal-backdrop')) {
-                    $('#createModal').addClass('hidden');
-                }
-            });
+    /* ---------------------------------------------------- delete */
 
-            $('.modal-close-edit, .modal-backdrop').click(function(e) {
-                if ($(e.target).hasClass('modal-backdrop') || $(e.target).closest('.modal-close-edit').length) {
-                    $('#editModal').addClass('hidden');
-                }
-            });
+    $(document).on('click', '.delete-item-btn', function () {
+        $('#deleteName').text($(this).data('title'));
+        $('#confirmDeleteBtn').data('target-id', $(this).data('item_id'));
+        $('#deleteModal').removeClass('hidden');
+    });
 
-            $('.modal-close-delete, .modal-backdrop').click(function(e) {
-                if ($(e.target).hasClass('modal-backdrop') || $(e.target).closest('.modal-close-delete').length) {
-                    $('#deleteModal').addClass('hidden');
-                }
-            });
+    $('.modal-close-delete').on('click', () => $('#deleteModal').addClass('hidden'));
 
-            // Close success alert
-            $('.close-btn').click(function() {
-                $(this).closest('.alert').addClass('hidden');
-            });
+    $('#confirmDeleteBtn').on('click', function () {
+        const id = $(this).data('target-id');
 
-            // Create state form submission
-            $('#createSubmit').click(function(e) {
-                e.preventDefault();
-                console.log(validateCreateForm());                
-                if (validateCreateForm()) {
-                    let formData = new FormData($('#createForm')[0]);
-                    $.ajax({
-                        url: $('#createForm').attr('action'),
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Done',
-                                    text: 'Data created successfully!'
-                                });
-                                $('#createModal').addClass('hidden');
-                                $('#createForm')[0].reset();
-                                setTimeout(() => window.location.reload(), 800);
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Oops...',
-                                    text: response.message || 'Something went wrong.'
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            console.error(xhr.responseText);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Failed to create data.'
-                            });
-                        }
-                    });                                     
-                }
-            });
-
-            // Edit state form submission
-            $('#editSubmit').click(function() {
-                if (validateEditForm()) {
-                    let formData = new FormData($('#editForm')[0]);
-                    $.ajax({
-                        url: $(this).data('action'),
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    icon: "success",
-                                    title: "Done",
-                                    text: "Data updated successfully!",
-                                });
-                                $('#editModal').addClass('hidden');
-                                setTimeout(() => window.location.reload(), 800);
-                            } else {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Oops...",
-                                    text: response.message || "Update failed.",
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            console.error('❌ Error:', xhr.responseText);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'Something went wrong!'
-                            });
-                        }
-                    }); 
-                }
-            });
-
-            // Delete confirmation
-            $('#confirmDeleteBtn').click(function() {
-                const dataId = $(this).data('item-id');
-                const deleteUrl = $(this).data('action');
-                $.ajax({
-                    url: deleteUrl,
-                    method: 'DELETE',
-                    data: {
-                        item_id: dataId,
-                    },
-                    success: function (response) {
-                        console.log(response);
-                        if (response.success) {
-                            Swal.fire({
-                                icon: "success",
-                                title: "Done",
-                                text: "Data deleted successfully!",
-                            });
-                            $('#deleteModal').addClass('hidden');
-                            console.log('trigger reload');                                
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        } else {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Opps...",
-                                text: response.message,
-                            });
-                        }
-                    },
-                    error: function (xhr) {
-                        console.error('❌ Error:', xhr.responseText);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Something went wrong!'
-                        });
-                    }
-                });  
-            });
-        });
-
-        function getExpSubCategory(obj, targetId){
-            $.ajax({
-                url: $(obj).data('action'),
-                method: 'GET',
-                data: {
-                    expense_category_id: $(obj).val()
-                },
-                success: function (response) {
-                    console.log(response);
-                    if (response.success) {                                                            
-                        const targetSelect = $(obj).closest('.closest').find(targetId);
-                        console.log(targetSelect);                        
-                        targetSelect.empty();
-                        targetSelect.append('<option value="">Select an Item</option>');
-                        $.each(response.data, function(index, item) {
-                            targetSelect.append(
-                                `<option value="${item.id}">${item.name}</option>`
-                            );
-                        });
-                        if (targetSelect.hasClass('select2-hidden-accessible')) {
-                            targetSelect.trigger('change.select2');
-                        }
-                    } else{
-                        Swal.fire({
-                            icon: "error",
-                            title: "Opps...",
-                            text: response.message,
-                        });
-                    }
-                },
-                error: function (xhr) {
-                    console.error('❌ Error:', xhr.responseText);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Something went wrong!'
-                    });
-                }
-            });    
-        }
-
-        function select2SetValueNoEvent(selectId, value) {
-            var $select = $(selectId);
-
-            // Set the underlying value
-            $select.val(value);
-
-            // Find the selected option text
-            var text = $select.find('option:selected').text() || '';
-
-            // Update the visible Select2 box manually
-            $select.data('select2').$container.find('.select2-selection__rendered').text(text);
-        }
-        
-        // Form validation functions
-        function validateCreateForm() {
-            let isValid = true;
-            
-            // Reset error messages
-            $('#createForm .error-message').addClass('hidden');
-            $('#createForm .form-select, #createForm .form-input').removeClass('border-red-500');                                                
-                        
-            if (!$('#create_title').val().trim()) {
-                $('#create_title').next('.error-message').removeClass('hidden');
-                $('#create_title').addClass('border-red-500');
-                isValid = false;
-            }                          
-            if (!$('#create_amount').val().trim()) {
-                $('#create_amount').next('.error-message').removeClass('hidden');
-                $('#create_amount').addClass('border-red-500');
-                isValid = false;
-            }                          
-            if (!$('#create_expense_date').val().trim()) {
-                $('#create_expense_date').next('.error-message').removeClass('hidden');
-                $('#create_expense_date').addClass('border-red-500');
-                isValid = false;
-            }                          
-                                                                                                                 
-            if (!$('#create_expense_category_id').val() || ($('#create_expense_category_id').val() == '') || ($('#create_expense_category_id').val() == null)) {
-                $('#create_expense_category_msg').removeClass('hidden');
-                isValid = false;
-            }                                                                    
-            
-            return isValid;
-        }
-
-        function validateEditForm() {
-            let isValid = true;
-            
-            // Reset error messages
-            $('#editForm .error-message').addClass('hidden');
-            $('#editForm .form-select, #editForm .form-input').removeClass('border-red-500');
-            
-            if (!$('#edit_title').val().trim()) {
-                $('#edit_title').next('.error-message').removeClass('hidden');
-                $('#edit_title').addClass('border-red-500');
-                isValid = false;
-            }                          
-            if (!$('#edit_amount').val().trim()) {
-                $('#edit_amount').next('.error-message').removeClass('hidden');
-                $('#edit_amount').addClass('border-red-500');
-                isValid = false;
-            }                          
-            if (!$('#edit_expense_date').val().trim()) {
-                $('#edit_expense_date').next('.error-message').removeClass('hidden');
-                $('#edit_expense_date').addClass('border-red-500');
-                isValid = false;
-            }                          
-                                                                                                                 
-            if (!$('#edit_expense_category_id').val() || ($('#edit_expense_category_id').val() == '') || ($('#edit_expense_category_id').val() == null)) {
-                $('#edit_expense_category_msg').removeClass('hidden');
-                isValid = false;
-            }    
-            
-            return isValid;
-        }
-
-        // Reset create form
-        function resetCreateForm() {
-            $('#createForm')[0].reset();
-            $('#createForm .error-message').addClass('hidden');
-            $('#createForm .form-select, #createForm .form-input').removeClass('border-red-500');
-        }
-
-        // Delete confirmation
-        function confirmDelete(id, name=null) {
-            $('#deleteName').text(name);
-            $('#confirmDeleteBtn').data('item-id', id);
-            $('#deleteModal').removeClass('hidden');
-        }
-
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const filterHeader = document.querySelector('.filter-container .filter-header');
-            const filterContent = document.querySelector('.filter-container .filter-content');
-            
-            filterHeader.addEventListener('click', function() {
-                this.classList.toggle('active');
-                filterContent.classList.toggle('active');
-            });
-            
-            // Reset button functionality
-            document.querySelector('.filter-container .reset-btn').addEventListener('click', function() {
-                const inputs = document.querySelectorAll('.filter-container select, .filter-container input');
-                inputs.forEach(input => {
-                    if (input.type === 'date') {
-                        input.value = '';
-                    } else {
-                        input.selectedIndex = 0;
-                    }
-                });
-            });
-            document.querySelector('.reset-btn').addEventListener('click', function (e) {
-                e.preventDefault();
-                window.location = '{{ route('role.expenses.index', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}';
-            });
-        });
-    </script>
-    <script>
-        function editorExecCmd(command) {
-            document.execCommand(command, false, null);
-        }
-
-        function clearEditor() {
-            document.getElementById("editor").innerHTML = "";
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            // Select2 init
-            $('.select2').select2({
-                width: '100%'
-            });
-
-            const createModal      = document.getElementById('createModal');
-            const openCreateBtns   = document.querySelectorAll('.open-create');
-            const closeCreateBtns  = document.querySelectorAll('.modal-close-create');
-            const form             = document.getElementById('createForm');
-            const editor           = document.getElementById('editor');
-            const description      = document.getElementById('create_description');
-            const createSubmitBtn  = document.getElementById('createSubmit');
-
-            // Open modal
-            openCreateBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    createModal.classList.remove('hidden');
-                });
-            });
-
-            // Close modal
-            function closeModal() {
-                createModal.classList.add('hidden');
+        $.ajax({
+            url: destroyTemplate.replace('__ID__', id),
+            method: 'POST',
+            data: { _method: 'DELETE', item_id: id }
+        })
+        .done(function (response) {
+            $('#deleteModal').addClass('hidden');
+            if (!response.success) {
+                return Swal.fire({ icon: 'error', title: 'Cannot delete', text: response.message });
             }
+            toast.fire({ icon: 'success', title: 'Page deleted' });
+            setTimeout(() => window.location.reload(), 700);
+        })
+        .fail(function (xhr) { $('#deleteModal').addClass('hidden'); fail(xhr, 'Failed to delete the page.'); });
+    });
 
-            closeCreateBtns.forEach(btn => {
-                btn.addEventListener('click', closeModal);
-            });
+    /* ---------------------------------------------------- reordering */
 
-            // Click outside to close
-            createModal.addEventListener('click', function (e) {
-                if (e.target === createModal) {
-                    closeModal();
-                }
-            });
-
-            // Submit handling
-            if (createSubmitBtn && form && editor && description) {
-                createSubmitBtn.addEventListener('click', function () {
-                    // Editor content → textarea
-                    description.value = editor.innerHTML;
-                    form.submit();
-                });
+    document.querySelectorAll('.cms-sortable').forEach(function (list) {
+        Sortable.create(list, {
+            handle: '.cms-handle',
+            animation: 150,
+            onEnd: function () {
+                const ids = $(list).find('.cms-row').map(function () { return $(this).data('id'); }).get();
+                $.post(reorderUrl, { ids: ids })
+                    .done(() => toast.fire({ icon: 'success', title: 'Order saved' }))
+                    .fail((xhr) => fail(xhr, 'Failed to save the new order.'));
             }
         });
-    </script>
+    });
+});
+</script>
 @endsection
