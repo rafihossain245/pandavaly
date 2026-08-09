@@ -889,30 +889,6 @@
                         </div>
                     </div>
 
-                    <div class="{{ $card }}">
-                        <div class="{{ $cardHead }}">
-                            <h3 class="{{ $cardTitle }}"><i class="fas fa-truck text-sm text-gray-400"></i> Sourcing
-                            </h3>
-                        </div>
-                        <div class="{{ $cardBody }}">
-                            <div>
-                                <label for="create_supplier_id" class="{{ $label }}">Supplier <span
-                                        class="text-red-500">*</span></label>
-                                <select id="create_supplier_id" name="supplier_id"
-                                    class="@error('supplier_id') {{ $inputBad }} @else {{ $inputOk }} @enderror">
-                                    <option value="">Select a supplier</option>
-                                    @foreach ($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}" @selected(old('supplier_id') == $supplier->id)>{{ $supplier->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('supplier_id')
-                                    <p class="{{ $errorText }}">{{ $message }}</p>
-                                @else
-                                    <p class="{{ $help }}">Back-office only — never shown to customers.</p>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
                 </aside>
             </div>
 

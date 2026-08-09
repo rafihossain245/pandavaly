@@ -11,7 +11,6 @@ use App\Models\Product;
 use App\Models\ExpenseCategory;
 use App\Models\Stock;
 use App\Models\SubCategory;
-use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Attribute;
@@ -125,10 +124,9 @@ class ProductController extends Controller
 
         $brands = Brand::orderBy('name')->where('is_active', 1)->get();
         $units = Unit::orderBy('name')->where('is_active', 1)->get();
-        $suppliers = Supplier::orderBy('name')->where('is_active', 1)->get();
         $branches = Branch::orderBy('name')->where('is_active', 1)->get();
         $attributes = Attribute::with('values')->usableForVariants()->ordered()->get();
-        return view('products.create', compact('categories', 'brands', 'branches', 'suppliers', 'units', 'attributes'));
+        return view('products.create', compact('categories', 'brands', 'branches', 'units', 'attributes'));
     }
 
     /**
@@ -164,7 +162,6 @@ class ProductController extends Controller
                     'sub_category_id' => $request->sub_category_id,
                     'brand_id' => $request->brand_id,
                     'unit_id' => $request->unit_id,
-                    'supplier_id' => $request->supplier_id,
                     'thumbnail' => $thumbnail ?? null,
                     'description' => $request->content,
                     'moq' => max(1, (int) ($request->moq ?? 1)),
@@ -187,7 +184,10 @@ class ProductController extends Controller
                         // update() already stored this; leaving it out here meant a
                         // compare-at price typed on the create form was silently lost
                         // until the admin saved the product a second time.
-                        'previous_price' => $request->previous_price,
+                        // The column is NOT NULL and a blank field arrives as null,
+                        // so fall back to the column's own default of 0 = "no
+                        // compare-at price" rather than failing the whole save.
+                        'previous_price' => $request->previous_price ?? 0,
                         'selling_price' => $request->selling_price,
                         'valid_from' => now(),
                         'created_at' => now(),
@@ -344,7 +344,10 @@ class ProductController extends Controller
             'sub_category_id' => 'nullable|exists:sub_categories,id',
             'brand_id' => 'required|exists:brands,id',
             'unit_id' => 'required|exists:units,id',
-            'supplier_id' => 'required|exists:suppliers,id',
+            // Sourcing is out of scope for this single-location B2C store, so the
+            // product form no longer asks for a supplier. Kept nullable rather
+            // than dropped so existing rows and the list filter still work.
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'selling_price' => 'required|numeric|min:0',
             'purchase_price' => 'nullable|numeric|min:0',
             'previous_price' => 'nullable|numeric|min:0',
@@ -460,14 +463,13 @@ class ProductController extends Controller
 
         $brands = Brand::orderBy('name')->where('is_active', 1)->get();
         $units = Unit::orderBy('name')->where('is_active', 1)->get();
-        $suppliers = Supplier::orderBy('name')->where('is_active', 1)->get();
         $branches = Branch::orderBy('name')->where('is_active', 1)->get();
         $data = Product::with(['product_prices'])->findOrFail($id);
         $product_spec = DB::table('product_specifications')->where('product_id', $id)->get();
         $product_images = DB::table('productwise_images')->where('product_id', $id)->get();
         $attributes = Attribute::with('values')->usableForVariants()->ordered()->get();
         $skus = ProductSku::with('productAttributes')->where('product_id', $id)->ordered()->get();
-        return view('products.edit-modal', compact('brands', 'units', 'categories', 'data', 'suppliers', 'branches', 'product_spec', 'product_images', 'attributes', 'skus'));
+        return view('products.edit-modal', compact('brands', 'units', 'categories', 'data', 'branches', 'product_spec', 'product_images', 'attributes', 'skus'));
     }
 
     /**
@@ -522,7 +524,8 @@ class ProductController extends Controller
                     'sub_category_id' => $request->sub_category_id,
                     'brand_id' => $request->brand_id,
                     'unit_id' => $request->unit_id,
-                    'supplier_id' => $request->supplier_id,
+                    // supplier_id is deliberately absent: the form no longer edits
+                    // it, so writing it here would wipe it on every save.
                     'thumbnail' => $thumbnail,
                     'description' => $request->content,
                     'moq' => max(1, (int) ($request->moq ?? 1)),
@@ -542,7 +545,9 @@ class ProductController extends Controller
                     ->where('product_id', $data->id)
                     ->update([
                         'purchase_price' => $request->purchase_price ?? $request->selling_price,
-                        'previous_price' => $request->previous_price,
+                        // NOT NULL column; a cleared field arrives as null. 0 is the
+                        // column default and reads as "no compare-at price".
+                        'previous_price' => $request->previous_price ?? 0,
                         'selling_price'   => $request->selling_price,
                         'updated_at'      => now(),
                     ]);
@@ -668,7 +673,6 @@ class ProductController extends Controller
             $categories = Category::orderBy('name')->where('is_active', 1)->get();
             $brands = Brand::orderBy('name')->where('is_active', 1)->get();
             $units = Unit::orderBy('name')->where('is_active', 1)->get();
-            $suppliers = Supplier::orderBy('name')->where('is_active', 1)->get();
             $branches = Branch::orderBy('name')->where('is_active', 1)->get();
             $sub_categories = $product && $product->category_id ? SubCategory::where('category_id', $product->category_id)->get() : [];
             if (empty($product)) {
@@ -688,7 +692,6 @@ class ProductController extends Controller
                 'categories' => $categories,
                 'brands' => $brands,
                 'units' => $units,
-                'suppliers' => $suppliers,
                 'branches' => $branches,
                 'sub_categories' => $sub_categories,
                 'product_spec' => $product_spec,

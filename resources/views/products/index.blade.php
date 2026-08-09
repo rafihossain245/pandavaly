@@ -681,7 +681,7 @@
                     if (response.success && response.data.modal_view) {
                         $('#appendEditHtml').html(response.data.modal_view);
                         $('#editModal').removeClass('hidden');
-                        $('#edit_category_id,#edit_sub_category_id,#edit_brand_id,#edit_unit_id,#edit_supplier_id')
+                        $('#edit_category_id,#edit_sub_category_id,#edit_brand_id,#edit_unit_id')
                             .select2();
                         getEditSubCategory(edit_sub_category_id);
 
