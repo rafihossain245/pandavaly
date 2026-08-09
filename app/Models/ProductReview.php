@@ -12,11 +12,13 @@ class ProductReview extends Model
         'rating',
         'title',
         'comment',
+        'images',
         'is_approved',
     ];
 
     protected $casts = [
         'rating' => 'integer',
+        'images' => 'array',
         'is_approved' => 'boolean',
     ];
 

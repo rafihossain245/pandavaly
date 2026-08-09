@@ -175,6 +175,304 @@
         .product-variant-selector .variant-pill.is-disabled {
             text-decoration: line-through;
         }
+
+        /* ---------- Customer reviews tab ---------- */
+        .rv-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+            gap: 40px;
+            align-items: start;
+        }
+
+        /* One column below the tablet breakpoint: the bar chart and the form both
+           need the full width to stay readable. */
+        @media (max-width: 991px) {
+            .rv-grid {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 28px;
+            }
+        }
+
+        .rv-muted {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .rv-score {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .rv-score-value {
+            font-size: 44px;
+            font-weight: 700;
+            line-height: 1;
+            color: #111827;
+        }
+
+        .rv-score-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .rv-stars {
+            color: #ffb400;
+            font-size: 16px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .rv-stars.rv-stars-sm {
+            font-size: 13px;
+        }
+
+        .rv-stars .rv-star-off {
+            color: #d7dbe0;
+        }
+
+        .rv-recommend {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rv-recommend-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .rv-bars {
+            margin-top: 20px;
+            display: grid;
+            gap: 9px;
+        }
+
+        .rv-bar-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) 34px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rv-bar-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #eceff3;
+            overflow: hidden;
+        }
+
+        .rv-bar-fill {
+            display: block;
+            height: 100%;
+            border-radius: 999px;
+            background: #ffb400;
+        }
+
+        .rv-bar-percent {
+            font-size: 12px;
+            color: #6b7280;
+            text-align: right;
+        }
+
+        .rv-form-title {
+            display: inline-block;
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 14px;
+        }
+
+        .rv-note {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 18px;
+        }
+
+        .rv-label {
+            display: block;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .rv-required {
+            color: #dc2626;
+        }
+
+        .rv-textarea {
+            width: 100%;
+            min-height: 130px;
+            border: 1px solid #d5d9e0;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .rv-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .rv-field {
+            margin-top: 18px;
+        }
+
+        .rv-drop {
+            border: 1px dashed #cbd2da;
+            border-radius: 6px;
+            padding: 26px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s ease, background-color .2s ease;
+        }
+
+        .rv-drop:hover,
+        .rv-drop:focus-visible,
+        .rv-drop.is-dragging {
+            border-color: var(--primary);
+            background: #f8fafc;
+            outline: none;
+        }
+
+        .rv-drop-icon {
+            font-size: 26px;
+            color: #2f80ed;
+        }
+
+        .rv-drop-title {
+            font-weight: 600;
+            color: #374151;
+            margin-top: 8px;
+        }
+
+        .rv-drop-hint {
+            font-size: 13px;
+            color: #8b93a1;
+            margin-top: 6px;
+        }
+
+        .rv-previews {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .rv-preview {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .rv-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .rv-preview-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(17, 24, 39, .75);
+            color: #fff;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .rv-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .rv-rating-field {
+            flex: 1 1 260px;
+        }
+
+        .rv-select {
+            width: 100%;
+            max-width: 320px;
+            border: 1px solid #d5d9e0;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .rv-submit {
+            background: #1f2937;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 22px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .rv-submit:hover {
+            background: #111827;
+            color: #fff;
+        }
+
+        .rv-submit-link {
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .rv-error {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .rv-list {
+            margin-top: 36px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .rv-list-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .rv-review-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .rv-review-images img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
     </style>
 @endsection
 
@@ -344,9 +642,6 @@
                                         <li><strong>{{ $specification->specification_name }}:</strong> {{ $specification->specification_value }}</li>
                                     @endforeach
                                 </ul>
-                                @if($product->product_specifications->count() > 6)
-                                    <a href="javascript:void(0);" class="highlight-view-more" data-tab-target="specifications">View More Info</a>
-                                @endif
                             </div>
                         @endif
                     </div>
@@ -776,27 +1071,11 @@
                     <div class="product-container">
                         <div class="tabs-container">
                             <div class="tabs-header">
-                                <button class="tab-button active" data-tab="specifications">Specifications</button>
-                                <button class="tab-button" data-tab="description">Description</button>
-                                <button class="tab-button" data-tab="reviews">Reviews</button>
+                                <button class="tab-button active" data-tab="description">Description</button>
+                                <button class="tab-button" data-tab="reviews">Customer Reviews ({{ $reviewCount }})</button>
                             </div>
 
-                            <div class="tab-content active" id="specifications">
-                                <table class="specs-table">
-                                    <tbody>
-                                        @foreach ($product->product_specifications as $specification)
-                                            <tr>
-                                                <td>{{ $specification->specification_name }}</td>
-                                                <td>{{ $specification->specification_value }}</td>
-                                            </tr>
-                                            
-                                        @endforeach
-                                        
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="tab-content" id="description">
+                            <div class="tab-content active" id="description">
                                 <div class="product-description">
                                     {!! $product->description !!}
                                     
@@ -804,50 +1083,165 @@
                             </div>
 
                             <div class="tab-content" id="reviews">
-                                <div class="reviews-header">
-                                    <div class="rating-summary">
-                                        <div class="average-rating">{{ $averageRating }}</div>
-                                        <div>
-                                            <div class="stars">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    {{ $i <= round($averageRating) ? '★' : '☆' }}
-                                                @endfor
-                                            </div>
-                                            <div class="review-count">Based on {{ $reviewCount }} {{ Str::plural('review', $reviewCount) }}</div>
-                                        </div>
-                                    </div>
-                                    @auth('buyer')
-                                        <button id="openReviewModal" class="review-btn">
-                                            Write a Review
-                                        </button>
-                                    @else
-                                        <a href="{{ route('buyer.login') }}" class="review-btn">
-                                            Login to Write a Review
-                                        </a>
-                                    @endauth
-                                </div>
+                                @php
+                                    $approvedReviews = $product->approvedReviews;
+                                    // Star rows run 5 down to 1 so the bar chart reads top-heavy
+                                    // like every other storefront's.
+                                    $ratingBreakdown = [];
+                                    for ($star = 5; $star >= 1; $star--) {
+                                        $starCount = $approvedReviews->where('rating', $star)->count();
+                                        $ratingBreakdown[$star] = $reviewCount > 0 ? ($starCount / $reviewCount) * 100 : 0;
+                                    }
+                                    // "Recommended" = 4 stars and up, the usual reading of a
+                                    // positive review.
+                                    $recommendedCount = $approvedReviews->where('rating', '>=', 4)->count();
+                                    $recommendedPercent = $reviewCount > 0 ? ($recommendedCount / $reviewCount) * 100 : 0;
+                                    $ratingOptions = [
+                                        5 => 'Perfect',
+                                        4 => 'Good',
+                                        3 => 'Average',
+                                        2 => 'Not that bad',
+                                        1 => 'Very poor',
+                                    ];
+                                    $reviewImageMax = \App\Http\Controllers\Front\ProductReviewController::MAX_IMAGES;
+                                @endphp
 
-                                @forelse($product->approvedReviews as $review)
-                                    <div class="review-item">
-                                        <div class="review-header">
-                                            <div class="reviewer-name">{{ $review->buyer->business_name ?? 'Anonymous' }}</div>
-                                            <div class="review-date">{{ $review->created_at->format('F j, Y') }}</div>
+                                <div class="rv-panel">
+                                    @if (session('success'))
+                                        <div class="alert alert-success">{{ session('success') }}</div>
+                                    @endif
+
+                                    <div class="rv-grid">
+                                        <div class="rv-summary">
+                                            <div class="rv-score">
+                                                <div class="rv-score-value">{{ number_format($averageRating, 1) }}</div>
+                                                <div>
+                                                    <div class="rv-score-label">Average Rating</div>
+                                                    <div class="rv-stars">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <span @class(['rv-star-off' => $i > round($averageRating)])>★</span>
+                                                        @endfor
+                                                        <span class="rv-muted">({{ $reviewCount }} {{ Str::plural('Review', $reviewCount) }})</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="rv-recommend">
+                                                <div class="rv-recommend-value">{{ number_format($recommendedPercent, 2) }}%</div>
+                                                <div class="rv-score-label">
+                                                    Recommended
+                                                    <span class="rv-muted">({{ $recommendedCount }} of {{ $reviewCount }})</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="rv-bars">
+                                                @foreach ($ratingBreakdown as $star => $percent)
+                                                    <div class="rv-bar-row">
+                                                        <span class="rv-stars rv-stars-sm">
+                                                            @for ($i = 1; $i <= 5; $i++)<span @class(['rv-star-off' => $i > $star])>★</span>@endfor
+                                                        </span>
+                                                        <span class="rv-bar-track">
+                                                            <span class="rv-bar-fill" style="width: {{ $percent }}%"></span>
+                                                        </span>
+                                                        <span class="rv-bar-percent">{{ round($percent) }}%</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                         </div>
-                                        <div class="stars">
-                                            @for ($i = 1; $i <= 5; $i++)
-                                                {{ $i <= $review->rating ? '★' : '☆' }}
-                                            @endfor
+
+                                        <div class="rv-form-wrap">
+                                            <h3 class="rv-form-title">Submit Your Review</h3>
+
+                                            @auth('buyer')
+                                                <p class="rv-note">Your email address will not be published. Required fields are marked *</p>
+
+                                                <form id="reviewForm" action="{{ route('reviews.store', $product->slug) }}"
+                                                    method="POST" enctype="multipart/form-data">
+                                                    @csrf
+
+                                                    <label for="reviewComment" class="rv-label">Write your opinion about the product</label>
+                                                    <textarea id="reviewComment" name="comment" class="rv-textarea"
+                                                        placeholder="Write Your Review Here...">{{ old('comment') }}</textarea>
+                                                    @error('comment')
+                                                        <div class="rv-error">{{ $message }}</div>
+                                                    @enderror
+
+                                                    <div class="rv-field">
+                                                        <label class="rv-label">Upload Images (Optional)</label>
+                                                        <div class="rv-drop" id="reviewDrop" role="button" tabindex="0"
+                                                            aria-label="Upload review images">
+                                                            <div class="rv-drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                                                            <div class="rv-drop-title">Drag &amp; Drop Images Here</div>
+                                                            <div class="rv-drop-hint">or click to browse files ( {{ $reviewImageMax }} max )</div>
+                                                        </div>
+                                                        <input type="file" id="reviewImages" name="images[]" accept="image/*"
+                                                            multiple hidden data-max="{{ $reviewImageMax }}">
+                                                        <div class="rv-previews" id="reviewPreviews"></div>
+                                                        <div class="rv-error" id="reviewImagesError" hidden></div>
+                                                        @error('images')
+                                                            <div class="rv-error">{{ $message }}</div>
+                                                        @enderror
+                                                        @error('images.*')
+                                                            <div class="rv-error">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+
+                                                    <div class="rv-actions">
+                                                        <div class="rv-rating-field">
+                                                            <label for="reviewRating" class="rv-label">Your Rating: <span class="rv-required">*</span></label>
+                                                            <select id="reviewRating" name="rating" class="rv-select" required>
+                                                                <option value="">Select One</option>
+                                                                @foreach ($ratingOptions as $value => $text)
+                                                                    <option value="{{ $value }}" @selected(old('rating') == $value)>{{ $text }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('rating')
+                                                                <div class="rv-error">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                        <button type="submit" class="rv-submit">Submit Review</button>
+                                                    </div>
+                                                </form>
+                                            @else
+                                                <p class="rv-note">Only signed-in customers can review this product.</p>
+                                                <a href="{{ route('buyer.login') }}" class="rv-submit rv-submit-link">Login to Write a Review</a>
+                                            @endauth
                                         </div>
-                                        @if($review->title)
-                                            <div class="review-title fw-semibold">{{ $review->title }}</div>
-                                        @endif
-                                        @if($review->comment)
-                                            <div class="review-text">{{ $review->comment }}</div>
-                                        @endif
                                     </div>
-                                @empty
-                                    <p class="text-muted">No reviews yet. Be the first to review this product.</p>
-                                @endforelse
+
+                                    <div class="rv-list">
+                                        <h4 class="rv-list-title">Customer Reviews ({{ $reviewCount }})</h4>
+
+                                        @forelse($approvedReviews as $review)
+                                            <div class="review-item">
+                                                <div class="review-header">
+                                                    <div class="reviewer-name">{{ $review->buyer->business_name ?? 'Anonymous' }}</div>
+                                                    <div class="review-date">{{ $review->created_at->format('F j, Y') }}</div>
+                                                </div>
+                                                <div class="rv-stars">
+                                                    @for ($i = 1; $i <= 5; $i++)
+                                                        <span @class(['rv-star-off' => $i > $review->rating])>★</span>
+                                                    @endfor
+                                                </div>
+                                                @if($review->title)
+                                                    <div class="review-title fw-semibold">{{ $review->title }}</div>
+                                                @endif
+                                                @if($review->comment)
+                                                    <div class="review-text">{{ $review->comment }}</div>
+                                                @endif
+                                                @if(!empty($review->images))
+                                                    <div class="rv-review-images">
+                                                        @foreach($review->images as $image)
+                                                            <img src="{{ asset($image) }}" alt="Review photo">
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            <p class="text-muted">No reviews yet. Be the first to review this product.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -872,61 +1266,6 @@
         <button class="add-to-cart-btn" data-product="{{ $product->id }}">Add To Cart</button>
     </div>
 
-    <!-- Review Modal -->
-    <div class="review-modal-overlay" id="reviewModal">
-        <div class="review-modal-container">
-            <div class="review-modal-header">
-                <h2 class="review-modal-title">Write a Review</h2>
-                <button class="review-modal-close" id="closeReviewModal">&times;</button>
-            </div>
-
-            <div class="review-modal-body">
-                <div class="review-product-info">
-                    <div class="review-product-image">
-                        <img src="{{ asset($product->thumbnail) }}" alt="{{ $product->name }}" style="width:100%;height:100%;object-fit:cover;">
-                    </div>
-                    <div class="review-product-details">
-                        <h3 class="review-product-name">{{ $product->name }}</h3>
-                        <div class="review-product-category">{{ $product->category->name ?? '' }}</div>
-                    </div>
-                </div>
-
-                <form id="reviewForm" action="{{ route('reviews.store', $product->slug) }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="rating" id="reviewRatingInput" value="0">
-
-                    <div class="review-rating-section">
-                        <label class="review-rating-label">Overall Rating</label>
-                        <div class="review-stars-container" id="ratingStars">
-                            <span class="review-star" data-rating="1">★</span>
-                            <span class="review-star" data-rating="2">★</span>
-                            <span class="review-star" data-rating="3">★</span>
-                            <span class="review-star" data-rating="4">★</span>
-                            <span class="review-star" data-rating="5">★</span>
-                        </div>
-                        <div class="review-rating-text" id="ratingText">Tap a star to rate</div>
-                    </div>
-
-                    <div class="review-form-group">
-                        <label for="reviewTitle" class="review-form-label">Review Title</label>
-                        <input type="text" name="title" id="reviewTitle" class="review-form-input"
-                            placeholder="Summarize your experience">
-                    </div>
-
-                    <div class="review-form-group">
-                        <label for="reviewContent" class="review-form-label">Your Review</label>
-                        <textarea name="comment" id="reviewContent" class="review-form-input review-form-textarea"
-                            placeholder="Share details of your experience with this product"></textarea>
-                    </div>
-
-                    <div class="review-modal-actions">
-                        <button type="button" class="review-button review-button-cancel" id="cancelReview">Cancel</button>
-                        <button type="submit" class="review-button review-button-submit" id="submitReview" disabled>Submit Review</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 @endsection
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js"></script>
@@ -1017,121 +1356,127 @@
                 });
             });
 
-            const viewMoreLink = document.querySelector('.highlight-view-more');
-            if (viewMoreLink) {
-                viewMoreLink.addEventListener('click', function () {
-                    const tabId = this.getAttribute('data-tab-target');
-                    activateTab(tabId);
-                    document.getElementById(tabId).scrollIntoView({ behavior: 'smooth', block: 'start' });
-                });
-            }
+            // A rejected or accepted review sends the shopper back to a page that
+            // opens on Description by default, which hides the very message they
+            // need to read. Land them on the reviews instead.
+            @if ($errors->any() || session('success'))
+                activateTab('reviews');
+                document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            @endif
         });
     </script>
     <script>
+        // Review photo picker: a drop zone in front of a hidden multi-file input.
+        // The browser gives no way to append to input.files, so the chosen files
+        // are kept in a DataTransfer and written back after every add/remove.
         document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('reviewModal');
-            const openButton = document.getElementById('openReviewModal');
-            const closeButton = document.getElementById('closeReviewModal');
-            const cancelButton = document.getElementById('cancelReview');
-            const submitButton = document.getElementById('submitReview');
-            const ratingStars = document.getElementById('ratingStars');
-            const ratingText = document.getElementById('ratingText');
-            const ratingInput = document.getElementById('reviewRatingInput');
+            const dropZone = document.getElementById('reviewDrop');
+            const input = document.getElementById('reviewImages');
+            const previews = document.getElementById('reviewPreviews');
+            const errorBox = document.getElementById('reviewImagesError');
 
-            if (!modal || !openButton) {
+            if (!dropZone || !input || !previews) {
                 return;
             }
 
-            let currentRating = 0;
+            const maxFiles = parseInt(input.dataset.max, 10) || 3;
+            const picked = [];
 
-            // Open modal
-            openButton.addEventListener('click', function () {
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            });
-
-            // Close modal
-            function closeModal() {
-                modal.classList.remove('active');
-                document.body.style.overflow = 'auto';
-                resetForm();
+            function showError(message) {
+                if (!errorBox) return;
+                errorBox.textContent = message || '';
+                errorBox.hidden = !message;
             }
 
-            closeButton.addEventListener('click', closeModal);
-            cancelButton.addEventListener('click', closeModal);
-
-            // Close modal when clicking outside
-            modal.addEventListener('click', function (e) {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
-
-            // Star rating functionality
-            const stars = ratingStars.querySelectorAll('.review-star');
-            stars.forEach(star => {
-                star.addEventListener('click', function () {
-                    currentRating = parseInt(this.getAttribute('data-rating'));
-                    ratingInput.value = currentRating;
-                    updateStars(currentRating);
-                    updateSubmitButton();
-                });
-
-                star.addEventListener('mouseover', function () {
-                    const hoverRating = parseInt(this.getAttribute('data-rating'));
-                    updateStars(hoverRating, true);
-                });
-            });
-
-            ratingStars.addEventListener('mouseleave', function () {
-                updateStars(currentRating);
-            });
-
-            function updateStars(rating, isHover = false) {
-                stars.forEach(star => {
-                    const starRating = parseInt(star.getAttribute('data-rating'));
-                    if (starRating <= rating) {
-                        star.classList.add('active');
-                    } else {
-                        star.classList.remove('active');
-                    }
-                });
-
-                // Update rating text
-                const ratingTexts = [
-                    "Tap a star to rate",
-                    "Poor",
-                    "Fair",
-                    "Good",
-                    "Very Good",
-                    "Excellent"
-                ];
-                ratingText.textContent = ratingTexts[rating] || "Tap a star to rate";
+            function syncInput() {
+                const transfer = new DataTransfer();
+                picked.forEach(file => transfer.items.add(file));
+                input.files = transfer.files;
             }
 
-            // Form validation
-            const formInputs = document.querySelectorAll('.review-form-input');
-            formInputs.forEach(input => {
-                input.addEventListener('input', updateSubmitButton);
-            });
+            function renderPreviews() {
+                previews.innerHTML = '';
 
-            function updateSubmitButton() {
-                if (currentRating > 0) {
-                    submitButton.disabled = false;
+                picked.forEach((file, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'rv-preview';
+
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    // The blob is only needed until the thumbnail paints.
+                    img.onload = () => URL.revokeObjectURL(img.src);
+                    img.alt = file.name;
+
+                    const remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.className = 'rv-preview-remove';
+                    remove.innerHTML = '&times;';
+                    remove.setAttribute('aria-label', 'Remove ' + file.name);
+                    remove.addEventListener('click', function () {
+                        picked.splice(index, 1);
+                        showError('');
+                        syncInput();
+                        renderPreviews();
+                    });
+
+                    item.append(img, remove);
+                    previews.append(item);
+                });
+            }
+
+            function addFiles(fileList) {
+                const images = Array.from(fileList).filter(file => file.type.startsWith('image/'));
+
+                if (images.length !== fileList.length) {
+                    showError('Only image files can be attached.');
                 } else {
-                    submitButton.disabled = true;
+                    showError('');
                 }
+
+                const room = maxFiles - picked.length;
+                if (images.length > room) {
+                    showError('You can attach at most ' + maxFiles + ' images.');
+                }
+
+                picked.push(...images.slice(0, Math.max(room, 0)));
+                syncInput();
+                renderPreviews();
             }
 
-            // Reset form
-            function resetForm() {
-                currentRating = 0;
-                ratingInput.value = 0;
-                updateStars(0);
-                document.getElementById('reviewTitle').value = '';
-                document.getElementById('reviewContent').value = '';
-                updateSubmitButton();
-            }
+            dropZone.addEventListener('click', () => input.click());
+            dropZone.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    input.click();
+                }
+            });
+
+            input.addEventListener('change', function () {
+                // Read the picks, then hand ownership back to `picked` via syncInput.
+                const chosen = Array.from(input.files);
+                input.value = '';
+                addFiles(chosen);
+            });
+
+            ['dragenter', 'dragover'].forEach(type => {
+                dropZone.addEventListener(type, function (e) {
+                    e.preventDefault();
+                    dropZone.classList.add('is-dragging');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(type => {
+                dropZone.addEventListener(type, function (e) {
+                    e.preventDefault();
+                    dropZone.classList.remove('is-dragging');
+                });
+            });
+
+            dropZone.addEventListener('drop', function (e) {
+                if (e.dataTransfer?.files?.length) {
+                    addFiles(e.dataTransfer.files);
+                }
+            });
         });
     </script>
     <script>
