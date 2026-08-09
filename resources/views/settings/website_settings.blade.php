@@ -1,81 +1,332 @@
 @extends('layout.app')
 
 @section('meta-information')
-    <title>Website Setting Create</title>
+    <title>Website Settings</title>
+@endsection
+
+@section('css')
+<style>
+    .ws-page { padding-bottom: 30px; }
+
+    .ws-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+    .ws-header h1 { font-size: 1.35rem; font-weight: 600; margin: 0; color: #111827; }
+    .ws-header p { margin: 4px 0 0; font-size: .85rem; color: #6b7280; }
+
+    .ws-alert { display: flex; align-items: flex-start; gap: 10px; border-radius: 9px; padding: 12px 15px; margin-bottom: 18px; font-size: .87rem; border: 1px solid transparent; }
+    .ws-alert i { margin-top: 2px; }
+    .ws-alert-success { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+    .ws-alert-error { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+    .ws-alert ul { margin: 4px 0 0; padding-left: 18px; }
+
+    .ws-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+    .ws-card-head { display: flex; align-items: center; gap: 11px; padding: 14px 20px; border-bottom: 1px solid #f1f2f4; background: #fafafa; }
+    .ws-card-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .88rem; flex: 0 0 auto; }
+    .ws-i-blue { background: #eff6ff; color: #2563eb; }
+    .ws-i-green { background: #ecfdf5; color: #059669; }
+    .ws-i-violet { background: #f5f3ff; color: #7c3aed; }
+    .ws-card-head h2 { font-size: .98rem; font-weight: 600; margin: 0; color: #111827; }
+    .ws-card-head p { margin: 2px 0 0; font-size: .78rem; color: #6b7280; }
+    .ws-card-body { padding: 20px; }
+
+    .ws-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .ws-full { grid-column: 1 / -1; }
+
+    .ws-field > label { display: block; font-size: .84rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .ws-req { color: #ef4444; }
+    .ws-input { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 7px; font-size: .88rem; background: #fff; color: #111827; }
+    .ws-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+    .ws-input.is-bad { border-color: #ef4444; }
+    .ws-help { font-size: .77rem; color: #6b7280; margin: 5px 0 0; }
+    .ws-err { font-size: .77rem; color: #dc2626; margin: 5px 0 0; }
+    textarea.ws-input { resize: vertical; min-height: 84px; }
+
+    /* ---- Image pickers ---- */
+    .ws-image-row { display: flex; gap: 16px; align-items: flex-start; }
+    .ws-preview { width: 116px; height: 78px; border: 1px dashed #d1d5db; border-radius: 8px; background: #fafafa; display: flex; align-items: center; justify-content: center; overflow: hidden; flex: 0 0 auto; padding: 8px; }
+    .ws-preview.is-square { width: 78px; }
+    .ws-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .ws-preview span { font-size: .7rem; color: #9ca3af; text-align: center; }
+    .ws-image-fields { flex: 1; min-width: 0; }
+
+    /* ---- Social rows ---- */
+    .ws-social-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f6f7f8; }
+    .ws-social-row:last-child { border-bottom: none; }
+    .ws-social-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .92rem; flex: 0 0 auto; }
+    .ws-social-label { width: 104px; font-size: .85rem; font-weight: 600; color: #374151; flex: 0 0 auto; }
+    .ws-social-row .ws-input { flex: 1; }
+    .ws-social-test { color: #9ca3af; padding: 6px 8px; border-radius: 6px; }
+    .ws-social-test:hover { color: #2563eb; background: #eff6ff; }
+    .ws-social-test.is-off { visibility: hidden; }
+
+    /* ---- Sticky save ---- */
+    .ws-save-bar { position: sticky; bottom: 0; z-index: 30; display: flex; align-items: center; justify-content: flex-end; gap: 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 13px 18px; box-shadow: 0 -3px 14px rgba(17,24,39,.07); }
+    .ws-save-note { margin-right: auto; font-size: .78rem; color: #6b7280; }
+    .ws-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 7px; padding: 9px 18px; font-size: .88rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; text-decoration: none; }
+    .ws-btn-primary { background: #2563eb; color: #fff; }
+    .ws-btn-primary:hover { background: #1d4ed8; color: #fff; }
+    .ws-btn-light { background: #fff; border-color: #d1d5db; color: #374151; }
+    .ws-btn-light:hover { background: #f9fafb; color: #374151; }
+
+    @media (max-width: 720px) {
+        .ws-grid { grid-template-columns: 1fr; }
+        .ws-social-row { flex-wrap: wrap; }
+        .ws-social-label { width: auto; }
+    }
+</style>
 @endsection
 
 @section('main-content')
+@php
+    $roleSlug = Str::slug(Auth::user()->getRoleNames()->first());
+    // Brand colours for the social icon chips, keyed to Setting::SOCIAL_PLATFORMS.
+    $socialColors = [
+        'facebook_url' => '#1877f2',
+        'instagram_url' => '#e1306c',
+        'twitter_url' => '#111827',
+        'youtube_url' => '#ff0000',
+        'linkedin_url' => '#0a66c2',
+        'tiktok_url' => '#111827',
+    ];
+@endphp
 
-<div class="bg-white p-8 mt-1">
-    <h2 class="text-2xl font-semibold mb-6 text-gray-700">Add Website Setting</h2>
-@if (session('success'))
-    <div class="mb-4 flex items-center p-4 rounded-lg bg-green-50 border-l-4 border-green-500 text-green-700">
-        <svg class="w-5 h-5 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M5 13l4 4L19 7" />
-        </svg>
-        <span>{{ session('success') }}</span>
+<div class="ws-page">
+    <div class="ws-header">
+        <div>
+            <h1>Website Settings</h1>
+            <p>Your shop's identity, contact details and social profiles — used across the storefront.</p>
+        </div>
+        <a href="{{ route('home') }}" target="_blank" class="ws-btn ws-btn-light">
+            <i class="fas fa-arrow-up-right-from-square"></i> View storefront
+        </a>
     </div>
-@endif
 
-    <form action="{{ route('role.website-settings.store', ['role' => Str::slug(Auth::user()->getRoleNames()->first())]) }}" method="POST" enctype="multipart/form-data">
+    @if (session('success'))
+        <div class="ws-alert ws-alert-success">
+            <i class="fas fa-circle-check"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="ws-alert ws-alert-error">
+            <i class="fas fa-circle-exclamation"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="ws-alert ws-alert-error">
+            <i class="fas fa-circle-exclamation"></i>
+            <div>
+                <strong>{{ $errors->count() }} {{ Str::plural('field', $errors->count()) }} need{{ $errors->count() === 1 ? 's' : '' }} your attention.</strong>
+                <ul>
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+
+    <form action="{{ route('role.website-settings.store', ['role' => $roleSlug]) }}"
+          method="POST" enctype="multipart/form-data">
         @csrf
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            <!-- title -->
-            <div class="mb-4">
-                <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
-                <input type="text" name="title" id="title" required
-                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{$settings->title ?? old('title')}}">
+        {{-- ---------------------------------------------------- Brand identity --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-blue"><i class="fas fa-store"></i></div>
+                <div>
+                    <h2>Brand identity</h2>
+                    <p>The name and marks shoppers see in the browser tab and header.</p>
+                </div>
             </div>
+            <div class="ws-card-body">
+                <div class="ws-grid">
+                    <div class="ws-field ws-full">
+                        <label for="title">Website title <span class="ws-req">*</span></label>
+                        <input type="text" name="title" id="title"
+                               value="{{ old('title', $settings->title ?? '') }}"
+                               class="ws-input @error('title') is-bad @enderror"
+                               placeholder="e.g. GoeBazar">
+                        @error('title')
+                            <p class="ws-err">{{ $message }}</p>
+                        @else
+                            <p class="ws-help">Shown in the browser tab and used as the footer copyright name.</p>
+                        @enderror
+                    </div>
 
-            <!-- Logo -->
-            <div class="mb-4">
-                <label for="logo_path" class="block text-sm font-medium text-gray-700">Logo</label>
-                <img src="{{asset($settings->logo_path ?? '')}}" alt="" srcset="" width="100px">
-                <input type="file" name="logo_path" id="logo_path"
-                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-            </div>
+                    <div class="ws-field">
+                        <label for="logo_path">Logo</label>
+                        <div class="ws-image-row">
+                            <div class="ws-preview" id="logo_preview">
+                                @if (! empty($settings->logo_path))
+                                    <img src="{{ asset($settings->logo_path) }}" alt="Current logo">
+                                @else
+                                    <span>No logo</span>
+                                @endif
+                            </div>
+                            <div class="ws-image-fields">
+                                <input type="file" name="logo_path" id="logo_path" accept="image/*"
+                                       class="ws-input @error('logo_path') is-bad @enderror">
+                                @error('logo_path')
+                                    <p class="ws-err">{{ $message }}</p>
+                                @else
+                                    <p class="ws-help">PNG with a transparent background works best. Up to 2 MB.</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Favicon -->
-            <div class="mb-4">
-                <label for="favicon_path" class="block text-sm font-medium text-gray-700">Favicon</label>
-                <img src="{{asset($settings->favicon_path ?? '')}}" alt="" srcset="" width="50px">
-                <input type="file" name="favicon_path" id="favicon_path"
-                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-            </div>
-
-            <!-- Phone -->
-            <div class="mb-4">
-                <label for="contact_phone" class="block text-sm font-medium text-gray-700">Contact Phone</label>
-                <input type="tel" name="contact_phone" id="contact_phone"
-                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{$settings->contact_phone ?? old('contact_phone')}}">
-            </div>
-
-            <!-- Email -->
-            <div class="mb-4">
-                <label for="contact_email" class="block text-sm font-medium text-gray-700">Contact Email</label>
-                <input type="email" name="contact_email" id="contact_email"
-                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{$settings->contact_email ?? old('contact_email')}}">
-            </div>
-
-            <!-- Address (full width row = spans 3 columns) -->
-            <div class="md:col-span-3 mb-4">
-                <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
-                <textarea name="address" id="address" rows="3"
-                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">{{$settings->address ?? old('address')}}</textarea>
+                    <div class="ws-field">
+                        <label for="favicon_path">Favicon</label>
+                        <div class="ws-image-row">
+                            <div class="ws-preview is-square" id="favicon_preview">
+                                @if (! empty($settings->favicon_path))
+                                    <img src="{{ asset($settings->favicon_path) }}" alt="Current favicon">
+                                @else
+                                    <span>None</span>
+                                @endif
+                            </div>
+                            <div class="ws-image-fields">
+                                <input type="file" name="favicon_path" id="favicon_path" accept="image/*"
+                                       class="ws-input @error('favicon_path') is-bad @enderror">
+                                @error('favicon_path')
+                                    <p class="ws-err">{{ $message }}</p>
+                                @else
+                                    <p class="ws-help">Small square image, 32&times;32 or 64&times;64.</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Submit -->
-        <div class="flex justify-end mt-6">
-            <button type="submit"
-                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                Save
+        {{-- ---------------------------------------------------- Contact --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-green"><i class="fas fa-headset"></i></div>
+                <div>
+                    <h2>Contact details</h2>
+                    <p>Shown in the footer. The phone number also powers the floating WhatsApp button.</p>
+                </div>
+            </div>
+            <div class="ws-card-body">
+                <div class="ws-grid">
+                    <div class="ws-field">
+                        <label for="contact_phone">Contact phone</label>
+                        <input type="tel" name="contact_phone" id="contact_phone"
+                               value="{{ old('contact_phone', $settings->contact_phone ?? '') }}"
+                               class="ws-input @error('contact_phone') is-bad @enderror"
+                               placeholder="01770105856">
+                        @error('contact_phone')
+                            <p class="ws-err">{{ $message }}</p>
+                        @else
+                            <p class="ws-help">Leave empty to hide the WhatsApp button.</p>
+                        @enderror
+                    </div>
+
+                    <div class="ws-field">
+                        <label for="contact_email">Contact email</label>
+                        <input type="email" name="contact_email" id="contact_email"
+                               value="{{ old('contact_email', $settings->contact_email ?? '') }}"
+                               class="ws-input @error('contact_email') is-bad @enderror"
+                               placeholder="support@yourshop.com">
+                        @error('contact_email')
+                            <p class="ws-err">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="ws-field ws-full">
+                        <label for="address">Address</label>
+                        <textarea name="address" id="address" rows="3"
+                                  class="ws-input @error('address') is-bad @enderror"
+                                  placeholder="Shop address shown in the footer">{{ old('address', $settings->address ?? '') }}</textarea>
+                        @error('address')
+                            <p class="ws-err">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ---------------------------------------------------- Social --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-violet"><i class="fas fa-share-nodes"></i></div>
+                <div>
+                    <h2>Social media</h2>
+                    <p>Appear in the top bar and the footer. Leave one empty and its icon is hidden.</p>
+                </div>
+            </div>
+            <div class="ws-card-body">
+                @foreach (\App\Models\Setting::SOCIAL_PLATFORMS as $key => $platform)
+                    @php $value = old($key, $settings->{$key} ?? ''); @endphp
+                    <div class="ws-social-row">
+                        <span class="ws-social-icon" style="background: {{ $socialColors[$key] ?? '#6b7280' }}">
+                            <i class="{{ $platform['icon'] }}"></i>
+                        </span>
+                        <span class="ws-social-label">{{ $platform['label'] }}</span>
+                        <input type="text" name="{{ $key }}" id="{{ $key }}" value="{{ $value }}"
+                               class="ws-input ws-social-input @error($key) is-bad @enderror"
+                               placeholder="{{ $platform['placeholder'] }}">
+                        <a href="{{ $value ?: '#' }}" target="_blank" rel="noopener"
+                           class="ws-social-test {{ $value ? '' : 'is-off' }}" title="Open this profile">
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                    @error($key)
+                        <p class="ws-err">{{ $message }}</p>
+                    @enderror
+                @endforeach
+
+                <p class="ws-help" style="margin-top:12px;">
+                    Paste the full profile address. If you leave off <code>https://</code> we add it for you.
+                </p>
+            </div>
+        </div>
+
+        <div class="ws-save-bar">
+            <span class="ws-save-note"><span class="ws-req">*</span> Required field</span>
+            <button type="submit" class="ws-btn ws-btn-primary">
+                <i class="fas fa-floppy-disk"></i> Save settings
             </button>
         </div>
-
     </form>
 </div>
+@endsection
+
+@section('js')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script>
+$(function () {
+    // Swap the preview to the newly picked file so the admin can confirm the
+    // right image before saving.
+    function bindPreview(inputId, previewId) {
+        $('#' + inputId).on('change', function () {
+            const file = this.files && this.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#' + previewId).html($('<img>').attr('src', e.target.result).attr('alt', 'Preview'));
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    bindPreview('logo_path', 'logo_preview');
+    bindPreview('favicon_path', 'favicon_preview');
+
+    // Keep each row's "open profile" shortcut in step with what is typed.
+    $('.ws-social-input').on('input', function () {
+        const value = $(this).val().trim();
+        const $test = $(this).next('.ws-social-test');
+        const href = /^(https?:)?\/\//i.test(value) ? value : 'https://' + value.replace(/^\/+/, '');
+
+        $test.toggleClass('is-off', value === '').attr('href', value ? href : '#');
+    });
+});
+</script>
 @endsection
