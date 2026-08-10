@@ -485,11 +485,19 @@
     <div class="container">
         <div class="breadcrumb-container">
             <div class="custom-breadcrumb">
-                <a href="index.html">Home</a>
-                <span class="breadcrumb-separator">/</span>
-                <a href="category.html">{{ $product->category->name ?? '' }}</a>
-                <span class="breadcrumb-separator">/</span>
-                <a href="subcategory.html">{{ $product->sub_category->name ?? '' }}</a>
+                {{-- These were the theme's placeholder files (index.html,
+                     category.html, subcategory.html) and so 404'd. Each crumb is
+                     also conditional now: an empty category no longer leaves a
+                     bare link and a doubled "/" in the trail. --}}
+                <a href="{{ route('home') }}">Home</a>
+                @if($product->category)
+                    <span class="breadcrumb-separator">/</span>
+                    <a href="{{ route('shop', ['category' => $product->category->slug]) }}">{{ $product->category->name }}</a>
+                @endif
+                @if($product->sub_category)
+                    <span class="breadcrumb-separator">/</span>
+                    <a href="{{ route('shop', ['category' => $product->category->slug ?? null, 'sub_category' => $product->sub_category->slug]) }}">{{ $product->sub_category->name }}</a>
+                @endif
                 <span class="breadcrumb-separator">/</span>
                 <p>{{ $product->name }}</p>
             </div>
@@ -1268,6 +1276,19 @@
 
 @endsection
 @section('scripts')
+{{-- Product view, for retargeting and dynamic ads. The price is resolved here
+     rather than reused from the content section so this keeps working if that
+     block is ever reorganised. --}}
+@php
+    $trackedPrice = $product->product_prices->first()->selling_price
+        ?? $product->selling_price
+        ?? 0;
+@endphp
+<script>
+    if (window.goeTrack) {
+        goeTrack('view_item', @json(\App\Services\Tracking::productPayload($product, (float) $trackedPrice)));
+    }
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js"></script>
 <script>
         // Simple cart interactions
@@ -2267,8 +2288,20 @@
                 sku_id: skuId,
                 variant_label: variantLabel
             })
-            .done(function () {
-                window.location.href = "{{ route('checkout.index') }}";
+            .done(function (res) {
+                var go = function () { window.location.href = "{{ route('checkout.index') }}"; };
+
+                // Buy Now really does add to the cart, so it reports AddToCart
+                // like any other add — otherwise the funnel shows a checkout
+                // starting from nothing. The short delay gives the pixel request
+                // time to leave the browser before the page navigates away.
+                if (res && res.tracking && window.goeTrack) {
+                    goeTrack('add_to_cart', res.tracking);
+                    setTimeout(go, 250);
+                    return;
+                }
+
+                go();
             })
             .fail(function (xhr) {
                 const message = xhr.responseJSON?.message || 'Unable to add product to cart.';

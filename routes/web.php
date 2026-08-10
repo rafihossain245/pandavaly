@@ -10,7 +10,10 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\Dashboard\BankController;
 use App\Http\Controllers\CountryController;
+use App\Http\Controllers\Dashboard\AccountsController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\DeliveryController;
+use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\PassportHolderController;
 use App\Http\Controllers\Dashboard\VendorController;
@@ -167,7 +170,9 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
 ->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('change-password', [LoginController::class, 'updatePassword'])->name('change.password');
-    Route::resource('user', UserController::class);
+    // No show route: there is no single-user page, and the index already carries
+    // everything about a user that is worth reading.
+    Route::resource('user', UserController::class)->except('show');
     Route::resource('passport-holder', PassportHolderController::class);
     Route::resource('passport-holder-category', PassportHolderCategoryController::class);
     Route::resource('vendor', VendorController::class);
@@ -265,8 +270,24 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
     Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('orders/{order}/verify-payment', [OrderController::class, 'verifyPayment'])->name('orders.verify-payment');
+    Route::post('orders/{order}/send-to-courier', [OrderController::class, 'sendToCourier'])->name('orders.send-to-courier');
 
     Route::get('/get-sub-category', [ProductController::class, 'getSubCategory'])
     ->name('get-sub-category');
+
+    /*
+    | Roles, Accounts and Delivery.
+    |
+    | The resource parameter for roles is forced to {roles}: this whole group is
+    | already prefixed with {role}, and Laravel's default singular parameter for
+    | a "roles" resource is also {role}, which would collide.
+    */
+    Route::resource('roles', RoleController::class)->parameters(['roles' => 'roles'])->except('show');
+
+    Route::get('accounts', [AccountsController::class, 'index'])->name('accounts.index');
+
+    Route::get('delivery', [DeliveryController::class, 'index'])->name('delivery.index');
+    Route::post('delivery/{consignment}/retry', [DeliveryController::class, 'retry'])->name('delivery.retry');
+    Route::post('delivery/{consignment}/sync', [DeliveryController::class, 'sync'])->name('delivery.sync');
 
 });

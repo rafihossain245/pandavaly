@@ -66,6 +66,13 @@
             <i class="fas fa-users w-6 text-center mr-2"></i>
             <span>Customers</span>
         </a>
+        {{-- Parcels handed to the courier. The pushing itself is automatic; this
+             is where a rejected one gets retried. --}}
+        <a href="{{ route('role.delivery.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.delivery.*') ? 'active' : '' }}">
+            <i class="fas fa-truck-fast w-6 text-center mr-2"></i>
+            <span>Delivery</span>
+        </a>
 
         <p class="sidebar-section">Catalog</p>
 
@@ -192,6 +199,26 @@
             <span>WhatsApp</span>
         </a>
 
+        <p class="sidebar-section">Accounts</p>
+
+        {{-- Read-only summary over orders and expenses; nothing is recorded on it,
+             so the two screens below are where the numbers actually come from. --}}
+        <a href="{{ route('role.accounts.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.accounts.*') ? 'active' : '' }}">
+            <i class="fas fa-wallet w-6 text-center mr-2"></i>
+            <span>Overview</span>
+        </a>
+        <a href="{{ route('role.expenses.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.expenses.*') ? 'active' : '' }}">
+            <i class="fas fa-receipt w-6 text-center mr-2"></i>
+            <span>Expenses</span>
+        </a>
+        <a href="{{ route('role.expense-categories.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.expense-categories.*') ? 'active' : '' }}">
+            <i class="fas fa-folder-tree w-6 text-center mr-2"></i>
+            <span>Expense Categories</span>
+        </a>
+
         <p class="sidebar-section">Settings</p>
 
         <a href="{{ route('role.website-settings', ['role' => $roleSlug]) }}"
@@ -204,8 +231,13 @@
              controller kept — role.company-settings.index. --}}
         <a href="{{ route('role.user.index', ['role' => $roleSlug]) }}"
             class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.user.*') ? 'active' : '' }}">
-            <i class="fas fa-user-shield w-6 text-center mr-2"></i>
-            <span>Users &amp; Roles</span>
+            <i class="fas fa-user w-6 text-center mr-2"></i>
+            <span>Users</span>
+        </a>
+        <a href="{{ route('role.roles.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.roles.*') ? 'active' : '' }}">
+            <i class="fas fa-shield-halved w-6 text-center mr-2"></i>
+            <span>Roles</span>
         </a>
 
         {{--

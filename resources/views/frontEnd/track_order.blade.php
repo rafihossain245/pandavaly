@@ -205,6 +205,26 @@
 
 @section('scripts')
 @if($justPlaced && $order)
+{{-- Purchase belongs here, not on the confirmation view: checkout redirects a
+     shopper who has just paid to this tracker, so this is the real thank-you
+     page. $justPlaced comes from flashed session data, so it is already gone on
+     a refresh; the sessionStorage guard covers the back button and bfcache
+     restoring the page from memory. --}}
+<script>
+    (function () {
+        if (!window.goeTrack) return;
+
+        var once = 'purchase.{{ $order->id }}';
+        try {
+            if (sessionStorage.getItem(once)) return;
+            sessionStorage.setItem(once, '1');
+        } catch (e) {
+            // Private mode can refuse storage; reporting twice beats not at all.
+        }
+
+        goeTrack('purchase', @json(\App\Services\Tracking::orderPayload($order)));
+    })();
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const el = document.getElementById('orderPlacedModal');

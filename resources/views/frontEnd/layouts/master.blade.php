@@ -8,6 +8,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- As high in the head as possible so PageView is not lost to shoppers
+         who leave before the stylesheets finish loading. --}}
+    @include('frontEnd.layouts.tracking')
     <meta property="og:type" content="website">
     <meta property="og:title" content="title">
     <meta property="og:image" content="">
@@ -108,6 +111,8 @@
 </head>
 
 <body>
+
+    @include('frontEnd.layouts.tracking-noscript')
 
     <header>
         <div class="top-headline">
@@ -319,9 +324,14 @@
         </div>
     </div>
 
+    {{-- Mobile bottom bar. Shown only under 576px, by `display: block !important`
+         in responsive.css, which is what overrides the inline none.
+         The hrefs were the theme's placeholder files (index.html, shop.html,
+         cartlists.html) and so 404'd — they are real routes now. --}}
     <section class="footer-nav" style="display: none">
         <div class="nav-container">
-            <a href="index.html" class="nav-item active">
+            <a href="{{ route('home') }}"
+               class="nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
                 <span class="nav-icon">🏠</span>
                 <span class="nav-text">Home</span>
             </a>
@@ -332,16 +342,22 @@
                 <span class="nav-text">Category</span>
             </a>
 
-            <a href="shop.html" class="logo">
+            <a href="{{ route('shop') }}" class="logo" aria-label="Shop all products">
                 <span class="logo-icon">🛍️</span>
             </a>
 
-            <a href="cartlists.html" class="nav-item cart-container">
+            <a href="{{ route('cart.index') }}"
+               class="nav-item cart-container {{ request()->routeIs('cart.index') ? 'active' : '' }}">
                 <span class="nav-icon">🛒</span>
+                {{-- The theme styles .cart-count but never rendered one here. --}}
+                @if(($cart['count'] ?? 0) > 0)
+                    <span class="cart-count">{{ $cart['count'] }}</span>
+                @endif
                 <span class="nav-text">Cart</span>
             </a>
 
-            <a href="{{ Auth::guard('buyer')->check() ? route('buyer.dashboard') : route('buyer.login') }}" class="nav-item">
+            <a href="{{ Auth::guard('buyer')->check() ? route('buyer.dashboard') : route('buyer.login') }}"
+               class="nav-item {{ request()->routeIs('buyer.*') ? 'active' : '' }}">
                 <span class="nav-icon">👤</span>
                 <span class="nav-text">Profile</span>
             </a>

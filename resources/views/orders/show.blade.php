@@ -42,6 +42,21 @@
     .items-table tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
     .sum-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; color: #444; }
     .sum-row.grand { font-weight: 700; font-size: 16px; color: #111; border-top: 2px solid #111; padding-top: 10px; margin-top: 4px; }
+
+    /* ---- Courier handover ---- */
+    .courier-box { margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 9px; padding: 14px 16px; background: #fafafa; }
+    .courier-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 10px; }
+    .courier-head i { color: #6b7280; margin-right: 5px; }
+    .courier-tag { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 9px; }
+    .courier-tag-ok { background: #ecfdf5; color: #047857; }
+    .courier-tag-warn { background: #fffbeb; color: #b45309; }
+    .courier-tag-muted { background: #f3f4f6; color: #6b7280; }
+    .courier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .courier-grid span { display: block; font-size: 11.5px; color: #6b7280; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 2px; }
+    .courier-grid strong { font-size: 13.5px; color: #111827; word-break: break-all; }
+    .courier-note { font-size: 13px; color: #6b7280; margin: 0 0 10px; }
+    .courier-error { font-size: 13px; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 11px; margin: 0 0 10px; }
+    .courier-attempts { color: #9ca3af; }
 </style>
 @endsection
 @section('main-content')
@@ -178,6 +193,79 @@
                 @endif
             </div>
             @endif
+
+            {{-- Courier handover. Shows the consignment once Steadfast has one,
+                 the failure reason when a push was rejected, and a manual button
+                 so a failure can be retried without waiting for the cron. --}}
+            @php $consignment = $courier['consignment']; @endphp
+            <div class="courier-box">
+                <div class="courier-head">
+                    <span><i class="fas fa-truck-fast"></i> Steadfast Courier</span>
+                    @if($courier['driver'] !== 'api')
+                        <span class="courier-tag courier-tag-warn">Test mode &mdash; no real shipments</span>
+                    @elseif($courier['auto_push'])
+                        <span class="courier-tag courier-tag-ok">Auto-send on</span>
+                    @else
+                        <span class="courier-tag courier-tag-muted">Auto-send off</span>
+                    @endif
+                </div>
+
+                @if($consignment && $consignment->isAccepted())
+                    <div class="courier-grid">
+                        <div>
+                            <span>Consignment</span>
+                            <strong>{{ $consignment->consignment_id }}</strong>
+                        </div>
+                        <div>
+                            <span>Tracking code</span>
+                            <strong>{{ $consignment->tracking_code ?? '—' }}</strong>
+                        </div>
+                        <div>
+                            <span>Delivery status</span>
+                            <strong>{{ $consignment->statusLabel() }}</strong>
+                        </div>
+                        <div>
+                            <span>Collect on delivery</span>
+                            <strong>৳ {{ number_format((float) $consignment->cod_amount, 2) }}</strong>
+                        </div>
+                        <div>
+                            <span>Sent</span>
+                            <strong>{{ $consignment->pushed_at?->format('d M Y, h:i A') ?? '—' }}</strong>
+                        </div>
+                    </div>
+                @else
+                    @if($consignment && $consignment->last_error)
+                        <p class="courier-error">
+                            <i class="fas fa-circle-exclamation"></i>
+                            Last attempt failed: {{ $consignment->last_error }}
+                            <span class="courier-attempts">({{ $consignment->attempts }} {{ Str::plural('attempt', $consignment->attempts) }})</span>
+                        </p>
+                    @elseif($courier['blocked_reason'])
+                        <p class="courier-note">{{ $courier['blocked_reason'] }}</p>
+                    @else
+                        <p class="courier-note">Not handed to the courier yet.</p>
+                    @endif
+
+                    @if(! $courier['configured'] && $courier['driver'] === 'api')
+                        <p class="courier-error">
+                            <i class="fas fa-key"></i>
+                            Steadfast API credentials are missing — add STEADFAST_API_KEY and STEADFAST_SECRET_KEY.
+                        </p>
+                    @endif
+
+                    @unless($courier['blocked_reason'])
+                        <form method="POST"
+                              action="{{ route('role.orders.send-to-courier', ['role'=>$role, 'order'=>$order->id]) }}"
+                              onsubmit="return confirm('{{ $courier['driver'] === 'api' ? 'Create a real Steadfast shipment for this order?' : 'Send this order to the courier (test mode)?' }}')">
+                            @csrf
+                            <button type="submit" class="action-btn btn-process">
+                                <i class="fas fa-paper-plane"></i>
+                                {{ $consignment && $consignment->last_error ? 'Retry courier send' : 'Send to courier' }}
+                            </button>
+                        </form>
+                    @endunless
+                @endif
+            </div>
 
         </div>
     </div>

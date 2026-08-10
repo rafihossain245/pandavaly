@@ -89,6 +89,9 @@
                     $('.cs-total-val').text(numFmt(res.cart.total || 0));
                     updateFloatingCart(res.cart.count || 0, res.cart.total || 0);
                     showCartToast('Product added to cart!');
+                    // Fired only on the server's confirmation, so a rejected add
+                    // (out of stock, below MOQ) never reports a conversion.
+                    if (res.tracking && window.goeTrack) goeTrack('add_to_cart', res.tracking);
                 },
                 error: function (xhr) {
                     var msg = xhr.responseJSON ? (xhr.responseJSON.error || 'Failed to add.') : 'Out of stock.';
@@ -148,6 +151,7 @@
                         if (res.cart_items_html) $('#cs-items-wrap').html(res.cart_items_html);
                         $('.cs-total-val').text(numFmt(res.cart.total || 0));
                         updateFloatingCart(res.cart.count || 0, res.cart.total || 0);
+                        if (res.tracking && window.goeTrack) goeTrack('add_to_cart', res.tracking);
                     },
                     complete: function () {
                         addNext(index + 1);
@@ -176,6 +180,8 @@
                         $icon.removeClass('fas').addClass('far').css('color', '#999');
                     }
                     $('.total-wishlist').text(res.count || 0);
+                    // Only sent on an add; the server omits it on a remove.
+                    if (res.tracking && window.goeTrack) goeTrack('add_to_wishlist', res.tracking);
                 },
                 error: function (xhr) {
                     if (xhr.status === 401 || xhr.status === 419) {

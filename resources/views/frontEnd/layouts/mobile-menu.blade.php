@@ -4,6 +4,17 @@
         ->orderBy('sort_order')
         ->orderBy('name')
         ->get();
+
+    // The Menu tab's link groups are the same admin-managed page categories that
+    // build the footer columns, so anything added under Content > Pages appears
+    // here too. Manage them there, not in this file.
+    $mobileMenuColumns = App\Models\PageCategory::active()
+        ->ordered()
+        ->with('activePages')
+        ->get()
+        ->filter(fn ($column) => $column->activePages->isNotEmpty());
+
+    $mobileBuyer = Auth::guard('buyer')->user();
 @endphp
 <div class="offcanvas offcanvas-start mobile-menu-sidebar" tabindex="-1" id="offcanvasMenu"
         aria-labelledby="offcanvasMenuLabel">
@@ -28,94 +39,73 @@
                 <!-- Menu Tab -->
                 <div class="tab-pane fade show active" id="menu" role="tabpanel" aria-labelledby="menu-tab">
                     <ul class="sidebar-menu">
-                        <li><a href="#"><span><i class="far fa-file"></i> Menu</span></a></li>
-                        <li><a href="#"><span><i class="far fa-file"></i> Menu</span></a></li>
-                        <li><a href="#"><span><i class="far fa-file"></i> Menu</span></a></li>
-                        <li><a href="#"><span><i class="far fa-file"></i> Menu</span></a></li>
+                        {{-- Primary destinations, mirroring the desktop navbar. --}}
                         <li>
-                            <a href="#">
-                                <span><i class="far fa-file"></i> Multilevel Menu</span>
-                                <i class="fa fa-angle-right pull-right"></i>
+                            <a href="{{ route('home') }}">
+                                <span><i class="fas fa-house"></i> Home</span>
                             </a>
-                            <ul class="sidebar-submenu">
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                                <li>
-                                    <a href="#"><span><i class="fa fa-circle-o"></i> Level One</span> <i
-                                            class="fa fa-angle-right pull-right"></i></a>
-                                    <ul class="sidebar-submenu">
-                                        <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                    Two</span></a></li>
-                                        <li>
-                                            <a href="#"><span><i class="fa fa-circle-o"></i> Level Two</span> <i
-                                                    class="fa fa-angle-right pull-right"></i></a>
-                                            <ul class="sidebar-submenu">
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                            </ul>
                         </li>
                         <li>
-                            <a href="#">
-                                <span><i class="far fa-file"></i> Multilevel Menu</span>
-                                <i class="fa fa-angle-right pull-right"></i>
+                            <a href="{{ route('shop') }}">
+                                <span><i class="fas fa-store"></i> All Products</span>
                             </a>
-                            <ul class="sidebar-submenu">
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                                <li>
-                                    <a href="#"><span><i class="fa fa-circle-o"></i> Level One</span> <i
-                                            class="fa fa-angle-right pull-right"></i></a>
-                                    <ul class="sidebar-submenu">
-                                        <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                    Two</span></a></li>
-                                        <li>
-                                            <a href="#"><span><i class="fa fa-circle-o"></i> Level Two</span> <i
-                                                    class="fa fa-angle-right pull-right"></i></a>
-                                            <ul class="sidebar-submenu">
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                            </ul>
                         </li>
                         <li>
-                            <a href="#">
-                                <span><i class="far fa-file"></i> Multilevel Menu</span>
-                                <i class="fa fa-angle-right pull-right"></i>
+                            <a href="{{ route('shop', ['sort' => 'newest']) }}">
+                                <span><i class="fas fa-star"></i> New Arrival</span>
                             </a>
-                            <ul class="sidebar-submenu">
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                                <li>
-                                    <a href="#"><span><i class="fa fa-circle-o"></i> Level One</span> <i
-                                            class="fa fa-angle-right pull-right"></i></a>
-                                    <ul class="sidebar-submenu">
-                                        <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                    Two</span></a></li>
-                                        <li>
-                                            <a href="#"><span><i class="fa fa-circle-o"></i> Level Two</span> <i
-                                                    class="fa fa-angle-right pull-right"></i></a>
-                                            <ul class="sidebar-submenu">
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level
-                                                            Three</span></a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li><a href="#"><span><i class="fa fa-circle-o"></i> Level One</span></a></li>
-                            </ul>
                         </li>
+                        <li>
+                            <a href="{{ route('track-order') }}">
+                                <span><i class="fas fa-truck-fast"></i> Track Order</span>
+                            </a>
+                        </li>
+
+                        {{-- Admin-managed page groups (the footer columns). The theme's
+                             sidebarMenu plugin expands a .sidebar-submenu that is the
+                             link's next sibling, so this structure must stay. --}}
+                        @foreach ($mobileMenuColumns as $mobileColumn)
+                            <li class="has-sub">
+                                <a href="#">
+                                    <span><i class="far fa-file"></i> {{ $mobileColumn->name }}</span>
+                                    <i class="fa fa-angle-right pull-right"></i>
+                                </a>
+                                <ul class="sidebar-submenu">
+                                    @foreach ($mobileColumn->activePages as $mobilePage)
+                                        <li>
+                                            <a href="{{ $mobilePage->url() }}">
+                                                <span><i class="fa fa-circle-o"></i> {{ $mobilePage->title }}</span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                        @endforeach
+
+                        {{-- Account --}}
+                        @if ($mobileBuyer)
+                            <li>
+                                <a href="{{ route('buyer.dashboard') }}">
+                                    <span><i class="far fa-user"></i> My Account</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('buyer.orders') }}">
+                                    <span><i class="fas fa-box"></i> My Orders</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('buyer.wishlist') }}">
+                                    <span><i class="far fa-heart"></i> Wishlist</span>
+                                </a>
+                            </li>
+                        @else
+                            <li>
+                                <a href="{{ route('buyer.login') }}">
+                                    <span><i class="fas fa-right-to-bracket"></i> Login / Register</span>
+                                </a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
                 <!-- Categories Tab -->

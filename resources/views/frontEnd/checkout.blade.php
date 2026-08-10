@@ -468,6 +468,13 @@
 @endsection
 
 @section('scripts')
+{{-- Checkout started. Delivery is left out of the value: the district has not
+     been picked yet on first load, so there is no charge to add. --}}
+<script>
+    if (window.goeTrack) {
+        goeTrack('begin_checkout', @json(\App\Services\Tracking::cartPayload($cart, (float) $discount)));
+    }
+</script>
 <script>
 function selectPM(radio, labelId) {
     document.querySelectorAll('.pm-option').forEach(function(l) { l.classList.remove('active'); });
