@@ -37,6 +37,18 @@ class SalesOrder extends Model
         return $this->hasOne(Invoice::class);
     }
 
+    public function courierConsignments()
+    {
+        return $this->hasMany(CourierConsignment::class);
+    }
+
+    /** The Steadfast consignment for this order, if it has one. */
+    public function courierConsignment()
+    {
+        return $this->hasOne(CourierConsignment::class)
+            ->where('courier', \App\Services\Courier\CourierDispatcher::COURIER);
+    }
+
     public function district()
     {
         return $this->belongsTo(District::class);

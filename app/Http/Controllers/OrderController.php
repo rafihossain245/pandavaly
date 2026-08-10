@@ -10,6 +10,8 @@ use App\Models\InvoiceItem;
 use App\Models\ProductSku;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
+use App\Services\Courier\CourierDispatcher;
+use App\Services\Courier\CourierException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -110,10 +112,49 @@ class OrderController extends Controller
             && $order->status === 'payment_requested'
             && $order->payment_status === 'pending_verification';
 
+        $dispatcher = app(CourierDispatcher::class);
+        $consignment = $dispatcher->consignmentFor($order);
+        $courier = [
+            'consignment' => $consignment,
+            'driver' => $dispatcher->client()->driver(),
+            'auto_push' => $dispatcher->autoPushEnabled(),
+            'configured' => $dispatcher->client()->isConfigured(),
+            // Null when the order is ready to hand over; otherwise why it is not.
+            'blocked_reason' => $dispatcher->ineligibleReason($order),
+        ];
+
         return view('orders.show', compact(
             'order', 'items', 'productNames', 'variantLabels',
-            'transitions', 'statusColors', 'canVerifyPayment'
+            'transitions', 'statusColors', 'canVerifyPayment', 'courier'
         ));
+    }
+
+    /**
+     * Manual courier handover / retry.
+     *
+     * Runs inline rather than queued so the admin sees the courier's actual
+     * answer — the whole point of pressing the button is to find out why the
+     * automatic push failed.
+     */
+    public function sendToCourier(string $_role, SalesOrder $order, CourierDispatcher $dispatcher)
+    {
+        $existing = $dispatcher->consignmentFor($order);
+
+        if ($existing?->isAccepted()) {
+            return back()->with('success', "Already with the courier (consignment {$existing->consignment_id}).");
+        }
+
+        try {
+            $consignment = $dispatcher->push($order);
+        } catch (CourierException $e) {
+            return back()->with('error', 'Courier rejected this order: ' . $e->getMessage());
+        }
+
+        return back()->with(
+            'success',
+            "Sent to Steadfast. Consignment {$consignment->consignment_id}"
+            . ($dispatcher->client()->isLive() ? '.' : ' (log driver — no real shipment was created).')
+        );
     }
 
     public function updateStatus(string $_role, Request $request, SalesOrder $order)

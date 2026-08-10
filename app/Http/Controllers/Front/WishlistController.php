@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Wishlist;
+use App\Services\Tracking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,10 +48,19 @@ class WishlistController extends Controller
             $wishlisted = true;
         }
 
+        // Only an add is worth reporting to the pixels — removing from a
+        // wishlist is not an event any ad platform models.
+        $tracking = null;
+        if ($wishlisted && $product = Product::with('product_prices')->find($request->product_id)) {
+            $price = $product->product_prices->first()->selling_price ?? $product->selling_price ?? 0;
+            $tracking = Tracking::productPayload($product, (float) $price);
+        }
+
         return response()->json([
             'success' => true,
             'wishlisted' => $wishlisted,
             'count' => Wishlist::where('buyer_id', $buyerId)->count(),
+            'tracking' => $tracking,
         ]);
     }
 }

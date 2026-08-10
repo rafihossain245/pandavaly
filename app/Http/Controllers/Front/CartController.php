@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductSku;
+use App\Services\Tracking;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -53,7 +54,9 @@ class CartController extends Controller
 
     /**
      * Add a product (optionally with a selected SKU/variant) to the cart.
-     * Returns ['error' => string] on failure, or ['cart' => array] on success.
+     * Returns ['error' => string] on failure, or ['cart' => array, 'key' =>
+     * string] on success — the key identifies the line that was just touched,
+     * which the caller needs to report the add to the marketing pixels.
      */
     public function addToCart(Product $product, ?ProductSku $sku, int $requestedQty, ?string $variantLabel = null): array
     {
@@ -117,7 +120,7 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
-        return ['cart' => $cart];
+        return ['cart' => $cart, 'key' => $key];
     }
 
     public function index()
@@ -154,10 +157,15 @@ class CartController extends Controller
         }
 
         $cart = $result['cart'];
+        $addedLine = $cart['items'][$result['key']] ?? null;
+        $addedQty = (int) $request->get('qty', 1);
 
         return response()->json([
             'cart' => $cart,
             'cart_items_html' => $this->renderSidebarItems($cart),
+            // Built here rather than in the browser: only the server knows which
+            // variant was resolved and what it actually costs.
+            'tracking' => $addedLine ? Tracking::addToCartPayload($addedLine, $addedQty) : null,
         ]);
     }
 
