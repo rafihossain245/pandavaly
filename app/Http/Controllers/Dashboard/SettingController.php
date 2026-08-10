@@ -25,6 +25,19 @@ class SettingController extends Controller
             $socialRules[$key] = 'nullable|string|max:255';
         }
 
+        $trackingRules = [];
+        $trackingMessages = [];
+        foreach (Setting::TRACKING_FIELDS as $key => $field) {
+            // Normalised before validation so a lowercased "gtm-abc123" or a
+            // stray space from copy-paste is accepted rather than rejected.
+            $request->merge([$key => $this->normaliseTrackingId($request->input($key))]);
+
+            // Checked against the platform's own ID format. A pasted <script>
+            // block fails here rather than reaching every storefront page.
+            $trackingRules[$key] = ['nullable', 'string', 'max:32', 'regex:' . $field['pattern']];
+            $trackingMessages[$key . '.regex'] = $field['error'];
+        }
+
         try {
             $request->validate(array_merge([
                 'title' => 'required|string|max:255',
@@ -33,11 +46,11 @@ class SettingController extends Controller
                 'contact_email' => 'nullable|email|max:255',
                 'contact_phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string',
-            ], $socialRules), [
+            ], $socialRules, $trackingRules), array_merge([
                 'title.required' => 'The website title is required — it appears in the browser tab.',
                 'logo_path.max' => 'The logo must be 2 MB or smaller.',
                 'favicon_path.max' => 'The favicon must be 2 MB or smaller.',
-            ]);
+            ], $trackingMessages));
 
             $settings = Setting::first();
 
@@ -45,6 +58,11 @@ class SettingController extends Controller
 
             foreach (array_keys(Setting::SOCIAL_PLATFORMS) as $key) {
                 $data[$key] = $this->normaliseUrl($request->input($key));
+            }
+
+            foreach (array_keys(Setting::TRACKING_FIELDS) as $key) {
+                // Already normalised above the validator; blank clears the pixel.
+                $data[$key] = $request->input($key) ?: null;
             }
 
             if ($request->hasFile('logo_path')) {
@@ -87,6 +105,17 @@ class SettingController extends Controller
         }
 
         return 'https://' . ltrim($value, '/');
+    }
+
+    /**
+     * Pixel IDs are pasted, so they arrive with stray whitespace and in mixed
+     * case. Google's prefixes are upper case by definition; Meta's is digits.
+     */
+    private function normaliseTrackingId(mixed $value): ?string
+    {
+        $value = strtoupper(preg_replace('/\s+/', '', is_string($value) ? $value : ''));
+
+        return $value === '' ? null : $value;
     }
 
     /**

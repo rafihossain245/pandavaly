@@ -1,9 +1,9 @@
 @extends('layout.app')
 
 @section('meta-information')
-    <title>Add User</title>
+    <title>Edit {{ $target->name }}</title>
 @endsection
 
 @section('main-content')
-    @include('panel.users._form', ['user' => null])
+    @include('panel.roles._form')
 @endsection

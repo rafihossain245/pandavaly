@@ -287,6 +287,41 @@
             </div>
         </div>
 
+        {{-- ---------------------------------------------------- Tracking --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-blue"><i class="fas fa-bullseye"></i></div>
+                <div>
+                    <h2>Marketing &amp; tracking</h2>
+                    <p>Measure ads and traffic. Paste the ID only — we build the tracking code for you.</p>
+                </div>
+            </div>
+            <div class="ws-card-body">
+                @foreach (\App\Models\Setting::TRACKING_FIELDS as $key => $field)
+                    <div class="ws-social-row">
+                        <span class="ws-social-icon" style="background: {{ $field['colour'] }}">
+                            <i class="{{ $field['icon'] }}"></i>
+                        </span>
+                        <span class="ws-social-label">{{ $field['label'] }}</span>
+                        <input type="text" name="{{ $key }}" id="{{ $key }}"
+                               value="{{ old($key, $settings->{$key} ?? '') }}"
+                               class="ws-input ws-social-input @error($key) is-bad @enderror"
+                               placeholder="{{ $field['placeholder'] }}">
+                    </div>
+                    @error($key)
+                        <p class="ws-err">{{ $message }}</p>
+                    @else
+                        <p class="ws-help" style="margin: -4px 0 12px 44px;">{{ $field['help'] }}</p>
+                    @enderror
+                @endforeach
+
+                <p class="ws-help" style="margin-top:12px;">
+                    Leave a field empty and that platform's script is not loaded at all. Tracking runs on the
+                    storefront only — staff browsing this dashboard are never counted as shoppers.
+                </p>
+            </div>
+        </div>
+
         <div class="ws-save-bar">
             <span class="ws-save-note"><span class="ws-req">*</span> Required field</span>
             <button type="submit" class="ws-btn ws-btn-primary">

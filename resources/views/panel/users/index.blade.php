@@ -1,6 +1,6 @@
 @extends('layout.app')
 @section('meta-information')
-    <title>Users &amp; Roles</title>
+    <title>Users</title>
 @endsection
 @section('main-content')
     @php
@@ -20,8 +20,12 @@
         <div class="mb-5 overflow-hidden rounded-xl shadow-sm">
             <div class="flex items-center justify-between bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-4">
                 <h2 class="text-xl font-semibold text-white">
-                    <i class="fas fa-user-shield mr-2"></i> Users &amp; Roles
+                    <i class="fas fa-user-shield mr-2"></i> Users
                 </h2>
+                <a href="{{ route('role.user.create', ['role' => $roleSlug]) }}"
+                    class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-800 transition hover:bg-blue-50">
+                    <i class="fas fa-plus mr-1"></i> Add user
+                </a>
             </div>
         </div>
 
@@ -56,6 +60,19 @@
                             class="text-blue-600 hover:underline">Customers</a>.
                     </p>
                 </div>
+
+                <form method="GET" class="flex items-center gap-2">
+                    <input type="search" name="q" value="{{ $search }}" placeholder="Name, email or phone"
+                        class="w-56 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <button type="submit"
+                        class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    @if ($search !== '')
+                        <a href="{{ route('role.user.index', ['role' => $roleSlug]) }}"
+                            class="text-xs text-gray-500 hover:underline">Clear</a>
+                    @endif
+                </form>
             </div>
 
             <div class="overflow-x-auto">
@@ -100,7 +117,9 @@
                                     @endforelse
                                 </td>
                                 <td class="px-5 py-3">
-                                    @if ($user->status)
+                                    {{-- status is an enum column, so the string "inactive" is
+                                         truthy — it has to be compared, not just checked. --}}
+                                    @if ($user->status === 'active')
                                         <span
                                             class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">Active</span>
                                     @else
@@ -109,6 +128,11 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-3 text-right">
+                                    <a href="{{ route('role.user.edit', ['role' => $roleSlug, 'user' => $user->id]) }}"
+                                        class="mr-1 inline-block rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                                        title="Edit user">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
                                     @if ($user->id !== Auth::id())
                                         <form method="POST"
                                             action="{{ route('role.user.destroy', ['role' => $roleSlug, 'user' => $user->id]) }}"
@@ -122,8 +146,6 @@
                                                 <i class="fas fa-trash-can"></i>
                                             </button>
                                         </form>
-                                    @else
-                                        <span class="text-xs text-gray-300">—</span>
                                     @endif
                                 </td>
                             </tr>
@@ -147,8 +169,8 @@
         </div>
 
         <p class="mt-4 text-xs text-gray-500">
-            Roles are defined by Spatie permissions. Adding and editing users is not built yet —
-            <code class="rounded bg-gray-100 px-1 py-0.5">UserController@create/edit/update</code> are still stubs.
+            A user's role decides which screens they can open. Define the roles themselves under
+            <a href="{{ route('role.roles.index', ['role' => $roleSlug]) }}" class="text-blue-600 hover:underline">Roles</a>.
         </p>
     </div>
 @endsection
