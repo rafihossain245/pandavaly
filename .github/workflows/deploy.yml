@@ -37,4 +37,4 @@ jobs:
             --exclude '/storage/' \
             --exclude '/.github/' \
             --exclude '/.git/' \
-            ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USERNAME }}/public_html/
+            ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USERNAME }}/pandavaly.com/
