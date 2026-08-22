@@ -100,7 +100,6 @@ class Setting extends Model
         'announcement',
         'announcement_enabled',
         'logo_path',
-        'logo_light_path',
         'favicon_path',
         'contact_email',
         'contact_phone',

@@ -2,24 +2,111 @@
 @section('meta-information')
     <title>Invoice {{ $invoice->invoice_no }}</title>
 @endsection
+
 @section('css')
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
 <style>
+    /* ---- Brand invoice ------------------------------------------------
+       Sized to A4 width so "Print / Save PDF" produces the same document
+       that is shown on screen. Colours are the storefront palette. */
+    .inv-sheet {
+        --ink: #1a1a1a; --brand: #e6007e; --tint: #fdeaf4; --line: #f2c9e0;
+        width: 210mm; max-width: 100%; margin: 0 auto; background: #fff;
+        border: 1px solid #e6e6ec; padding: 26px 30px 18px;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: var(--ink);
+    }
+    .inv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .inv-logo-plate { background: var(--brand); border-radius: 8px; padding: 9px 16px; display: inline-flex; align-items: center; }
+    .inv-logo { max-height: 44px; max-width: 210px; width: auto; object-fit: contain; display: block; }
+    .inv-brand-name { font-size: 21px; font-weight: 800; color: var(--brand); letter-spacing: .5px; }
+    .inv-brand-sub { font-size: 10px; letter-spacing: 4px; color: #b8b8c2; text-transform: uppercase; }
+    .inv-qr { border: 2px solid var(--brand); border-radius: 6px; padding: 5px; flex-shrink: 0; }
+    .inv-qr img { display: block; width: 78px; height: 78px; }
+
+    /* Title band: two magenta bars with INVOICE knocked out between them. */
+    .inv-title-row { display: flex; align-items: center; gap: 14px; margin: 6px 0 20px; }
+    .inv-title-bar { flex: 1; height: 20px; background: var(--brand); }
+    .inv-title { font-size: 25px; font-weight: 800; letter-spacing: 1px; white-space: nowrap; }
+
+    .inv-meta { display: grid; grid-template-columns: 1.35fr 1.15fr .8fr; gap: 16px; margin-bottom: 20px; }
+    .inv-meta-label { font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+    .inv-meta-value { font-size: 12.5px; line-height: 1.65; color: #3a3a44; }
+    .inv-order-no { font-weight: 800; color: var(--brand); font-size: 13px; white-space: nowrap; letter-spacing: -.2px; }
+
+    table.inv-items { width: 100%; border-collapse: collapse; border: 1px solid var(--line); }
+    table.inv-items thead th {
+        background: var(--brand); color: #fff; font-size: 11.5px; font-weight: 700;
+        letter-spacing: .3px; padding: 8px 10px; text-align: left;
+    }
+    table.inv-items tbody td { padding: 8px 10px; font-size: 12.5px; border-bottom: 1px solid var(--line); }
+    table.inv-items tbody tr:nth-child(even) td { background: var(--tint); }
+    .inv-num { text-align: right; white-space: nowrap; }
+    .inv-center { text-align: center; }
+    /* Blank rows keep the table a consistent height on short orders, as on a
+       pre-printed pad — without them a one-line invoice looks unfinished. */
+    .inv-filler td { height: 26px; }
+
+    .inv-lower { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-top: 18px; }
+    .inv-thanks { font-family: 'Caveat', 'Segoe Script', cursive; font-size: 40px; font-weight: 600; color: var(--brand); line-height: .95; }
+    .inv-thanks small { display: block; font-family: inherit; font-size: 24px; color: #8b8b99; margin-top: -2px; }
+
+    .inv-totals { width: 250px; flex-shrink: 0; }
+    .inv-total-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 10px; }
+    .inv-total-row.is-grand { background: var(--brand); color: #fff; font-weight: 800; font-size: 14px; padding: 8px 10px; margin-top: 4px; }
+
+    .inv-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 20px; }
+    .inv-pay-label { font-size: 12.5px; font-weight: 700; margin-bottom: 3px; }
+    .inv-pay-value { font-size: 12.5px; color: #3a3a44; }
+    .inv-sign { text-align: center; font-size: 11.5px; color: #6b6b7b; border-top: 1px solid var(--ink); padding-top: 4px; min-width: 165px; }
+    .inv-contact {
+        margin-top: 18px; padding-top: 10px; border-top: 1px solid #eee;
+        text-align: center; font-size: 10.5px; color: #8b8b99; line-height: 1.7;
+    }
+
     @media print {
         .no-print { display: none !important; }
         body { background: #fff !important; }
-        .print-wrap { box-shadow: none !important; border: none !important; }
+        /* Colour bands and tinted rows must survive the print pipeline. */
+        .inv-sheet { border: none; padding: 0; width: auto; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        table.inv-items thead th, .inv-total-row.is-grand, .inv-title-bar,
+        table.inv-items tbody tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @page { size: A4; margin: 12mm; }
     }
-    .inv-label { width: 140px; flex-shrink: 0; color: #777; font-size: 13px; font-weight: 500; }
-    .inv-value { color: #111; font-size: 13px; font-weight: 600; }
 </style>
 @endsection
-@section('main-content')
 
-@php $role = Str::slug(Auth::user()->getRoleNames()->first()); @endphp
+@section('main-content')
+@php
+    $role    = Str::slug(Auth::user()->getRoleNames()->first());
+    $setting = \App\Models\Setting::first();
+    $order   = $invoice->salesOrder;
+
+    // Prefer what the shopper typed at checkout — that is who the goods go to.
+    $toName  = $order->shipping_name    ?? $invoice->buyer?->business_name;
+    $toPhone = $order->shipping_phone   ?? $invoice->buyer?->phone;
+    $toAddr  = $order->shipping_address ?? $invoice->buyer?->address;
+    $area    = $order?->district?->name;
+
+    $delivery = (float) ($order->shipping_charge ?? 0);
+    $discount = (float) $invoice->discount;
+    $payment  = ($order->payment_method ?? 'cod') === 'bank_transfer' ? 'Bank / bKash' : 'COD';
+
+    // Scans to the public tracker, so a customer holding the printed invoice
+    // can check delivery without phoning the shop.
+    try {
+        $qr = \App\Support\Qr::svgDataUri(
+            $order ? route('track-order', ['order_no' => $order->order_no]) : url('/')
+        );
+    } catch (\Throwable $e) {
+        $qr = null;
+    }
+
+    $rows = $invoice->items;
+    $filler = max(0, 6 - $rows->count());
+@endphp
 
 <div class="no-print flex items-center justify-between mb-5">
-    <a href="{{ route('role.invoices.index', ['role' => $role]) }}"
-       class="text-blue-600 text-sm hover:underline">
+    <a href="{{ route('role.invoices.index', ['role' => $role]) }}" class="text-blue-600 text-sm hover:underline">
         <i class="fas fa-arrow-left mr-1"></i> Back to Invoices
     </a>
     <button onclick="window.print()"
@@ -28,134 +115,104 @@
     </button>
 </div>
 
-<div class="print-wrap bg-white rounded-xl shadow p-8 max-w-3xl mx-auto">
+<div class="inv-sheet">
 
-    {{-- Header --}}
-    <div class="flex justify-between items-start mb-8">
+    <div class="inv-head">
         <div>
-            <div class="text-2xl font-extrabold text-gray-900">{{ config('app.name') }}</div>
-            @php $setting = \App\Models\Setting::first(); @endphp
-            @if($setting?->address)
-            <div class="text-gray-500 text-sm mt-1">{{ $setting->address }}</div>
-            @endif
-            @if($setting?->contact_phone)
-            <div class="text-gray-500 text-sm">{{ $setting->contact_phone }}</div>
+            @if($setting?->logo_path)
+                <span class="inv-logo-plate">
+                    <img class="inv-logo" src="{{ asset($setting->logo_path) }}" alt="{{ $setting->title ?? 'Panda Valy' }}">
+                </span>
+            @else
+                <div class="inv-brand-name">{{ Str::upper($setting->title ?? 'Panda Valy') }}</div>
+                <div class="inv-brand-sub">Shopping center</div>
             @endif
         </div>
-        <div class="text-right">
-            <div class="text-3xl font-black text-blue-600 tracking-wide">INVOICE</div>
-            <div class="mt-2 font-mono font-bold text-lg text-gray-900">{{ $invoice->invoice_no }}</div>
-            <span class="inline-block mt-1 px-3 py-0.5 rounded-full text-xs font-bold {{ $statusColors[$invoice->status] ?? 'bg-gray-100 text-gray-700' }}">
-                {{ ucfirst($invoice->status) }}
-            </span>
+        @if($qr)
+            <div class="inv-qr"><img src="{{ $qr }}" alt="Scan to track this order"></div>
+        @endif
+    </div>
+
+    <div class="inv-title-row">
+        <span class="inv-title-bar"></span>
+        <span class="inv-title">INVOICE</span>
+        <span class="inv-title-bar"></span>
+    </div>
+
+    <div class="inv-meta">
+        <div>
+            <div class="inv-meta-label">Invoice to :</div>
+            <div class="inv-meta-value">
+                <strong>{{ $toName ?: '—' }}</strong><br>
+                @if($toPhone){{ $toPhone }}<br>@endif
+                @if($toAddr){{ $toAddr }}@if($area), {{ $area }}@endif @endif
+            </div>
+        </div>
+        <div>
+            <div class="inv-meta-label">Order ID :</div>
+            <div class="inv-order-no">#{{ $order->order_no ?? $invoice->invoice_no }}</div>
+        </div>
+        <div>
+            <div class="inv-meta-label">Date :</div>
+            <div class="inv-meta-value">{{ $invoice->invoice_date?->format('d/m/Y') ?? '—' }}</div>
         </div>
     </div>
 
-    {{-- Meta row --}}
-    <div class="grid grid-cols-2 gap-6 mb-8">
-        <div>
-            <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Bill To</div>
-            <div class="font-bold text-gray-900">{{ $invoice->buyer?->business_name ?? '—' }}</div>
-            @if($invoice->buyer?->phone)
-            <div class="text-gray-600 text-sm">{{ $invoice->buyer->phone }}</div>
-            @endif
-            @if($invoice->buyer?->email)
-            <div class="text-gray-600 text-sm">{{ $invoice->buyer->email }}</div>
-            @endif
-            @if($invoice->buyer?->address)
-            <div class="text-gray-500 text-sm mt-1">{{ $invoice->buyer->address }}{{ $invoice->buyer->city ? ', '.$invoice->buyer->city : '' }}</div>
-            @endif
-        </div>
-        <div class="text-right">
-            <div class="flex justify-end gap-8">
-                <div>
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Invoice Date</div>
-                    <div class="font-semibold text-gray-900">{{ $invoice->invoice_date?->format('d M Y') ?? '—' }}</div>
-                </div>
-                <div>
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Due Date</div>
-                    <div class="font-semibold {{ $invoice->status === 'unpaid' && $invoice->due_date?->isPast() ? 'text-red-600' : 'text-gray-900' }}">
-                        {{ $invoice->due_date?->format('d M Y') ?? '—' }}
-                    </div>
-                </div>
-            </div>
-            @if($invoice->salesOrder)
-            <div class="mt-3 text-sm text-gray-500">
-                Order: <span class="font-mono font-semibold text-gray-700">{{ $invoice->salesOrder->order_no }}</span>
-            </div>
-            @endif
-        </div>
-    </div>
-
-    {{-- Items table --}}
-    <table class="w-full text-sm mb-6" style="border-collapse:collapse">
+    <table class="inv-items">
         <thead>
-            <tr style="background:#f8f9fa; border-bottom:2px solid #e9ecef">
-                <th class="text-left px-4 py-3 font-semibold text-gray-600">Product</th>
-                <th class="text-center px-4 py-3 font-semibold text-gray-600">Qty</th>
-                <th class="text-right px-4 py-3 font-semibold text-gray-600">Unit Price</th>
-                <th class="text-right px-4 py-3 font-semibold text-gray-600">Total</th>
+            <tr>
+                <th style="width:44px">SL</th>
+                <th>Item Description</th>
+                <th class="inv-num" style="width:88px">Price</th>
+                <th class="inv-center" style="width:56px">Qty</th>
+                <th class="inv-num" style="width:106px">Amount tk.</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($invoice->items as $item)
-            <tr style="border-bottom:1px solid #f0f0f0">
-                <td class="px-4 py-3 text-gray-800">
-                    {{ $item->productSku?->product?->name ?? '—' }}
-                    @if($item->productSku?->variant_label)
-                        <div class="text-muted small">{{ $item->productSku->variant_label }}</div>
-                    @endif
-                </td>
-                <td class="px-4 py-3 text-center text-gray-700">{{ $item->qty }}</td>
-                <td class="px-4 py-3 text-right text-gray-700">Tk {{ number_format($item->price, 2) }}</td>
-                <td class="px-4 py-3 text-right font-semibold text-gray-900">Tk {{ number_format($item->line_total, 2) }}</td>
-            </tr>
+            @foreach($rows as $i => $item)
+                <tr>
+                    <td>{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td>
+                        {{ $item->productSku?->product?->name ?? '—' }}
+                        @if($item->productSku?->variant_label)
+                            <div style="font-size:11px; color:#8b8b99">{{ $item->productSku->variant_label }}</div>
+                        @endif
+                    </td>
+                    <td class="inv-num">{{ number_format($item->price, 0) }}</td>
+                    <td class="inv-center">{{ $item->qty }}</td>
+                    <td class="inv-num">{{ number_format($item->line_total, 0) }}</td>
+                </tr>
             @endforeach
+            @for($i = 0; $i < $filler; $i++)
+                <tr class="inv-filler"><td></td><td></td><td></td><td></td><td></td></tr>
+            @endfor
         </tbody>
     </table>
 
-    {{-- Totals --}}
-    <div class="flex justify-end">
-        <div class="w-64">
-            <div class="flex justify-between py-1.5 text-sm text-gray-600">
-                <span>Subtotal</span><span>Tk {{ number_format($invoice->subtotal, 2) }}</span>
-            </div>
-            <div class="flex justify-between py-1.5 text-sm text-gray-600">
-                <span>Discount</span><span>Tk {{ number_format($invoice->discount, 2) }}</span>
-            </div>
-            <div class="flex justify-between py-1.5 text-sm text-gray-600">
-                <span>Tax / VAT</span><span>Tk {{ number_format($invoice->tax, 2) }}</span>
-            </div>
-            <div class="flex justify-between py-2 text-base font-bold text-gray-900 border-t-2 border-gray-900 mt-1 pt-2">
-                <span>Grand Total</span><span>Tk {{ number_format($invoice->total, 2) }}</span>
-            </div>
-            @if($invoice->balance > 0)
-            <div class="flex justify-between py-1.5 text-sm font-semibold text-red-600 border-t border-red-200 mt-1">
-                <span>Balance Due</span><span>Tk {{ number_format($invoice->balance, 2) }}</span>
-            </div>
+    <div class="inv-lower">
+        <div class="inv-thanks">thank you<small>for purchase</small></div>
+        <div class="inv-totals">
+            <div class="inv-total-row"><span>Sub Total :</span><span>{{ number_format($invoice->subtotal, 0) }}</span></div>
+            @if($discount > 0)
+                <div class="inv-total-row"><span>Discount :</span><span>− {{ number_format($discount, 0) }}</span></div>
             @endif
+            <div class="inv-total-row"><span>Delivery Charge :</span><span>{{ number_format($delivery, 0) }}</span></div>
+            <div class="inv-total-row is-grand"><span>Total :</span><span>{{ number_format($invoice->total, 0) }}</span></div>
         </div>
     </div>
 
-    {{-- Payment info (for unpaid) --}}
-    @if(in_array($invoice->status, ['unpaid', 'partial']))
-    <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-        <div class="font-bold text-blue-800 mb-2"><i class="fas fa-university mr-1"></i> Payment Instructions</div>
-        <div class="text-blue-700">Please transfer the balance due to our bank account:</div>
-        <div class="mt-2 space-y-1 text-blue-800">
-            <div><span class="font-semibold">Bank:</span> {{ \App\Http\Controllers\OrderController::BANK_NAME }}</div>
-            <div><span class="font-semibold">Account:</span> {{ \App\Http\Controllers\OrderController::BANK_ACCOUNT }}</div>
-            <div><span class="font-semibold">Account Name:</span> {{ \App\Http\Controllers\OrderController::BANK_HOLDER }}</div>
-            <div><span class="font-semibold">Reference:</span> {{ $invoice->invoice_no }}</div>
+    <div class="inv-foot">
+        <div>
+            <div class="inv-pay-label">Payment Info:</div>
+            <div class="inv-pay-value">Payment type : <strong>{{ $payment }}</strong></div>
         </div>
-    </div>
-    @endif
-
-    {{-- Footer --}}
-    <div class="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
-        Thank you for your business. For queries contact {{ $setting?->contact_phone ?? config('app.name') }}.
+        <div class="inv-sign">Authorised Sign</div>
     </div>
 
+    <div class="inv-contact">
+        @if($setting?->address){{ $setting->address }}@endif
+        @if($setting?->contact_phone), {{ $setting->contact_phone }}@endif
+        @if($setting?->contact_email)<br>{{ $setting->contact_email }}@endif
+    </div>
 </div>
-
 @endsection

@@ -179,30 +179,6 @@
                     </div>
 
                     <div class="ws-field">
-                        <label for="logo_light_path">Logo for dark backgrounds</label>
-                        <div class="ws-image-row">
-                            {{-- Previewed on the brand colour, because a white
-                                 logo is invisible on the light tile above. --}}
-                            <div class="ws-preview" id="logo_light_preview" style="background:#e6007e; border-color:#e6007e">
-                                @if (! empty($settings->logo_light_path))
-                                    <img src="{{ asset($settings->logo_light_path) }}" alt="Current dark-background logo">
-                                @else
-                                    <span style="color:#ffd9ef">Falls back to logo</span>
-                                @endif
-                            </div>
-                            <div class="ws-image-fields">
-                                <input type="file" name="logo_light_path" id="logo_light_path" accept="image/*"
-                                       class="ws-input @error('logo_light_path') is-bad @enderror">
-                                @error('logo_light_path')
-                                    <p class="ws-err">{{ $message }}</p>
-                                @else
-                                    <p class="ws-help">A light version for the magenta header and dark footer. Leave empty to reuse the logo above.</p>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ws-field">
                         <label for="favicon_path">Favicon</label>
                         <div class="ws-image-row">
                             <div class="ws-preview is-square" id="favicon_preview">
@@ -493,7 +469,6 @@ $(function () {
     }
 
     bindPreview('logo_path', 'logo_preview');
-    bindPreview('logo_light_path', 'logo_light_preview');
     bindPreview('favicon_path', 'favicon_preview');
 
     // Keep each row's "open profile" shortcut in step with what is typed.

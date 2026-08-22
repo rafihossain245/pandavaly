@@ -20,7 +20,7 @@
     <div class="container footer-top" style="--footer-link-cols: {{ 1 + $footerColumns->count() }}">
         <div class="footer-brand">
             <a class="footer-logo" href="{{ route('home') }}">
-                <img src="{{ asset($setting->logo_light_path ?? $setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
+                <img src="{{ asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
                     alt="{{ $setting->title ?? 'Panda Valy' }}" style="height:42px">
             </a>
 

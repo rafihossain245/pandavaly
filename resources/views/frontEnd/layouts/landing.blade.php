@@ -50,7 +50,7 @@
     <header class="lp-header">
         <div class="lp-container lp-header-inner">
             <a class="lp-logo" href="{{ route('home') }}">
-                <img src="{{ asset($setting->logo_light_path ?? $setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
+                <img src="{{ asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
                      alt="{{ $setting->title ?? 'Panda Valy' }}">
             </a>
 

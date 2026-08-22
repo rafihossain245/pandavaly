@@ -52,7 +52,6 @@ class SettingController extends Controller
                 'meta_description' => 'nullable|string|max:300',
                 'announcement' => 'nullable|string|max:255',
                 'logo_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-                'logo_light_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                 'favicon_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                 'contact_email' => 'nullable|email|max:255',
                 'contact_phone' => 'nullable|string|max:20',
@@ -64,7 +63,6 @@ class SettingController extends Controller
             ], $socialRules, $trackingRules, $copyRules), array_merge([
                 'title.required' => 'The website title is required — it appears in the browser tab.',
                 'logo_path.max' => 'The logo must be 2 MB or smaller.',
-                'logo_light_path.max' => 'The dark-background logo must be 2 MB or smaller.',
                 'favicon_path.max' => 'The favicon must be 2 MB or smaller.',
             ], $trackingMessages));
 
@@ -98,17 +96,6 @@ class SettingController extends Controller
                 $data['logo_path'] = $this->storeImage($request->file('logo_path'), $settings?->logo_path);
             }
 
-            if ($request->hasFile('logo_light_path')) {
-                $data['logo_light_path'] = $this->storeImage($request->file('logo_light_path'), $settings?->logo_light_path);
-            } elseif ($request->hasFile('logo_path') && $this->isSeededBrandAsset($settings?->logo_light_path)) {
-                // Uploading a logo while the dark-background slot still holds a
-                // shipped placeholder would leave that placeholder winning on the
-                // header — the new logo would appear to have been ignored. Clear
-                // it so one upload takes effect everywhere; a light variant the
-                // shop uploaded itself is never touched.
-                $data['logo_light_path'] = null;
-            }
-
             if ($request->hasFile('favicon_path')) {
                 $data['favicon_path'] = $this->storeImage($request->file('favicon_path'), $settings?->favicon_path);
             }
@@ -125,15 +112,6 @@ class SettingController extends Controller
         } catch (\Throwable $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
-    }
-
-    /**
-     * Whether a stored path is one of the logos this project ships (generated
-     * into public/images/brand), as opposed to a file the shop uploaded.
-     */
-    private function isSeededBrandAsset(?string $path): bool
-    {
-        return $path !== null && Str::startsWith($path, 'images/brand/');
     }
 
     /**
