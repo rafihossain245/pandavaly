@@ -156,7 +156,7 @@ class ProductController extends Controller
                 $data = Product::create([
                     'user_id' => auth()->id(),
                     'name' => $request->name,
-                    'slug' => Str::slug($request->name),
+                    'slug' => $this->uniqueProductSlug($request->name, $request->slug),
                     'sku' => 'PRD-' . strtoupper(Str::random(8)),
                     'category_id' => $request->category_id,
                     'sub_category_id' => $request->sub_category_id,
@@ -333,6 +333,42 @@ class ProductController extends Controller
      * Validation rules shared by store() and update(). $ignoreId skips the row being edited
      * in the unique checks.
      */
+    /**
+     * A URL-safe, unique slug for a product name.
+     *
+     * products.slug carries a UNIQUE index, but the name does not have to be
+     * unique — a shop legitimately sells several items under one label (a
+     * bedsheet range listed by size, for example). Str::slug() also
+     * transliterates, so two *different* Bengali names can collapse onto the
+     * same slug. Without a suffix either case aborts the save with a raw
+     * "Duplicate entry ... for key products_slug_unique" SQL error.
+     *
+     * An explicit slug from the form wins; it is validated for uniqueness
+     * separately, and is only de-duplicated here as a backstop.
+     */
+    private function uniqueProductSlug(?string $name, ?string $preferred = null, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($preferred ?: (string) $name);
+
+        // Non-Latin names can transliterate to nothing at all; never store ''.
+        if ($base === '') {
+            $base = 'product';
+        }
+
+        $slug = $base;
+        $suffix = 2;
+
+        while (
+            Product::where('slug', $slug)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $suffix++;
+        }
+
+        return $slug;
+    }
+
     private function productRules(?int $ignoreId = null): array
     {
         $uniqueSlug = 'unique:products,slug' . ($ignoreId ? ',' . $ignoreId : '');
@@ -519,7 +555,7 @@ class ProductController extends Controller
                  */
                 $data->update([
                     'name' => $request->name,
-                    'slug' => Str::slug($request->name),
+                    'slug' => $this->uniqueProductSlug($request->name, $request->slug, $data->id),
                     'category_id' => $request->category_id,
                     'sub_category_id' => $request->sub_category_id,
                     'brand_id' => $request->brand_id,
@@ -600,8 +636,11 @@ class ProductController extends Controller
                 $this->syncProductVariants($data->id, $request);
             });
 
+            // Keyed off the slug that was actually saved: a de-duplicated slug
+            // ("name-2") does not equal Str::slug($request->name), so deriving
+            // the key from the name again would leave the real entry cached.
             Cache::forget("product_details_{$oldSlug}");
-            Cache::forget("product_details_" . Str::slug($request->name));
+            Cache::forget('product_details_' . Product::whereKey($id)->value('slug'));
 
             return redirect()
                 ->back()

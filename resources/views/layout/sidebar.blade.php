@@ -74,6 +74,13 @@
             <span>Delivery</span>
         </a>
 
+        {{-- The delivery charge the funnel quotes, per district. --}}
+        <a href="{{ route('role.delivery-areas.index', ['role' => $roleSlug]) }}"
+            class="sidebar-item flex items-center px-3 py-2 cursor-pointer {{ request()->routeIs('role.delivery-areas.*') ? 'active' : '' }}">
+            <i class="fas fa-map-location-dot w-6 text-center mr-2"></i>
+            <span>Delivery Areas</span>
+        </a>
+
         <p class="sidebar-section">Catalog</p>
 
         <a href="{{ route('role.products.index', ['role' => $roleSlug]) }}"

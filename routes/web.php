@@ -70,6 +70,7 @@ use App\Http\Controllers\Dashboard\PageCategoryController;
 use App\Http\Controllers\Dashboard\PageController;
 use App\Http\Controllers\Dashboard\SettingController;
 use App\Http\Controllers\Front\HomeController;
+use App\Http\Controllers\Front\LandingController;
 use App\Http\Controllers\Front\ShopController;
 use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\CheckoutController;
@@ -86,7 +87,14 @@ use App\Http\Controllers\Dashboard\ProductReviewController as DashboardProductRe
 //         : redirect()->route('login');
 // });
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// The storefront front page is a single-page sales funnel: offer, packages,
+// gallery, reviews and the order form on one screen, with no login step.
+Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::post('/order', [LandingController::class, 'place'])->name('landing.order');
+Route::get('/order/received/{order}', [LandingController::class, 'thankYou'])->name('landing.thankyou');
+// The previous multi-section homepage is still reachable while the funnel beds
+// in; it renders from the same admin-managed homepage sections.
+Route::get('/home', [HomeController::class, 'index'])->name('home.sections');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 // Live suggestions for the header search box; full results are /shop?q=…
 Route::get('/search/suggestions', [\App\Http\Controllers\Front\SearchController::class, 'suggestions'])
@@ -241,6 +249,12 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     // Before the resource so "pages/reorder" is not caught by the {page} wildcard.
     Route::post('pages/reorder', [PageController::class, 'reorder'])->name('pages.reorder');
     Route::resource('pages', PageController::class)->except('show');
+    // Delivery charge per district — what the funnel adds to every order. No
+    // destroy route: orders reference a district, so an area the shop no longer
+    // serves is switched off instead of deleted.
+    Route::get('delivery-areas', [\App\Http\Controllers\Dashboard\DeliveryAreaController::class, 'index'])->name('delivery-areas.index');
+    Route::post('delivery-areas', [\App\Http\Controllers\Dashboard\DeliveryAreaController::class, 'store'])->name('delivery-areas.store');
+    Route::put('delivery-areas', [\App\Http\Controllers\Dashboard\DeliveryAreaController::class, 'update'])->name('delivery-areas.update');
     Route::get('website-settings', [SettingController::class, 'index'])->name('website-settings');
     Route::post('website-settings', [SettingController::class, 'store'])->name('website-settings.store');
     

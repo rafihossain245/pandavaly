@@ -77,7 +77,20 @@
                                             <div class="text-xs text-gray-500">Heading: {{ $value->heading }}</div>
                                         @endif
                                         @if($value->type === 'product_row' && $value->config)
-                                            <div class="text-xs text-gray-400">Source: {{ $value->config['source'] ?? 'manual' }}{{ !empty($value->config['limit']) ? ' · Limit '.$value->config['limit'] : '' }}</div>
+                                            <div class="text-xs text-gray-400">Source: {{ $value->config['source'] ?? 'manual' }}{{ !empty($value->config['limit']) ? ' · Limit '.$value->config['limit'] : '' }} · {{ ($value->config['layout'] ?? 'carousel') === 'grid' ? 'Grid' : 'Carousel' }}</div>
+                                        @elseif($value->type === 'feature_strip')
+                                            <div class="text-xs text-gray-400">
+                                                {{ count($value->config['items'] ?? []) ?: 'Default' }} badge(s)
+                                            </div>
+                                        @elseif($value->type === 'testimonials')
+                                            <div class="text-xs text-gray-400">
+                                                @if(($value->config['source'] ?? 'manual') === 'reviews')
+                                                    Real product reviews
+                                                @else
+                                                    {{ count($value->config['items'] ?? []) }} curated
+                                                @endif
+                                                · Limit {{ $value->config['limit'] ?? 3 }}
+                                            </div>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -105,7 +118,11 @@
                                                 data-source="{{ $value->config['source'] ?? '' }}"
                                                 data-category_id="{{ $value->config['category_id'] ?? '' }}"
                                                 data-limit="{{ $value->config['limit'] ?? '' }}"
+                                                data-layout="{{ $value->config['layout'] ?? 'carousel' }}"
                                                 data-product_ids="{{ $value->products->pluck('id')->implode(',') }}"
+                                                {{-- Repeater rows for feature_strip / testimonials. Blade escapes the
+                                                     quotes in the JSON, jQuery's .data() decodes and parses it back. --}}
+                                                data-items="{{ json_encode($value->config['items'] ?? []) }}"
                                                 data-starts_at="{{ optional($value->starts_at)->format('Y-m-d\TH:i') }}"
                                                 data-ends_at="{{ optional($value->ends_at)->format('Y-m-d\TH:i') }}"
                                                 data-is_active="{{ (int) $value->is_active }}"
@@ -158,7 +175,11 @@
             function toggleTypeFields(prefix) {
                 const type = $('#' + prefix + '_type').val();
                 $('#' + prefix + '_product_row_fields').toggleClass('active', type === 'product_row');
+                $('#' + prefix + '_feature_strip_fields').toggleClass('active', type === 'feature_strip');
+                $('#' + prefix + '_testimonials_fields').toggleClass('active', type === 'testimonials');
                 toggleSourceFields(prefix);
+                toggleTestimonialSource(prefix);
+                syncDisabledFields(prefix);
             }
 
             function toggleSourceFields(prefix) {
@@ -167,15 +188,129 @@
                 $('#' + prefix + '_manual_field').toggleClass('active', source === 'manual');
             }
 
+            function toggleTestimonialSource(prefix) {
+                // Curated rows are pointless when the section pulls real reviews.
+                const useReviews = $('#' + prefix + '_testimonial_source').val() === 'reviews';
+                $('#' + prefix + '_testimonial_manual_wrap').toggle(!useReviews);
+            }
+
+            // The product-row and testimonial blocks both expose `source` and
+            // `limit` inputs. Disabling the controls inside every hidden block
+            // keeps exactly one of each in the POST, so the wrong type's values
+            // can never leak into the saved config.
+            function syncDisabledFields(prefix) {
+                $('#' + prefix + 'Form, #' + prefix + 'Modal').find('.type-fields').each(function () {
+                    const $block = $(this);
+                    const on = $block.hasClass('active')
+                        && $block.parents('.type-fields').filter(':not(.active)').length === 0;
+                    $block.find('input, select, textarea').prop('disabled', !on);
+                });
+            }
+
+            // ---- Repeater rows (trust badges / curated testimonials) ----
+            // Indices are written explicitly and rebuilt after every add and
+            // remove: unchecked checkboxes are not posted, so without fixed
+            // indices a ticked "verified" box would land on the wrong row.
+            function featureRow(i, item) {
+                item = item || {};
+                return '<div class="repeater-row border rounded p-3 mb-2 bg-gray-50">'
+                    + '<div class="flex justify-between items-center mb-2">'
+                    + '<span class="text-xs font-bold text-gray-500">Badge ' + (i + 1) + '</span>'
+                    + '<button type="button" class="remove-row text-red-500 text-xs"><i class="fas fa-trash"></i></button>'
+                    + '</div>'
+                    + '<input type="text" name="feature_title[' + i + ']" value="' + esc(item.title) + '" placeholder="Title, e.g. 100% Pure &amp; Organic" class="form-input w-full px-2 py-1 border rounded mb-2">'
+                    + '<input type="text" name="feature_subtitle[' + i + ']" value="' + esc(item.subtitle) + '" placeholder="Subtitle, e.g. Lab tested quality" class="form-input w-full px-2 py-1 border rounded mb-2">'
+                    + '<input type="text" name="feature_icon[' + i + ']" value="' + esc(item.icon) + '" placeholder="Font Awesome class, e.g. fas fa-leaf" class="form-input w-full px-2 py-1 border rounded">'
+                    + '</div>';
+            }
+
+            function testimonialRow(i, item) {
+                item = item || {};
+                const rating = parseInt(item.rating || 5);
+                let options = '';
+                for (let r = 5; r >= 1; r--) {
+                    options += '<option value="' + r + '"' + (r === rating ? ' selected' : '') + '>' + r + ' star' + (r > 1 ? 's' : '') + '</option>';
+                }
+                return '<div class="repeater-row border rounded p-3 mb-2 bg-gray-50">'
+                    + '<div class="flex justify-between items-center mb-2">'
+                    + '<span class="text-xs font-bold text-gray-500">Testimonial ' + (i + 1) + '</span>'
+                    + '<button type="button" class="remove-row text-red-500 text-xs"><i class="fas fa-trash"></i></button>'
+                    + '</div>'
+                    + '<input type="text" name="testimonial_name[' + i + ']" value="' + esc(item.name) + '" placeholder="Customer name" class="form-input w-full px-2 py-1 border rounded mb-2">'
+                    + '<input type="text" name="testimonial_role[' + i + ']" value="' + esc(item.role) + '" placeholder="Role, e.g. Service Holder" class="form-input w-full px-2 py-1 border rounded mb-2">'
+                    + '<select name="testimonial_rating[' + i + ']" class="form-select w-full px-2 py-1 border rounded mb-2">' + options + '</select>'
+                    + '<textarea name="testimonial_body[' + i + ']" rows="3" placeholder="What the customer said" class="form-input w-full px-2 py-1 border rounded mb-2">' + esc(item.body) + '</textarea>'
+                    + '<label class="flex items-center text-sm"><input type="checkbox" name="testimonial_verified[' + i + ']" value="1"'
+                    + (item.verified ? ' checked' : '') + ' class="form-checkbox h-4 w-4 mr-2">Show &ldquo;Verified&rdquo; badge</label>'
+                    + '</div>';
+            }
+
+            function esc(v) {
+                return $('<div>').text(v == null ? '' : v).html().replace(/"/g, '&quot;');
+            }
+
+            function renderRows(prefix, kind, items) {
+                const $wrap = $('#' + prefix + '_' + kind + '_rows');
+                const builder = kind === 'feature' ? featureRow : testimonialRow;
+                $wrap.empty();
+                (items || []).forEach(function (item, i) { $wrap.append(builder(i, item)); });
+                if (!$wrap.children().length) $wrap.append(builder(0, {}));
+            }
+
+            function reindexRows(prefix, kind) {
+                const $wrap = $('#' + prefix + '_' + kind + '_rows');
+                $wrap.children('.repeater-row').each(function (i) {
+                    $(this).find('[name]').each(function () {
+                        $(this).attr('name', $(this).attr('name').replace(/\[\d+\]/, '[' + i + ']'));
+                    });
+                    $(this).find('span').first().text((kind === 'feature' ? 'Badge ' : 'Testimonial ') + (i + 1));
+                });
+            }
+
+            $(document).on('click', '.add-feature-row', function () {
+                const prefix = $(this).data('prefix');
+                const $wrap = $('#' + prefix + '_feature_rows');
+                $wrap.append(featureRow($wrap.children().length, {}));
+                syncDisabledFields(prefix);
+            });
+
+            $(document).on('click', '.add-testimonial-row', function () {
+                const prefix = $(this).data('prefix');
+                const $wrap = $('#' + prefix + '_testimonial_rows');
+                $wrap.append(testimonialRow($wrap.children().length, {}));
+                syncDisabledFields(prefix);
+            });
+
+            $(document).on('click', '.remove-row', function () {
+                const $wrap = $(this).closest('[id$="_rows"]');
+                const id = $wrap.attr('id');
+                const prefix = id.split('_')[0];
+                const kind = id.indexOf('_feature_') > -1 ? 'feature' : 'testimonial';
+                $(this).closest('.repeater-row').remove();
+                if (!$wrap.children().length) {
+                    $wrap.append(kind === 'feature' ? featureRow(0, {}) : testimonialRow(0, {}));
+                }
+                reindexRows(prefix, kind);
+                syncDisabledFields(prefix);
+            });
+
+            $('.testimonial-source').on('change', function () {
+                const prefix = $(this).data('prefix');
+                toggleTestimonialSource(prefix);
+                syncDisabledFields(prefix);
+            });
+
             $('#create_type').on('change', function () { toggleTypeFields('create'); });
-            $('#create_source').on('change', function () { toggleSourceFields('create'); });
+            $('#create_source').on('change', function () { toggleSourceFields('create'); syncDisabledFields('create'); });
             $('#edit_type').on('change', function () { toggleTypeFields('edit'); });
-            $('#edit_source').on('change', function () { toggleSourceFields('edit'); });
+            $('#edit_source').on('change', function () { toggleSourceFields('edit'); syncDisabledFields('edit'); });
 
             // Show create modal
             $('.create-new-btn').click(function () {
                 $('#createForm')[0].reset();
                 $('.select2').val(null).trigger('change');
+                renderRows('create', 'feature', []);
+                renderRows('create', 'testimonial', []);
                 toggleTypeFields('create');
                 $('#createModal').removeClass('hidden');
             });
@@ -190,6 +325,18 @@
                 $('#edit_source').val($(this).data('source')).trigger('change');
                 $('#edit_category_id').val($(this).data('category_id')).trigger('change');
                 $('#edit_limit').val($(this).data('limit'));
+                $('#edit_layout').val($(this).data('layout') || 'carousel');
+
+                // `data-items` is the section's stored config rows; jQuery parses
+                // the JSON for us. Rendered before the type toggle runs so the
+                // freshly built inputs get their disabled state set correctly.
+                const items = $(this).data('items') || [];
+                const type = $(this).data('type');
+                renderRows('edit', 'feature', type === 'feature_strip' ? items : []);
+                renderRows('edit', 'testimonial', type === 'testimonials' ? items : []);
+                $('#edit_testimonial_source').val($(this).data('source') === 'reviews' ? 'reviews' : 'manual');
+                $('#edit_testimonial_limit').val($(this).data('limit') || 3);
+                toggleTypeFields('edit');
                 const productIds = ($(this).data('product_ids') || '').toString().split(',').filter(Boolean).map(Number);
                 $('#edit_product_ids').val(productIds).trigger('change');
                 $('#edit_starts_at').val($(this).data('starts_at'));

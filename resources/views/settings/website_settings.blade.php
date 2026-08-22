@@ -179,6 +179,30 @@
                     </div>
 
                     <div class="ws-field">
+                        <label for="logo_light_path">Logo for dark backgrounds</label>
+                        <div class="ws-image-row">
+                            {{-- Previewed on the brand colour, because a white
+                                 logo is invisible on the light tile above. --}}
+                            <div class="ws-preview" id="logo_light_preview" style="background:#e6007e; border-color:#e6007e">
+                                @if (! empty($settings->logo_light_path))
+                                    <img src="{{ asset($settings->logo_light_path) }}" alt="Current dark-background logo">
+                                @else
+                                    <span style="color:#ffd9ef">Falls back to logo</span>
+                                @endif
+                            </div>
+                            <div class="ws-image-fields">
+                                <input type="file" name="logo_light_path" id="logo_light_path" accept="image/*"
+                                       class="ws-input @error('logo_light_path') is-bad @enderror">
+                                @error('logo_light_path')
+                                    <p class="ws-err">{{ $message }}</p>
+                                @else
+                                    <p class="ws-help">A light version for the magenta header and dark footer. Leave empty to reuse the logo above.</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ws-field">
                         <label for="favicon_path">Favicon</label>
                         <div class="ws-image-row">
                             <div class="ws-preview is-square" id="favicon_preview">
@@ -287,6 +311,123 @@
             </div>
         </div>
 
+        {{-- ---------------------------------------------- Storefront copy --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-violet"><i class="fas fa-pen-nib"></i></div>
+                <div>
+                    <h2>Storefront copy</h2>
+                    <p>Wording shown to shoppers. Leave the tagline empty to hide it.</p>
+                </div>
+            </div>
+            <div class="ws-card-body">
+                <div class="ws-grid">
+                    <div class="ws-field ws-full">
+                        <label for="tagline">Footer tagline</label>
+                        <input type="text" name="tagline" id="tagline"
+                               value="{{ old('tagline', $settings->tagline ?? '') }}"
+                               class="ws-input @error('tagline') is-bad @enderror"
+                               placeholder="e.g. Premium bedsheets and home textiles, delivered across Bangladesh">
+                        @error('tagline')<p class="ws-err">{{ $message }}</p>@enderror
+                        <p class="ws-help">Appears under the logo in the footer. Leave empty to hide it.</p>
+                    </div>
+                    <div class="ws-field ws-full">
+                        <label for="meta_description">Search &amp; share description</label>
+                        <input type="text" name="meta_description" id="meta_description"
+                               value="{{ old('meta_description', $settings->meta_description ?? '') }}"
+                               class="ws-input @error('meta_description') is-bad @enderror"
+                               placeholder="e.g. প্রিমিয়াম বেডশিট — সারা বাংলাদেশে ক্যাশ অন ডেলিভারি">
+                        @error('meta_description')<p class="ws-err">{{ $message }}</p>@enderror
+                        <p class="ws-help">One sentence used by Google and by the preview card when the site is shared on
+                           Facebook, WhatsApp or Messenger. Falls back to the footer tagline.</p>
+                    </div>
+                    <div class="ws-field ws-full">
+                        <label for="announcement">Announcement bar</label>
+                        <input type="text" name="announcement" id="announcement"
+                               value="{{ old('announcement', $settings->announcement ?? '') }}"
+                               class="ws-input @error('announcement') is-bad @enderror"
+                               placeholder="e.g. ধামাকা অফার — ১ পিস বেডশিট এর সাথে উপহার ফ্রি">
+                        @error('announcement')<p class="ws-err">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <label class="ws-social-row" style="border:0; padding-top:10px;">
+                    <input type="checkbox" name="announcement_enabled" value="1"
+                           {{ old('announcement_enabled', $settings->announcement_enabled ?? false) ? 'checked' : '' }}
+                           style="width:16px;height:16px;margin-right:10px;">
+                    <span style="font-size:.9rem;color:#374151;">Show the announcement bar above the header</span>
+                </label>
+            </div>
+        </div>
+
+        {{-- ------------------------------------------------- Landing page --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-violet"><i class="fas fa-bullseye"></i></div>
+                <div>
+                    <h2>Landing page</h2>
+                    <p>Headings on the one-page order funnel and its receipt. Leave a field empty to keep the
+                       wording shown as the placeholder.</p>
+                </div>
+            </div>
+            <div class="ws-card-body">
+                <div class="ws-grid">
+                    @foreach(\App\Models\Setting::LANDING_COPY as $key => $field)
+                        <div class="ws-field ws-full">
+                            <label for="{{ $key }}">{{ $field['label'] }}</label>
+                            <input type="text" name="{{ $key }}" id="{{ $key }}"
+                                   value="{{ old($key, $settings->{$key} ?? '') }}"
+                                   class="ws-input @error($key) is-bad @enderror"
+                                   placeholder="{{ $field['default'] }}">
+                            @error($key)<p class="ws-err">{{ $message }}</p>@enderror
+                        </div>
+                    @endforeach
+                </div>
+                <p class="ws-help" style="margin-top:12px;">
+                    Products, prices and the offer banner are not set here — they come from Products,
+                    Website Management → Banners and the customer reviews section under Homepage Sections.
+                </p>
+            </div>
+        </div>
+
+        {{-- --------------------------------------------------- Mobile app --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-violet"><i class="fas fa-mobile-screen"></i></div>
+                <div>
+                    <h2>Mobile app</h2>
+                    <p>Shown as download badges in the footer. Leave both empty to hide the block.</p>
+                </div>
+            </div>
+            <div class="ws-card-body">
+                @php
+                    $appStores = [
+                        'play_store_url' => ['label' => 'Google Play', 'icon' => 'fab fa-google-play', 'color' => '#01875f', 'placeholder' => 'play.google.com/store/apps/details?id=…'],
+                        'app_store_url' => ['label' => 'App Store', 'icon' => 'fab fa-apple', 'color' => '#000000', 'placeholder' => 'apps.apple.com/app/…'],
+                    ];
+                @endphp
+                @foreach ($appStores as $key => $store)
+                    @php $value = old($key, $settings->{$key} ?? ''); @endphp
+                    <div class="ws-social-row">
+                        <span class="ws-social-icon" style="background: {{ $store['color'] }}">
+                            <i class="{{ $store['icon'] }}"></i>
+                        </span>
+                        <span class="ws-social-label">{{ $store['label'] }}</span>
+                        <input type="text" name="{{ $key }}" id="{{ $key }}" value="{{ $value }}"
+                               class="ws-input @error($key) is-bad @enderror"
+                               placeholder="{{ $store['placeholder'] }}">
+                        <a href="{{ $value ?: '#' }}" target="_blank" rel="noopener"
+                           class="ws-social-test {{ $value ? '' : 'is-off' }}" title="Open this listing">
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                    @error($key)
+                        <p class="ws-err">{{ $message }}</p>
+                    @enderror
+                @endforeach
+            </div>
+        </div>
+
         {{-- ---------------------------------------------------- Tracking --}}
         <div class="ws-card">
             <div class="ws-card-head">
@@ -352,6 +493,7 @@ $(function () {
     }
 
     bindPreview('logo_path', 'logo_preview');
+    bindPreview('logo_light_path', 'logo_light_preview');
     bindPreview('favicon_path', 'favicon_preview');
 
     // Keep each row's "open profile" shortcut in step with what is typed.

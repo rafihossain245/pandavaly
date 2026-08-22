@@ -4,10 +4,22 @@
     $discountPct = $hasDiscount ? round((($price->previous_price - $price->selling_price) / $price->previous_price) * 100) : 0;
     $wishlistedIds = once(fn () => auth('buyer')->check() ? auth('buyer')->user()->wishlists()->pluck('product_id')->all() : []);
     $isWishlisted = in_array($item->id, $wishlistedIds);
+
+    // Merchandising pill shown top-right. Only one is rendered — the flags are
+    // not mutually exclusive in the admin, so we pick by priority.
+    $labelBadge = match (true) {
+        (bool) $item->is_trending => 'Best Selling',
+        (bool) $item->is_popular => 'Popular',
+        (bool) $item->is_recommended => 'Recommended',
+        default => null,
+    };
 @endphp
 <div class="product-card {{ $wrapperClass ?? 'item' }}">
     @if($hasDiscount)
-        <div class="discount-badge">{{ $discountPct }}%</div>
+        <div class="discount-badge">Save {{ $discountPct }}%</div>
+    @endif
+    @if($labelBadge)
+        <span class="label-badge">{{ $labelBadge }}</span>
     @endif
     <button type="button" class="wishlist-toggle-btn" data-product="{{ $item->id }}"
         style="position:absolute; top:8px; right:8px; z-index:2; background:#fff; border:none; border-radius:50%; width:32px; height:32px; box-shadow:0 1px 4px rgba(0,0,0,.15);">
@@ -25,8 +37,11 @@
     </div>
     <div class="stock-info">IN STOCK: <span class="stock-count">{{ $item->stock_qty ?? 0 }}</span></div>
     <div class="action-buttons mt-2 d-flex gap-2">
-        <button class="btn btn-sm btn-primary text-white add-to-cart-btn" data-product="{{ $item->id }}">
+        <button type="button" class="add-to-cart-btn" data-product="{{ $item->id }}">
             <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+        </button>
+        <button type="button" class="btn-buy-now buy-now-btn" data-product="{{ $item->id }}">
+            <i class="fa-solid fa-bolt"></i> Buy Now
         </button>
     </div>
 </div>

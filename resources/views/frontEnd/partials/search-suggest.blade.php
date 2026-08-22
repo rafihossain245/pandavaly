@@ -61,8 +61,8 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    .hs-name mark { background: #fdf1e7; color: inherit; padding: 0; font-weight: 700; }
-    .hs-price { font-size: 13px; font-weight: 700; color: var(--primary, #f47b32); }
+    .hs-name mark { background: var(--primary-soft); color: inherit; padding: 0; font-weight: 700; }
+    .hs-price { font-size: 13px; font-weight: 700; color: var(--primary); }
     .hs-compare { font-size: 11.5px; color: #9aa8b8; text-decoration: line-through; margin-left: 6px; font-weight: 400; }
     .hs-meta { font-size: 11.5px; color: #9aa8b8; margin-top: 2px; }
     .hs-out { color: #dc2626; }
@@ -74,11 +74,11 @@
         background: #fafafa;
         font-size: 12.5px;
         font-weight: 600;
-        color: var(--primary, #f47b32);
+        color: var(--primary);
         text-decoration: none;
         text-align: center;
     }
-    .hs-foot:hover { background: #f3f4f6; color: var(--primary, #f47b32); }
+    .hs-foot:hover { background: #f3f4f6; color: var(--primary); }
 
     .hs-note { padding: 22px 16px; text-align: center; font-size: 13px; color: #8a8a8a; }
     .hs-note i { display: block; font-size: 20px; color: #d8dde3; margin-bottom: 8px; }

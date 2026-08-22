@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600&display=swap">
+  <style>
+    body { margin:0; font-family:'Plus Jakarta Sans','Hind Siliguri',system-ui,sans-serif; background:#f6f7fb; color:#1a1a1a; }
+    a { color:#e6007e; } a:hover { color:#c0006a; }
+    .lbl { display:block; font-size:12.5px; font-weight:600; color:#1a1a1a; margin-bottom:6px; }
+    .req { color:#dc2626; }
+    .inp { width:100%; height:40px; border:1px solid #dcdce4; border-radius:9px; padding:0 12px; font-family:inherit; font-size:14px; background:#fff; color:#1a1a1a; }
+    .hint { font-size:12px; color:#a0a0ad; margin:5px 0 0; }
+  </style>
+</helmet>
+
+<div style="width:900px; padding:24px 28px 32px">
+  <div style="margin-bottom:18px">
+    <h1 style="margin:0 0 4px; font-size:22px; font-weight:700; letter-spacing:-.01em">Add Product</h1>
+    <p style="margin:0; font-size:13.5px; color:#8b8b99">The design code shown on the storefront gallery comes from this form.</p>
+  </div>
+
+  <div style="background:#fff; border:1px solid #e8e8ee; border-radius:12px; padding:22px 24px">
+
+    <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 20px; margin-bottom:20px">
+      <div><label class="lbl">Product title (English) <span class="req">*</span></label><input class="inp" value="Bedsheet 7/8 Feet"></div>
+      <div><label class="lbl">Product title (বাংলা) <span class="req">*</span></label><input class="inp" style="font-family:'Hind Siliguri',sans-serif" value="৭/৮ ফিট (৫/৬ হাত প্রায়)"></div>
+    </div>
+
+    <!-- the field the mockup was missing -->
+    <div style="background:#fdf2f8; border:1px solid #f9c9e4; border-radius:10px; padding:16px 18px; margin-bottom:20px">
+      <div style="display:grid; grid-template-columns:200px minmax(0,1fr); gap:20px; align-items:start">
+        <div>
+          <label class="lbl">Design code / SKU <span class="req">*</span></label>
+          <input class="inp" value="PV-401" style="font-weight:700; border-color:#e6007e">
+        </div>
+        <div style="padding-top:26px">
+          <p style="margin:0; font-size:13px; color:#a0005c; line-height:1.6">
+            Customers quote this code when ordering — it prints on the gallery card as <strong>Code: PV-401</strong> and on the invoice. Must be unique.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px 20px; margin-bottom:20px">
+      <div>
+        <label class="lbl">Category <span class="req">*</span></label>
+        <select class="inp"><option>Bedsheet</option><option>Comforter</option><option>Bed Cover</option></select>
+      </div>
+      <div><label class="lbl">Buying price (৳)</label><input class="inp" value="820"><p class="hint">For margin only</p></div>
+      <div><label class="lbl">Selling price (৳) <span class="req">*</span></label><input class="inp" value="1250"></div>
+      <div><label class="lbl">Regular price (৳)</label><input class="inp" value="1600"><p class="hint">Shown struck through</p></div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:9px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:9px; padding:11px 14px; margin-bottom:20px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+      <span style="font-size:13.5px; color:#15803d">Margin <strong>৳430</strong> per unit · 34% · Discount shown to customer: <strong>22% off</strong></span>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 20px; margin-bottom:20px">
+      <div><label class="lbl">Weight / Size</label><input class="inp" value="King"><p class="hint">Sent to courier</p></div>
+      <div>
+        <label class="lbl">Stock quantity <span class="req">*</span></label>
+        <input class="inp" value="10">
+        <p class="hint">Alert below <strong>3</strong> units</p>
+      </div>
+      <div><label class="lbl">Badge / tag</label><select class="inp"><option>Best Selling</option><option>New Arrival</option><option>Popular</option><option>None</option></select></div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <label class="lbl">Product photo</label>
+      <div style="display:flex; gap:14px; align-items:stretch">
+        <div style="width:112px; height:112px; border-radius:10px; background:#fdf2f8; border:1px solid #f0f0f5; flex-shrink:0; display:flex; align-items:center; justify-content:center">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f0a6d2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </div>
+        <div style="flex:1; min-width:0; border:1.5px dashed #f0a6d2; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:16px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e6007e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+          <span style="font-size:13.5px; font-weight:600; color:#e6007e">Click to browse or drag &amp; drop</span>
+          <span style="font-size:12px; color:#a0a0ad">PNG, JPG, WEBP up to 5MB — or paste a URL</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:22px">
+      <label class="lbl">Description</label>
+      <textarea style="width:100%; min-height:82px; border:1px solid #dcdce4; border-radius:9px; padding:11px 12px; font-family:'Hind Siliguri',sans-serif; font-size:14px; color:#1a1a1a; resize:vertical">১০০% কটন, নরম ও আরামদায়ক। ১ পিস বেডশিট + ২ পিস বালিশের কভার।</textarea>
+      <p class="hint">Up to 500 characters</p>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid #f0f0f5; padding-top:18px">
+      <div style="display:flex; align-items:center; gap:11px">
+        <span style="display:inline-flex; width:42px; height:24px; border-radius:999px; background:#e6007e; position:relative; flex-shrink:0">
+          <span style="position:absolute; top:3px; left:21px; width:18px; height:18px; border-radius:50%; background:#fff"></span>
+        </span>
+        <div>
+          <div style="font-size:13.5px; font-weight:600">Publish on website</div>
+          <div style="font-size:12px; color:#a0a0ad">Visible in the storefront gallery</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:9px">
+        <button style="height:40px; padding:0 20px; border:1px solid #dcdce4; background:#fff; border-radius:9px; font-family:inherit; font-size:13.5px; font-weight:600; color:#1a1a1a; cursor:pointer">Cancel</button>
+        <button style="height:40px; padding:0 24px; border:0; background:#e6007e; color:#fff; border-radius:9px; font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer">Save product</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

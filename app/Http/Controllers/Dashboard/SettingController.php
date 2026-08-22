@@ -38,25 +38,54 @@ class SettingController extends Controller
             $trackingMessages[$key . '.regex'] = $field['error'];
         }
 
+        // Funnel wording: every field optional, because blank means "use the
+        // line the page shipped with" rather than an empty heading.
+        $copyRules = [];
+        foreach (array_keys(Setting::LANDING_COPY) as $key) {
+            $copyRules[$key] = 'nullable|string|max:255';
+        }
+
         try {
             $request->validate(array_merge([
                 'title' => 'required|string|max:255',
+                'tagline' => 'nullable|string|max:255',
+                'meta_description' => 'nullable|string|max:300',
+                'announcement' => 'nullable|string|max:255',
                 'logo_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+                'logo_light_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                 'favicon_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                 'contact_email' => 'nullable|email|max:255',
                 'contact_phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string',
-            ], $socialRules, $trackingRules), array_merge([
+                // Normalised the same way as social links, so a pasted
+                // "play.google.com/store/..." without a scheme is accepted.
+                'play_store_url' => 'nullable|string|max:255',
+                'app_store_url' => 'nullable|string|max:255',
+            ], $socialRules, $trackingRules, $copyRules), array_merge([
                 'title.required' => 'The website title is required — it appears in the browser tab.',
                 'logo_path.max' => 'The logo must be 2 MB or smaller.',
+                'logo_light_path.max' => 'The dark-background logo must be 2 MB or smaller.',
                 'favicon_path.max' => 'The favicon must be 2 MB or smaller.',
             ], $trackingMessages));
 
             $settings = Setting::first();
 
-            $data = $request->only(['title', 'contact_email', 'contact_phone', 'address']);
+            $data = $request->only(['title', 'tagline', 'meta_description', 'announcement', 'contact_email', 'contact_phone', 'address']);
+
+            // Stored as null rather than '', so Setting::copy() sees a cleared
+            // field as "restore the default wording".
+            foreach (array_keys(Setting::LANDING_COPY) as $key) {
+                $data[$key] = trim((string) $request->input($key)) ?: null;
+            }
+
+            // Unchecked checkboxes are not posted at all, so absence is the value.
+            $data['announcement_enabled'] = $request->boolean('announcement_enabled');
 
             foreach (array_keys(Setting::SOCIAL_PLATFORMS) as $key) {
+                $data[$key] = $this->normaliseUrl($request->input($key));
+            }
+
+            foreach (['play_store_url', 'app_store_url'] as $key) {
                 $data[$key] = $this->normaliseUrl($request->input($key));
             }
 
@@ -67,6 +96,17 @@ class SettingController extends Controller
 
             if ($request->hasFile('logo_path')) {
                 $data['logo_path'] = $this->storeImage($request->file('logo_path'), $settings?->logo_path);
+            }
+
+            if ($request->hasFile('logo_light_path')) {
+                $data['logo_light_path'] = $this->storeImage($request->file('logo_light_path'), $settings?->logo_light_path);
+            } elseif ($request->hasFile('logo_path') && $this->isSeededBrandAsset($settings?->logo_light_path)) {
+                // Uploading a logo while the dark-background slot still holds a
+                // shipped placeholder would leave that placeholder winning on the
+                // header — the new logo would appear to have been ignored. Clear
+                // it so one upload takes effect everywhere; a light variant the
+                // shop uploaded itself is never touched.
+                $data['logo_light_path'] = null;
             }
 
             if ($request->hasFile('favicon_path')) {
@@ -85,6 +125,15 @@ class SettingController extends Controller
         } catch (\Throwable $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Whether a stored path is one of the logos this project ships (generated
+     * into public/images/brand), as opposed to a file the shop uploaded.
+     */
+    private function isSeededBrandAsset(?string $path): bool
+    {
+        return $path !== null && Str::startsWith($path, 'images/brand/');
     }
 
     /**

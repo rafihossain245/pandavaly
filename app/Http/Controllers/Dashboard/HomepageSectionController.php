@@ -140,31 +140,113 @@ class HomepageSectionController extends Controller
     protected function rules(): array
     {
         return [
-            'type' => 'required|in:hero_slider,category_strip,product_row,split_banner,brand_strip,combo_deals',
+            'type' => 'required|in:hero_slider,category_strip,product_row,split_banner,brand_strip,combo_deals,feature_strip,testimonials',
             'title' => 'required|string|max:255',
             'heading' => 'nullable|string|max:255',
             'subheading' => 'nullable|string|max:255',
-            'source' => 'nullable|in:trending,popular,recommended,category,manual',
+            'source' => 'nullable|in:trending,popular,recommended,category,manual,reviews',
             'category_id' => 'nullable|exists:categories,id',
             'limit' => 'nullable|integer|min:1|max:50',
+            'layout' => 'nullable|in:carousel,grid',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date|after_or_equal:starts_at',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
+
+            // Trust badges (feature_strip)
+            'feature_icon' => 'nullable|array',
+            'feature_icon.*' => 'nullable|string|max:60',
+            'feature_title' => 'nullable|array',
+            'feature_title.*' => 'nullable|string|max:60',
+            'feature_subtitle' => 'nullable|array',
+            'feature_subtitle.*' => 'nullable|string|max:80',
+
+            // Curated testimonials
+            'testimonial_name' => 'nullable|array',
+            'testimonial_name.*' => 'nullable|string|max:80',
+            'testimonial_role' => 'nullable|array',
+            'testimonial_role.*' => 'nullable|string|max:80',
+            'testimonial_rating' => 'nullable|array',
+            'testimonial_rating.*' => 'nullable|integer|min:1|max:5',
+            'testimonial_body' => 'nullable|array',
+            'testimonial_body.*' => 'nullable|string|max:600',
+            'testimonial_verified' => 'nullable|array',
         ];
     }
 
     protected function buildConfig(Request $request): ?array
     {
-        if ($request->type !== 'product_row') {
-            return null;
+        return match ($request->type) {
+            'product_row' => [
+                'source' => $request->source ?: 'manual',
+                'category_id' => $request->source === 'category' ? $request->category_id : null,
+                'limit' => $request->limit ?: 8,
+                'layout' => $request->layout ?: 'carousel',
+            ],
+            'feature_strip' => [
+                'items' => $this->buildFeatureItems($request),
+            ],
+            'testimonials' => [
+                'source' => $request->source === 'reviews' ? 'reviews' : 'manual',
+                'limit' => $request->limit ?: 3,
+                'items' => $request->source === 'reviews' ? [] : $this->buildTestimonialItems($request),
+            ],
+            default => null,
+        };
+    }
+
+    /**
+     * Rows arrive as parallel arrays from the repeater inputs. Rows with no
+     * title are blanks the admin left behind, so they are dropped rather than
+     * stored as empty badges.
+     */
+    protected function buildFeatureItems(Request $request): array
+    {
+        $items = [];
+
+        foreach ($request->input('feature_title', []) as $i => $title) {
+            if (blank($title)) {
+                continue;
+            }
+
+            $items[] = [
+                'icon' => $request->input("feature_icon.$i") ?: 'fas fa-circle-check',
+                'title' => $title,
+                'subtitle' => $request->input("feature_subtitle.$i"),
+            ];
         }
 
-        return [
-            'source' => $request->source ?: 'manual',
-            'category_id' => $request->source === 'category' ? $request->category_id : null,
-            'limit' => $request->limit ?: 8,
-        ];
+        return $items;
+    }
+
+    /**
+     * A testimonial needs both an attributable name and something said, so rows
+     * missing either are skipped.
+     */
+    protected function buildTestimonialItems(Request $request): array
+    {
+        $items = [];
+        $verified = $request->input('testimonial_verified', []);
+
+        foreach ($request->input('testimonial_name', []) as $i => $name) {
+            $body = $request->input("testimonial_body.$i");
+
+            if (blank($name) || blank($body)) {
+                continue;
+            }
+
+            $items[] = [
+                'name' => $name,
+                'role' => $request->input("testimonial_role.$i"),
+                'rating' => (int) ($request->input("testimonial_rating.$i") ?: 5),
+                'body' => $body,
+                // Checkbox inputs only post the rows that were ticked, so the
+                // presence of the index is the value.
+                'verified' => array_key_exists($i, $verified) && $verified[$i],
+            ];
+        }
+
+        return $items;
     }
 
     protected function syncManualProducts(HomepageSection $section, Request $request): void

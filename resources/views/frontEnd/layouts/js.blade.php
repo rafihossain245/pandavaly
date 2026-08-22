@@ -103,6 +103,44 @@
             });
         });
 
+        // ---- Buy Now: same add-to-cart call, then straight to checkout ----
+        // Deliberately reuses cart.add rather than a dedicated endpoint so
+        // stock/MOQ validation stays in one place; we only skip the toast and
+        // send the shopper on once the server has confirmed the add.
+        $(document).on('click', '.buy-now-btn', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var origHtml = $btn.html();
+            var pid = $btn.data('product');
+            var $form = $btn.closest('form');
+            if (!$form.length) {
+                var $buyForm = $('.product-buy-form');
+                if ($buyForm.data('product') == pid) {
+                    $form = $buyForm;
+                }
+            }
+            var qty = parseInt($btn.closest('[data-qty]').data('qty') || $form.find('[name=qty]').val() || 1);
+            var skuId = $form.find('.selected-sku-id').val() || '';
+            var variantLabel = $form.find('.selected-variant-label').val() || '';
+
+            $btn.prop('disabled', true);
+
+            $.ajax({
+                url: '{{ route("cart.add") }}',
+                method: 'POST',
+                data: { _token: csrfToken, product_id: pid, qty: qty || 1, sku_id: skuId, variant_label: variantLabel },
+                success: function (res) {
+                    if (res.tracking && window.goeTrack) goeTrack('add_to_cart', res.tracking);
+                    window.location.href = '{{ route("checkout.index") }}';
+                },
+                error: function (xhr) {
+                    var msg = xhr.responseJSON ? (xhr.responseJSON.error || 'Failed to add.') : 'Out of stock.';
+                    toastr.error(msg);
+                    $btn.prop('disabled', false).html(origHtml);
+                }
+            });
+        });
+
         // ---- Newsletter subscribe ----
         $(document).on('submit', '#newsletterForm', function (e) {
             e.preventDefault();

@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600&display=swap">
+  <style>
+    body { margin:0; font-family:'Plus Jakarta Sans','Hind Siliguri',system-ui,sans-serif; background:#f6f7fb; color:#1a1a1a; }
+    a { color:#e6007e; } a:hover { color:#c0006a; }
+    th { font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:#8b8b99; text-align:left; padding:0 14px 11px; }
+    td { font-size:13.5px; padding:14px; border-top:1px solid #f0f0f5; vertical-align:middle; }
+  </style>
+</helmet>
+
+<div style="width:1280px; padding:24px 28px 32px">
+
+  <div style="margin-bottom:18px">
+    <h1 style="margin:0 0 4px; font-size:22px; font-weight:700; letter-spacing:-.01em">Customer Orders</h1>
+    <p style="margin:0; font-size:13.5px; color:#8b8b99">Search by phone, dispatch to courier, and verify payments.</p>
+  </div>
+
+  <!-- toolbar -->
+  <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap">
+    <div style="position:relative; flex:1 1 320px; min-width:0">
+      <svg style="position:absolute; left:13px; top:11px" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a0a0ad" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input placeholder="Search phone, order no or customer name…" style="width:100%; height:40px; border:1px solid #dcdce4; border-radius:9px; padding:0 13px 0 38px; font-family:inherit; font-size:13.5px; background:#fff; color:#1a1a1a">
+    </div>
+    <select style="height:40px; border:1px solid #dcdce4; border-radius:9px; padding:0 11px; font-family:inherit; font-size:13.5px; background:#fff; color:#1a1a1a"><option>All statuses</option><option>Pending</option><option>Confirmed</option><option>Shipped</option><option>Delivered</option></select>
+    <select style="height:40px; border:1px solid #dcdce4; border-radius:9px; padding:0 11px; font-family:inherit; font-size:13.5px; background:#fff; color:#1a1a1a"><option>All couriers</option><option>Not sent</option><option>Dispatched</option><option>Failed</option></select>
+    <select style="height:40px; border:1px solid #dcdce4; border-radius:9px; padding:0 11px; font-family:inherit; font-size:13.5px; background:#fff; color:#1a1a1a"><option>Last 30 days</option><option>Today</option><option>This week</option></select>
+    <button style="height:40px; padding:0 15px; border:1px solid #dcdce4; background:#fff; border-radius:9px; font-family:inherit; font-size:13.5px; font-weight:600; color:#1a1a1a; cursor:pointer; display:inline-flex; align-items:center; gap:7px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+      Export
+    </button>
+  </div>
+
+  <!-- bulk bar -->
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; background:#fdf2f8; border:1px solid #f9c9e4; border-radius:10px; padding:11px 16px; margin-bottom:12px">
+    <span style="font-size:13.5px; font-weight:600; color:#a0005c">3 orders selected</span>
+    <div style="display:flex; gap:8px">
+      <button style="height:34px; padding:0 14px; border:1px solid #f0a6d2; background:#fff; color:#a0005c; border-radius:8px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer">Mark confirmed</button>
+      <button style="height:34px; padding:0 14px; border:0; background:#e6007e; color:#fff; border-radius:8px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-4l-3-4h-4v8h2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+        Send 3 to Courier
+      </button>
+    </div>
+  </div>
+
+  <div style="background:#fff; border:1px solid #e8e8ee; border-radius:12px; padding:16px 8px 6px">
+    <table style="width:100%; border-collapse:collapse">
+      <thead>
+        <tr>
+          <th style="width:34px; padding-left:16px"><input type="checkbox" style="width:15px; height:15px; accent-color:#e6007e"></th>
+          <th>Order</th><th>Customer</th><th>Area</th><th>Payment</th>
+          <th style="text-align:right">Total</th><th>Status</th><th>Courier</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+          <tr>
+            <td style="padding-left:16px"><input type="checkbox" style="width:15px; height:15px; accent-color:#e6007e"></td>
+            <td>
+              <a href="#" style="font-weight:700; text-decoration:none">{{r.no}}</a>
+              <div style="font-size:12px; color:#a0a0ad; margin-top:2px">{{r.date}}</div>
+            </td>
+            <td>
+              <div style="font-weight:600">{{r.name}}</div>
+              <div style="font-size:12.5px; color:#8b8b99; margin-top:2px">{{r.phone}}</div>
+              <sc-if value="{{r.risky}}" hint-placeholder-val="{{false}}">
+                <span style="display:inline-flex; align-items:center; gap:4px; margin-top:5px; background:#fef2f2; color:#b91c1c; font-size:11px; font-weight:600; padding:2px 8px; border-radius:5px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  2 past refusals
+                </span>
+              </sc-if>
+            </td>
+            <td><div>{{r.area}}</div><div style="font-size:12.5px; color:#a0a0ad; margin-top:2px">{{r.items}}</div></td>
+            <td><span style="background:{{r.payBg}}; color:{{r.payFg}}; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:6px">{{r.pay}}</span></td>
+            <td style="text-align:right; font-weight:700">৳{{r.total}}</td>
+            <td><span style="display:inline-flex; align-items:center; gap:6px; background:{{r.stBg}}; color:{{r.stFg}}; font-size:11.5px; font-weight:600; padding:4px 11px; border-radius:999px"><span style="width:5px; height:5px; border-radius:50%; background:{{r.stFg}}"></span>{{r.status}}</span></td>
+            <td><span style="color:{{r.cFg}}; font-size:12.5px; font-weight:600">{{r.courier}}</span><div style="font-size:11.5px; color:#a0a0ad; margin-top:2px">{{r.track}}</div></td>
+            <td style="text-align:right; padding-right:16px">
+              <a href="#" style="font-size:13px; font-weight:600; text-decoration:none">View</a>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = {
+      Pending:   { bg:'#fff7ed', fg:'#c2410c' },
+      Confirmed: { bg:'#fdf2f8', fg:'#e6007e' },
+      Shipped:   { bg:'#f5f3ff', fg:'#6d28d9' },
+      Delivered: { bg:'#f0fdf4', fg:'#16a34a' },
+    };
+    const raw = [
+      { no:'SO-…4821', date:'19 Aug, 4:12 PM', name:'Rafi Ahmed', phone:'+880 1770-105856', area:'Banani · Dhaka', items:'2 items', pay:'bKash', total:'2,460', status:'Confirmed', courier:'Dispatched', track:'15AB93KD', cFg:'#16a34a', risky:false },
+      { no:'SO-…4820', date:'19 Aug, 3:44 PM', name:'Nur Hossen', phone:'+880 1326-461270', area:'Mirpur · Dhaka', items:'1 item', pay:'COD', total:'1,310', status:'Pending', courier:'Not sent', track:'—', cFg:'#8b8b99', risky:true },
+      { no:'SO-…4819', date:'19 Aug, 2:20 PM', name:'Ayesha Khan', phone:'+880 1712-884411', area:'Cumilla', items:'3 items', pay:'COD', total:'3,850', status:'Shipped', courier:'Dispatched', track:'77KQ21LM', cFg:'#16a34a', risky:false },
+      { no:'SO-…4818', date:'18 Aug, 7:05 PM', name:'Tanvir Islam', phone:'+880 1911-220044', area:'Chattogram', items:'1 item', pay:'COD', total:'1,350', status:'Confirmed', courier:'Failed', track:'invalid phone', cFg:'#b91c1c', risky:false },
+      { no:'SO-…4817', date:'18 Aug, 5:31 PM', name:'Fariha Tumpa', phone:'+880 1620-773311', area:'Uttara · Dhaka', items:'2 items', pay:'COD', total:'2,560', status:'Delivered', courier:'Delivered', track:'44ZX10PP', cFg:'#16a34a', risky:false },
+    ];
+    return {
+      rows: raw.map(r => ({
+        ...r,
+        stBg: st[r.status].bg, stFg: st[r.status].fg,
+        payBg: r.pay === 'COD' ? '#f4f4f7' : '#fdf2f8',
+        payFg: r.pay === 'COD' ? '#6b6b7b' : '#e6007e',
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>

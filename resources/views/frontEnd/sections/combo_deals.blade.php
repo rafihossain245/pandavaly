@@ -2,13 +2,16 @@
 @if($combos && $combos->count())
 <div class="combo-deals-section py-4 my-4">
     <div class="container">
-        <div class="card p-4" style="background: #fff7ed; border: 1px solid #fde3c8; border-radius: 12px;">
+        <div class="card p-4 combo-panel">
             <div class="section-flex align-items-center justify-content-between mb-3">
-                <h3 class="section-title mb-0">{{ $section->heading ?: $section->title }}</h3>
+                <div>
+                    <h3 class="section-title mb-0">{{ $section->heading ?: $section->title }}</h3>
+                    @if($section->subheading)
+                        <p class="section-subtitle mb-0">{{ $section->subheading }}</p>
+                    @endif
+                </div>
+                <a href="{{ route('shop') }}" class="view-all">View All Combos <i class="ti ti-arrow-narrow-right"></i></a>
             </div>
-            @if($section->subheading)
-                <p class="text-muted">{{ $section->subheading }}</p>
-            @endif
             <div class="d-flex flex-wrap gap-20px">
                 @foreach($combos as $combo)
                     @php
@@ -16,6 +19,10 @@
                         $savings = max(0, $originalPrice - $combo->price);
                     @endphp
                     <div class="product-card" style="width: 220px;">
+                        @if($savings > 0)
+                            <div class="discount-badge">Save {{ number_format($savings, 0) }}</div>
+                        @endif
+                        <span class="label-badge" style="right: 10px;">Combo Offer</span>
                         <a href="{{ route('shop') }}" class="product-image d-block">
                             <img src="{{ $combo->image ? asset($combo->image) : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3C/svg%3E' }}" alt="{{ $combo->name }}">
                         </a>

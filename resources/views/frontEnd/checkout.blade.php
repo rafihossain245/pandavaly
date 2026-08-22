@@ -9,9 +9,9 @@
     .co-page-title { font-size: 26px; font-weight: 800; color: #111; margin: 0 0 8px; letter-spacing: -.3px; }
     .co-breadcrumb { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; color: #777; }
     .co-breadcrumb a { color: #666; text-decoration: none; transition: color .2s; }
-    .co-breadcrumb a:hover { color: var(--primary, #f4801f); }
+    .co-breadcrumb a:hover { color: var(--primary); }
     .co-breadcrumb .co-crumb-sep { color: #c9c9c9; }
-    .co-breadcrumb .co-crumb-current { color: var(--primary, #f4801f); font-weight: 700; }
+    .co-breadcrumb .co-crumb-current { color: var(--primary); font-weight: 700; }
 
     /* Guest login/register prompt (guests can still check out without one) */
     .co-guest-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; padding: 14px 18px; margin-bottom: 12px; font-size: 14px; color: #444; }
@@ -19,7 +19,7 @@
     .co-guest-btn { display: inline-block; padding: 7px 20px; border-radius: 4px; font-size: 13.5px; font-weight: 700; text-decoration: none; transition: filter .2s, background .2s; }
     .co-guest-btn-outline { border: 1px solid #cfcfcf; color: #444; background: #fff; }
     .co-guest-btn-outline:hover { background: #f5f5f5; color: #222; }
-    .co-guest-btn-solid { background: var(--primary, #f4801f); color: #fff; border: 1px solid var(--primary, #f4801f); }
+    .co-guest-btn-solid { background: var(--primary); color: #fff; border: 1px solid var(--primary); }
     .co-guest-btn-solid:hover { filter: brightness(.94); color: #fff; }
 
     .co-section { background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; margin-bottom: 10px; }
@@ -48,7 +48,7 @@
     .co-field .select2-container--default .select2-selection--single .select2-selection__placeholder { color: #9aa0a6; }
     .co-field .select2-container--default.select2-container--focus .select2-selection--single,
     .co-field .select2-container--default.select2-container--open .select2-selection--single { border-color: #2196F3; box-shadow: 0 0 0 3px rgba(33,150,243,.08); }
-    .select2-container--default .select2-results__option--highlighted[aria-selected] { background: #f4801f; }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] { background: var(--primary); }
     .select2-dropdown { border-color: #ddd; }
     .select2-search--dropdown .select2-search__field { border: 1px solid #ddd; border-radius: 3px; padding: 6px 8px; }
 
@@ -63,7 +63,7 @@
     .or-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .or-qty { display: inline-flex; align-items: center; border: 1px solid #e2e2e2; border-radius: 20px; overflow: hidden; background: #fafafa; }
     .or-qty button { width: 26px; height: 26px; border: 0; background: transparent; color: #666; font-size: 15px; line-height: 1; cursor: pointer; }
-    .or-qty button:hover:not(:disabled) { color: var(--primary, #f4801f); }
+    .or-qty button:hover:not(:disabled) { color: var(--primary); }
     .or-qty button:disabled { opacity: .4; cursor: not-allowed; }
     .or-qty input { width: 34px; border: 0; background: transparent; text-align: center; font-size: 13px; font-weight: 600; color: #111; pointer-events: none; }
     .or-price { font-size: 14px; font-weight: 700; color: #111; }
@@ -78,7 +78,7 @@
     .cp-body { padding: 0 18px 16px; }
     .cp-form { display: flex; }
     .cp-form .co-input { border-radius: 3px 0 0 3px; }
-    .cp-apply { border: 0; background: var(--primary, #f4801f); color: #fff; font-size: 13.5px; font-weight: 700; padding: 0 18px; border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; }
+    .cp-apply { border: 0; background: var(--primary); color: #fff; font-size: 13.5px; font-weight: 700; padding: 0 18px; border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; }
     .cp-apply:hover { filter: brightness(.94); }
     .cp-apply:disabled { opacity: .65; cursor: default; }
     .cp-msg { font-size: 12.5px; margin-top: 7px; }

@@ -27,7 +27,7 @@
             width: 46px;
             height: 46px;
             border-radius: 10px;
-            background: var(--primary, #f57c1f);
+            background: var(--primary);
             color: #fff;
             display: flex;
             align-items: center;
@@ -132,7 +132,7 @@
         }
 
         .signin-field input:focus {
-            border-color: var(--primary, #f57c1f);
+            border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(245, 124, 31, .12);
         }
 
@@ -158,7 +158,7 @@
             height: 44px;
             border: 0;
             border-radius: 8px;
-            background: var(--primary, #f57c1f);
+            background: var(--primary);
             color: #fff;
             font-size: 14px;
             font-weight: 600;
@@ -188,7 +188,7 @@
         }
 
         .signin-meta a {
-            color: var(--primary, #f57c1f);
+            color: var(--primary);
             text-decoration: underline;
         }
 
@@ -247,7 +247,7 @@
         }
 
         .signin-foot a {
-            color: var(--primary, #f57c1f);
+            color: var(--primary);
             font-weight: 600;
             text-decoration: underline;
         }

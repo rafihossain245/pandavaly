@@ -1,12 +1,16 @@
 @extends('frontEnd.layouts.master')
 
+{{-- Reached from the one-page funnel, which sells without accounts, cart or
+     category browsing — so this page drops that chrome too. --}}
+@section('chrome', 'bare')
+
 @section('css')
 <style>
     .track-page { background: #f5f5f5; min-height: 60vh; padding: 28px 0 50px; }
     .track-search-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 24px; margin-bottom: 24px; }
-    .track-order-no { font-size: 20px; font-weight: 800; color: #f47b32; letter-spacing: .3px; }
+    .track-order-no { font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: .3px; }
     .track-step { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #e5edf5; background: #f3f7fb; font-weight: 800; color: #9aa8b8; margin: 0 auto; }
-    .track-step.active { border-color: #f47b32; background: #fff; color: #f47b32; }
+    .track-step.active { border-color: var(--primary); background: #fff; color: var(--primary); }
     .track-step.done { border-color: #27ae60; background: #27ae60; color: #fff; }
     .track-step-line { flex: 1; height: 2px; background: #e5edf5; margin-top: 23px; }
     .track-step-line.done { background: #27ae60; }
@@ -16,8 +20,8 @@
 
     /* ---- Order placed dialog ---- */
     .placed-modal .modal-content { border: none; border-radius: 14px; padding: 6px; }
-    .placed-eyebrow { color: #f47b32; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-    .placed-tick { width: 68px; height: 68px; border-radius: 50%; background: #f47b32; color: #fff; display: grid; place-items: center; font-size: 30px; margin: 14px auto 18px; }
+    .placed-eyebrow { color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+    .placed-tick { width: 68px; height: 68px; border-radius: 50%; background: var(--primary); color: #fff; display: grid; place-items: center; font-size: 30px; margin: 14px auto 18px; }
     /* Draws the tick on once, so the dialog reads as a confirmation rather than a
        static panel. Skipped for anyone who asked for less motion. */
     @media (prefers-reduced-motion: no-preference) {
@@ -49,7 +53,7 @@
 <section class="track-page">
     <div class="container">
         <div class="text-center mb-4">
-            <p class="text-orange fw-bold mb-1" style="color:#f47b32;">&bull; LIVE ORDER TRACKING</p>
+            <p class="text-orange fw-bold mb-1" style="color:var(--primary);">&bull; LIVE ORDER TRACKING</p>
             <h1 class="fw-bold">Track Your Order</h1>
             @if($order)
                 <p class="text-muted mb-1">Real-time updates on your shipment progress</p>

@@ -231,6 +231,64 @@ class DemoEcommerceSeeder extends Seeder
                 ['type' => 'combo_deals', 'heading' => 'Exclusive Combo Deals', 'sort_order' => 8, 'is_active' => true]
             );
         }
+
+        // Trust badges, directly under the hero.
+        HomepageSection::firstOrCreate(
+            ['title' => 'Trust Badges'],
+            [
+                'type' => 'feature_strip',
+                'sort_order' => 2,
+                'is_active' => true,
+                'config' => [
+                    'items' => [
+                        ['icon' => 'fas fa-leaf', 'title' => '100% Pure & Organic', 'subtitle' => 'Lab tested quality'],
+                        ['icon' => 'fas fa-truck-fast', 'title' => 'Fast Home Delivery', 'subtitle' => 'Inside Dhaka in 24 hrs'],
+                        ['icon' => 'fas fa-hand-holding-dollar', 'title' => 'Cash On Delivery', 'subtitle' => 'Pay after verification'],
+                        ['icon' => 'fas fa-rotate-left', 'title' => 'Hassle-free Returns', 'subtitle' => '7 day money back'],
+                    ],
+                ],
+            ]
+        );
+
+        // Curated by default. Switch the section's source to "reviews" in the
+        // admin once there are enough approved product reviews to show.
+        HomepageSection::firstOrCreate(
+            ['title' => 'Customer Testimonials'],
+            [
+                'type' => 'testimonials',
+                'heading' => 'What Our Happy Customers Say',
+                'subheading' => 'Real experiences from food lovers and families across the country',
+                'sort_order' => 9,
+                'is_active' => true,
+                'config' => [
+                    'source' => 'manual',
+                    'limit' => 3,
+                    'items' => [
+                        [
+                            'name' => 'Shahriar Khan Abir',
+                            'role' => 'Service Holder',
+                            'rating' => 5,
+                            'body' => 'The ghee tastes exactly like the one my grandmother used to make. Pure aroma, no additives — my family can tell the difference immediately.',
+                            'verified' => true,
+                        ],
+                        [
+                            'name' => 'Fariha Akter Tumpa',
+                            'role' => 'Entrepreneur',
+                            'rating' => 5,
+                            'body' => 'I have been ordering the mustard oil and honey for months now. Consistent quality every single time and delivery is always on schedule.',
+                            'verified' => true,
+                        ],
+                        [
+                            'name' => 'Ayesha Khan',
+                            'role' => 'Banker',
+                            'rating' => 5,
+                            'body' => 'Ordered the Medjool dates for Ramadan and they arrived fresh and perfectly packed. Genuinely premium quality at a fair price.',
+                            'verified' => true,
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 
     /**
@@ -249,7 +307,7 @@ class DemoEcommerceSeeder extends Seeder
             mkdir(dirname($fullPath), 0755, true);
         }
 
-        $colors = ['#f4801f', '#0b3d2e', '#c2410c', '#166534', '#9a3412', '#065f46'];
+        $colors = ['#e6007e', '#1a1a1a', '#c0006a', '#16a34a', '#be185d', '#065f46'];
         $color = $colors[crc32($name) % count($colors)];
         $fontSize = strlen($name) > 9 ? 18 : 24;
 

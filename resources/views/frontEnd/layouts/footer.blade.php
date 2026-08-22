@@ -20,14 +20,16 @@
     <div class="container footer-top" style="--footer-link-cols: {{ 1 + $footerColumns->count() }}">
         <div class="footer-brand">
             <a class="footer-logo" href="{{ route('home') }}">
-                <img src="{{ asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
-                    alt="{{ $setting->title ?? 'GoeBazar' }}" style="height:42px">
+                <img src="{{ asset($setting->logo_light_path ?? $setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
+                    alt="{{ $setting->title ?? 'Panda Valy' }}" style="height:42px">
             </a>
 
-            <p class="footer-tagline">
-                {{ $setting->title ?? 'GoeBazar' }} is an e-commerce platform dedicated to providing
-                safe and reliable food to every home.
-            </p>
+            {{-- Shop-owned copy (Website Settings → Storefront copy). Hidden
+                 entirely when unset, rather than describing a business the shop
+                 may not be in. --}}
+            @if(filled($setting->tagline ?? null))
+                <p class="footer-tagline">{{ $setting->tagline }}</p>
+            @endif
 
             <ul class="footer-contact-list">
                 @if($setting->address ?? null)
@@ -57,6 +59,24 @@
                 </div>
             @endif
 
+            @if(($setting->play_store_url ?? null) || ($setting->app_store_url ?? null))
+                <span class="footer-heading">Download App On Mobile</span>
+                <div class="app-badges">
+                    @if($setting->play_store_url ?? null)
+                        <a href="{{ $setting->play_store_url }}" class="app-badge" target="_blank" rel="noopener">
+                            <i class="fab fa-google-play"></i>
+                            <span><small>Get it on</small>Google Play</span>
+                        </a>
+                    @endif
+                    @if($setting->app_store_url ?? null)
+                        <a href="{{ $setting->app_store_url }}" class="app-badge" target="_blank" rel="noopener">
+                            <i class="fab fa-apple"></i>
+                            <span><small>Download on the</small>App Store</span>
+                        </a>
+                    @endif
+                </div>
+            @endif
+
         </div>
 
         <div class="footer-section">
@@ -83,6 +103,12 @@
     </div>
 
     <div class="container footer-bottom">
-        <p class="copyright">Copyright &copy; {{ date('Y') }} {{ $setting->title ?? 'GoeBazar' }}</p>
+        <p class="copyright">
+            Copyright &copy; {{ date('Y') }} <strong>{{ $setting->title ?? 'Panda Valy' }}</strong>. All Rights Reserved.
+        </p>
+        <div class="footer-payments">
+            <span>Pay With</span>
+            <img src="{{ asset('frontEnd/assets/image/payment-getway.png') }}" alt="Accepted payment methods">
+        </div>
     </div>
 </footer>

@@ -76,7 +76,7 @@
                                  alt="{{ $product->name }}"
                                  style="width:100%; height:120px; object-fit:contain; background:#fafafa; border:1px solid #f0f0f0; border-radius:8px; padding:6px">
                             <div style="font-size:12.5px; font-weight:600; color:#111827; margin-top:8px; line-height:1.4">{{ $product->name }}</div>
-                            <div style="font-size:12.5px; color:var(--primary,#f4801f); font-weight:700; margin-top:2px">
+                            <div style="font-size:12.5px; color:var(--primary); font-weight:700; margin-top:2px">
                                 {{ number_format($product->product_prices->first()->selling_price ?? 0, 2) }} BDT
                             </div>
                         </a>

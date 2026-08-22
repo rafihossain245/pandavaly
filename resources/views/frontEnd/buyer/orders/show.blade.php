@@ -353,7 +353,7 @@
                     <tr>
                         <td>
                             @if($product)
-                                <a href="{{ route('product.details', $product->slug) }}" style="color:var(--primary,#f4801f); font-weight:600; text-decoration:none">
+                                <a href="{{ route('product.details', $product->slug) }}" style="color:var(--primary); font-weight:600; text-decoration:none">
                                     {{ $product->name }}
                                 </a>
                             @else

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\ComboDeal;
 use App\Models\HomepageSection;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\Slider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -36,8 +37,58 @@ class HomeController extends Controller
             'brand_strip' => Brand::where('is_active', 1)->orderBy('name')->get(),
             'combo_deals' => ComboDeal::active()->with('products.product_prices')->orderBy('sort_order')->get(),
             'product_row' => $this->resolveProductRow($section),
+            'testimonials' => $this->resolveTestimonials($section),
             default => null,
         };
+    }
+
+    /**
+     * Testimonials come either from curated entries stored on the section, or
+     * from real approved product reviews. Both are normalised to the same shape
+     * so the view has a single rendering path.
+     *
+     * @return \Illuminate\Support\Collection<int, array{name:string, role:?string, rating:int, body:string, avatar:?string, verified:bool}>
+     */
+    protected function resolveTestimonials(HomepageSection $section)
+    {
+        $config = $section->config ?? [];
+        $limit = (int) ($config['limit'] ?? 3);
+
+        if (($config['source'] ?? 'manual') === 'reviews') {
+            return ProductReview::with('buyer')
+                ->where('is_approved', 1)
+                ->whereNotNull('comment')
+                ->where('comment', '!=', '')
+                ->orderByDesc('rating')
+                ->orderByDesc('id')
+                ->limit($limit)
+                ->get()
+                ->map(fn (ProductReview $review) => [
+                    // `business_name` is the buyer's display name in this schema
+                    // (same field the product-detail review list renders).
+                    'name' => $review->buyer->business_name ?? 'Verified Buyer',
+                    'role' => 'Verified Purchase',
+                    'rating' => (int) $review->rating,
+                    'body' => $review->comment,
+                    'avatar' => null,
+                    // Every review here is admin-approved and tied to a buyer
+                    // account, so the badge is always accurate for this source.
+                    'verified' => true,
+                ]);
+        }
+
+        return collect($config['items'] ?? [])
+            ->filter(fn ($item) => filled($item['name'] ?? null) && filled($item['body'] ?? null))
+            ->map(fn ($item) => [
+                'name' => $item['name'],
+                'role' => $item['role'] ?? null,
+                'rating' => (int) ($item['rating'] ?? 5),
+                'body' => $item['body'],
+                'avatar' => $item['avatar'] ?? null,
+                'verified' => (bool) ($item['verified'] ?? false),
+            ])
+            ->take($limit > 0 ? $limit : PHP_INT_MAX)
+            ->values();
     }
 
     protected function resolveProductRow(HomepageSection $section)

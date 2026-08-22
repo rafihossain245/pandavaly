@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin:0; font-family:'Plus Jakarta Sans',system-ui,sans-serif; background:#f6f7fb; color:#1a1a1a; }
+    a { color:#e6007e; } a:hover { color:#c0006a; }
+    th { font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:#8b8b99; text-align:left; padding:0 14px 11px; }
+    td { font-size:13.5px; padding:11px 14px; border-top:1px solid #f0f0f5; vertical-align:middle; }
+  </style>
+</helmet>
+
+<div style="width:920px; padding:24px 28px 32px">
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px">
+    <div>
+      <h1 style="margin:0 0 4px; font-size:22px; font-weight:700; letter-spacing:-.01em">Delivery Charges</h1>
+      <p style="margin:0; font-size:13.5px; color:#8b8b99">Per-district rates applied at checkout. 64 districts configured.</p>
+    </div>
+    <button style="height:38px; padding:0 18px; border:0; background:#e6007e; color:#fff; border-radius:9px; font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer">Save changes</button>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-bottom:18px">
+    <div style="background:#fff; border:1px solid #e8e8ee; border-radius:11px; padding:16px 18px">
+      <div style="font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#8b8b99; margin-bottom:9px">Bulk set — inside Dhaka</div>
+      <div style="display:flex; gap:9px; align-items:center">
+        <span style="font-size:15px; color:#8b8b99">৳</span>
+        <input value="60" style="flex:1; min-width:0; height:38px; border:1px solid #dcdce4; border-radius:8px; padding:0 12px; font-family:inherit; font-size:14px; font-weight:600; color:#1a1a1a">
+        <button style="height:38px; padding:0 14px; border:1px solid #dcdce4; background:#fff; border-radius:8px; font-family:inherit; font-size:13px; font-weight:600; color:#1a1a1a; cursor:pointer; white-space:nowrap">Apply to 1</button>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #e8e8ee; border-radius:11px; padding:16px 18px">
+      <div style="font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#8b8b99; margin-bottom:9px">Bulk set — outside Dhaka</div>
+      <div style="display:flex; gap:9px; align-items:center">
+        <span style="font-size:15px; color:#8b8b99">৳</span>
+        <input value="120" style="flex:1; min-width:0; height:38px; border:1px solid #dcdce4; border-radius:8px; padding:0 12px; font-family:inherit; font-size:14px; font-weight:600; color:#1a1a1a">
+        <button style="height:38px; padding:0 14px; border:1px solid #dcdce4; background:#fff; border-radius:8px; font-family:inherit; font-size:13px; font-weight:600; color:#1a1a1a; cursor:pointer; white-space:nowrap">Apply to 63</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fff; border:1px solid #e8e8ee; border-radius:12px; padding:16px 8px 6px">
+    <div style="position:relative; margin:0 8px 14px">
+      <svg style="position:absolute; left:12px; top:11px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0a0ad" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input placeholder="Filter districts…" style="width:100%; height:38px; border:1px solid #dcdce4; border-radius:9px; padding:0 12px 0 36px; font-family:inherit; font-size:13.5px; color:#1a1a1a">
+    </div>
+    <table style="width:100%; border-collapse:collapse">
+      <thead><tr><th style="width:40%">District</th><th>Zone</th><th style="width:150px">Charge (৳)</th><th style="text-align:right; padding-right:20px">Active</th></tr></thead>
+      <tbody>
+        <sc-for list="{{rows}}" as="d" hint-placeholder-count="7">
+          <tr>
+            <td style="font-weight:600">{{d.name}}</td>
+            <td><span style="background:{{d.zBg}}; color:{{d.zFg}}; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:6px">{{d.zone}}</span></td>
+            <td><input value="{{d.charge}}" style="width:100px; height:34px; border:1px solid #dcdce4; border-radius:7px; padding:0 10px; font-family:inherit; font-size:13.5px; font-weight:600; color:#1a1a1a"></td>
+            <td style="text-align:right; padding-right:20px">
+              <span style="display:inline-flex; width:38px; height:22px; border-radius:999px; background:{{d.tBg}}; position:relative">
+                <span style="position:absolute; top:3px; left:{{d.tX}}; width:16px; height:16px; border-radius:50%; background:#fff"></span>
+              </span>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <div style="padding:14px 16px; font-size:13px; color:#a0a0ad; border-top:1px solid #f0f0f5">Showing 7 of 64 districts</div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() {
+    const raw = [
+      { name:'Dhaka', zone:'Inside Dhaka', charge:'60', on:true },
+      { name:'Gazipur', zone:'Sub-urban', charge:'80', on:true },
+      { name:'Narayanganj', zone:'Sub-urban', charge:'80', on:true },
+      { name:'Chattogram', zone:'Outside Dhaka', charge:'120', on:true },
+      { name:'Cumilla', zone:'Outside Dhaka', charge:'120', on:true },
+      { name:'Sylhet', zone:'Outside Dhaka', charge:'130', on:true },
+      { name:'Bandarban', zone:'Outside Dhaka', charge:'150', on:false },
+    ];
+    const z = {
+      'Inside Dhaka':  { bg:'#fdf2f8', fg:'#e6007e' },
+      'Sub-urban':     { bg:'#eff6ff', fg:'#1d4ed8' },
+      'Outside Dhaka': { bg:'#f4f4f7', fg:'#6b6b7b' },
+    };
+    return {
+      rows: raw.map(d => ({
+        ...d,
+        zBg: z[d.zone].bg, zFg: z[d.zone].fg,
+        tBg: d.on ? '#e6007e' : '#dcdce4',
+        tX: d.on ? '19px' : '3px',
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,9 +1,14 @@
 ﻿@extends('frontEnd.layouts.master')
 
+{{-- Shared links should preview the product, not the shop logo. --}}
+@section('page-title', $product->name)
+@section('og-type', 'product')
+@section('og-image', $product->thumbnail ? asset($product->thumbnail) : asset('frontEnd/assets/image/product.jpg'))
+
 @section('css')
     <style>
         .product-highlight-box {
-            border: 1px solid #2563eb;
+            border: 1px solid var(--primary-border);
             border-radius: 8px;
             padding: 14px 16px;
             margin: 12px 0 16px;
@@ -53,7 +58,7 @@
         .product-highlight-box .highlight-view-more {
             font-size: 13px;
             font-weight: 600;
-            color: #2563eb;
+            color: var(--primary);
             text-decoration: underline;
             cursor: pointer;
         }
@@ -123,13 +128,13 @@
         }
 
         .product-variant-selector .variant-pill:hover {
-            border-color: #16a34a;
-            color: #16a34a;
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .product-variant-selector .variant-pill.is-selected {
-            border-color: #16a34a;
-            background: #16a34a;
+            border-color: var(--primary);
+            background: var(--primary);
             color: #fff;
             font-weight: 600;
         }
@@ -157,8 +162,8 @@
         }
 
         .product-variant-selector .variant-swatch.is-selected {
-            border-color: #16a34a;
-            box-shadow: 0 0 0 2px rgba(22, 163, 74, .18);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(230, 0, 126, .18);
         }
 
         .product-variant-selector .variant-select {
@@ -656,10 +661,12 @@
 
                     <div class="product-buy-box mt-3">
                         <div class="d-flex align-items-baseline gap-2 mb-2">
-                            <span class="current-price variant-current-price" style="font-size:24px;font-weight:700;color:#16a34a;">৳ {{ number_format($selling, 2) }}</span>
+                            <span class="current-price variant-current-price" style="font-size:24px;font-weight:700;color:var(--primary);">৳ {{ number_format($selling, 2) }}</span>
                             @if($discount > 0)
                                 <span class="original-price" style="text-decoration:line-through;color:#9ca3af;font-size:14px;">৳ {{ number_format($previous, 2) }}</span>
-                                <span class="badge bg-danger">{{ $discount }}% off</span>
+                                {{-- Savings read green sitewide (product cards use the same
+                                     "Save X%" pill); red is reserved for out-of-stock. --}}
+                                <span class="badge bg-success">{{ $discount }}% off</span>
                             @endif
                         </div>
                         <div class="stock-info mb-3 variant-stock-info">
@@ -738,11 +745,12 @@
                                 @endif
                             </div>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-primary flex-fill add-to-cart-btn"
+                                {{-- Outlined + solid pairing, matching the product cards. --}}
+                                <button type="button" class="btn btn-cart-outline flex-fill add-to-cart-btn"
                                         data-product="{{ $product->id }}" {{ $inStock ? '' : 'disabled' }}>
                                     <i class="fas fa-shopping-cart me-1"></i> Add to Cart
                                 </button>
-                                <button type="button" class="btn btn-success flex-fill buy-now-btn"
+                                <button type="button" class="btn btn-buy-now flex-fill buy-now-btn"
                                         data-product="{{ $product->id }}" {{ $inStock ? '' : 'disabled' }}>
                                     <i class="fas fa-bolt me-1"></i> Buy Now
                                 </button>

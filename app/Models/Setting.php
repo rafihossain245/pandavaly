@@ -59,9 +59,48 @@ class Setting extends Model
         ],
     ];
 
+    /**
+     * Wording on the one-page funnel that belongs to the shop, with the copy
+     * the page shipped with as the default. One source of truth for three
+     * places: the settings form (labels + placeholders), the funnel and the
+     * receipt. Blank in the database means "use the default", so clearing a
+     * field restores the original line instead of emptying the page.
+     */
+    public const LANDING_COPY = [
+        'landing_gallery_heading' => [
+            'label' => 'Gallery heading',
+            'default' => 'প্রোডাক্ট গ্যালারি',
+        ],
+        'landing_gallery_subheading' => [
+            'label' => 'Gallery subheading',
+            'default' => 'পছন্দের ডিজাইনে Add To Cart চাপলেই নিচের অর্ডার তালিকায় যুক্ত হবে।',
+        ],
+        'landing_order_heading' => [
+            'label' => 'Order form heading',
+            'default' => 'অর্ডার কনফার্ম করতে নিচের ফর্মটি পূরণ করুন',
+        ],
+        'landing_cod_note' => [
+            'label' => 'Cash on delivery note',
+            'default' => 'প্রোডাক্ট হাতে পাওয়ার পর মূল্য পরিশোধ করুন।',
+        ],
+        'landing_thankyou_heading' => [
+            'label' => 'Order received heading',
+            'default' => 'ধন্যবাদ! আপনার অর্ডারটি গ্রহণ করা হয়েছে।',
+        ],
+        'landing_thankyou_note' => [
+            'label' => 'Order received note',
+            'default' => 'আমাদের প্রতিনিধি শীঘ্রই আপনার সাথে যোগাযোগ করবেন।',
+        ],
+    ];
+
     protected $fillable = [
         'title',
+        'tagline',
+        'meta_description',
+        'announcement',
+        'announcement_enabled',
         'logo_path',
+        'logo_light_path',
         'favicon_path',
         'contact_email',
         'contact_phone',
@@ -72,10 +111,48 @@ class Setting extends Model
         'youtube_url',
         'linkedin_url',
         'tiktok_url',
+        'play_store_url',
+        'app_store_url',
         'facebook_pixel_id',
         'ga4_measurement_id',
         'gtm_container_id',
+        'landing_gallery_heading',
+        'landing_gallery_subheading',
+        'landing_order_heading',
+        'landing_cod_note',
+        'landing_thankyou_heading',
+        'landing_thankyou_note',
     ];
+
+    /**
+     * A piece of funnel copy, falling back to the wording the page shipped
+     * with. Templates call this instead of reading the column directly so a
+     * cleared field can never render as a blank heading.
+     */
+    public function copy(string $key): string
+    {
+        $value = trim((string) ($this->{$key} ?? ''));
+
+        return $value !== '' ? $value : (self::LANDING_COPY[$key]['default'] ?? '');
+    }
+
+    /**
+     * What a share card or a search result should say about the shop. Falls
+     * back to the footer tagline, which is the only other one-line description
+     * the shop has written, so social previews are never empty.
+     */
+    public function metaDescription(): string
+    {
+        foreach ([$this->meta_description, $this->tagline] as $candidate) {
+            $candidate = trim((string) $candidate);
+
+            if ($candidate !== '') {
+                return $candidate;
+            }
+        }
+
+        return '';
+    }
 
     /**
      * Only the platforms that actually have a link, ready to render.

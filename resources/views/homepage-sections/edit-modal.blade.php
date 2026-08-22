@@ -21,6 +21,8 @@
                             <option value="split_banner">Promotional Banner(s)</option>
                             <option value="brand_strip">Our Brands Strip</option>
                             <option value="combo_deals">Combo Deals</option>
+                            <option value="feature_strip">Trust / Feature Strip</option>
+                            <option value="testimonials">Customer Testimonials</option>
                         </select>
                     </div>
                     <div class="mb-4">
@@ -65,8 +67,47 @@
                             </select>
                         </div>
                         <div class="mb-4">
+                            <label for="edit_layout" class="block text-gray-700 text-sm font-bold mb-2">Layout</label>
+                            <select id="edit_layout" name="layout" class="form-select w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="carousel">Carousel (sliding row)</option>
+                                <option value="grid">Grid (static gallery)</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
                             <label for="edit_limit" class="block text-gray-700 text-sm font-bold mb-2">Max Products to Show</label>
                             <input type="number" id="edit_limit" name="limit" min="1" max="50" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                    </div>
+
+                    {{-- Trust badges. Rows are built by JS (see index.blade.php)
+                         so the same repeater serves create and edit. --}}
+                    <div id="edit_feature_strip_fields" class="type-fields border-t pt-4 mt-2">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Trust Badges</label>
+                        <p class="text-xs text-gray-500 mb-3">Leave every row blank to show the default badges.</p>
+                        <div id="edit_feature_rows"></div>
+                        <button type="button" class="add-feature-row text-sm text-blue-600" data-prefix="edit">
+                            <i class="fas fa-plus"></i> Add badge
+                        </button>
+                    </div>
+
+                    <div id="edit_testimonials_fields" class="type-fields border-t pt-4 mt-2">
+                        <div class="mb-4">
+                            <label for="edit_testimonial_source" class="block text-gray-700 text-sm font-bold mb-2">Testimonial Source</label>
+                            <select id="edit_testimonial_source" name="source" class="testimonial-source form-select w-full px-3 py-2 border border-gray-300 rounded-md" data-prefix="edit">
+                                <option value="manual">Curated (written below)</option>
+                                <option value="reviews">Real approved product reviews</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="edit_testimonial_limit" class="block text-gray-700 text-sm font-bold mb-2">How many to show</label>
+                            <input type="number" id="edit_testimonial_limit" name="limit" min="1" max="50" value="3"
+                                class="testimonial-limit form-input w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div id="edit_testimonial_manual_wrap">
+                            <div id="edit_testimonial_rows"></div>
+                            <button type="button" class="add-testimonial-row text-sm text-blue-600" data-prefix="edit">
+                                <i class="fas fa-plus"></i> Add testimonial
+                            </button>
                         </div>
                     </div>
 
