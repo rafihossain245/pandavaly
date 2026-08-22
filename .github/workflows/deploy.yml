@@ -3,7 +3,12 @@ name: Deploy to cPanel via SSH
 on:
   push:
     branches:
-      - main  # adjust if needed
+      - main
+  workflow_dispatch:   # lets you re-run this by hand while debugging
+
+env:
+  SSH_PORT: 21098
+  REMOTE_DIR: pandavaly.com          # addon-domain folder under /home/<user>/
 
 jobs:
   deploy:
@@ -11,24 +16,58 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up SSH key
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_rsa
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+          # Secrets are per-repository. An unset one expands to "", which fails
+          # later as an unreadable key instead of the missing config it is.
+          missing=
+          [ -z "${{ secrets.CPANEL_SSH_KEY }}"  ] && missing="$missing CPANEL_SSH_KEY"
+          [ -z "${{ secrets.CPANEL_HOST }}"     ] && missing="$missing CPANEL_HOST"
+          [ -z "${{ secrets.CPANEL_USERNAME }}" ] && missing="$missing CPANEL_USERNAME"
+          if [ -n "$missing" ]; then
+            echo "::error::Not set on THIS repository:$missing"
+            exit 1
+          fi
+
+          # printf, not echo: guarantees the trailing newline OpenSSH requires.
+          printf '%s\n' "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_rsa
+          # A key pasted via Windows carries CRLF — the usual "error in libcrypto".
+          sed -i 's/\r$//' ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-          # Optional: add known hosts entry (won't fail if it can't scan)
-          ssh-keyscan -p 21098 -H ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts || echo "⚠️ ssh-keyscan failed"
+          if ! ssh-keygen -y -f ~/.ssh/id_rsa > /dev/null 2>&1; then
+            echo "::error::CPANEL_SSH_KEY is not a readable OpenSSH private key (whole file? no passphrase? not a PuTTY .ppk?)."
+            exit 1
+          fi
+          echo "Key fingerprint in use:"
+          ssh-keygen -lf ~/.ssh/id_rsa
 
-          # SSH config for custom port
-          echo -e "Host *\n  IdentityFile ~/.ssh/id_rsa\n  Port 21098\n  StrictHostKeyChecking no\n  UserKnownHostsFile=/dev/null" > ~/.ssh/config
-          chmod 600 ~/.ssh/config
+      - name: Diagnose SSH authentication
+        run: |
+          echo "Connecting to ${{ secrets.CPANEL_HOST }}:$SSH_PORT as ${{ secrets.CPANEL_USERNAME }}"
+          echo "Host resolves to: $(getent hosts "${{ secrets.CPANEL_HOST }}" | awk '{print $1}' | tr '\n' ' ')"
+
+          # -v shows which key is offered and how the server answers. BatchMode
+          # stops the password fallback that hides the real reason.
+          ssh -v -p "$SSH_PORT" \
+              -o BatchMode=yes -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -i ~/.ssh/id_rsa \
+              "${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_HOST }}" \
+              'echo "OK: logged in as $(whoami) on $(hostname)"; echo "Home contains:"; ls -d ~/*/ 2>/dev/null | head -20' \
+            || {
+              echo "::error::Key was refused. Check, in order: (1) CPANEL_USERNAME matches the account that owns the key, (2) CPANEL_HOST resolves to the cPanel server and not a proxy/parked domain, (3) this key is Authorized under that account in cPanel → SSH Access."
+              exit 1
+            }
 
       - name: Deploy via rsync
         run: |
           rsync -az --delete \
+            -e "ssh -p $SSH_PORT -i ~/.ssh/id_rsa -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
             --exclude '/public/' \
             --exclude '/.htaccess' \
             --exclude '/.env' \
@@ -37,4 +76,4 @@ jobs:
             --exclude '/storage/' \
             --exclude '/.github/' \
             --exclude '/.git/' \
-            ./ ${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USERNAME }}/pandavaly.com/
+            ./ "${{ secrets.CPANEL_USERNAME }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USERNAME }}/${REMOTE_DIR}/"
