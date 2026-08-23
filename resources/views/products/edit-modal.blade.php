@@ -573,6 +573,23 @@
                             </div>
 
                             <div class="mb-4">
+                                <label for="edit_sku" class="{{ $label }}">Product code</label>
+                                <input type="text" id="edit_sku" name="sku" value="{{ old('sku', $data->sku) }}"
+                                    class="@error('sku') {{ $inputBad }} @else {{ $inputOk }} @enderror"
+                                    placeholder="e.g. 401">
+                                @error('sku')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @else
+                                    {{-- Changing this changes what customers quote, so it is shown
+                                         plainly rather than hidden behind an advanced section. --}}
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        Shown to customers on the gallery card and the invoice.
+                                        Clearing it keeps the current code.
+                                    </p>
+                                @enderror
+                            </div>
+
+                            <div class="mb-4">
                                 <label class="{{ $label }}">Description</label>
                                 <textarea id="editor" class="hidden" name="content">{!! old('content', $data->description) !!}</textarea>
 

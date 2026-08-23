@@ -94,24 +94,24 @@ class PandaValyDemoSeeder extends Seeder
     {
         $defs = [
             // ---- Bedsheets (the reference gallery) ----
-            ['name' => 'রোজ ফ্লোরাল বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)',   'slug' => 'rose-floral-bedsheet-7-8-feet',    'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌹', '#fce7f3'], 'flags' => ['is_trending']],
-            ['name' => 'ট্রপিক্যাল ব্লুম বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)', 'slug' => 'tropical-bloom-bedsheet-7-8-feet', 'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌺', '#fde7f0'], 'flags' => ['is_trending']],
-            ['name' => 'প্যাস্টেল গার্ডেন বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)','slug' => 'pastel-garden-bedsheet-7-8-feet',  'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌷', '#f5e9fb'], 'flags' => ['is_trending']],
-            ['name' => 'নাইট ব্লসম বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)',     'slug' => 'night-blossom-bedsheet-7-8-feet',  'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌙', '#e9e7fb'], 'flags' => ['is_trending']],
-            ['name' => 'ক্লাসিক জ্যাকার্ড বেডশিট — ৬/৭ ফিট (৪/৫ হাত প্রায়)','slug' => 'classic-jacquard-bedsheet-6-7-feet','cat' => 'Bedsheets', 'price' => 1050, 'prev' => 1350, 'tile' => ['🪷', '#e7f5fb'], 'flags' => ['is_trending']],
-            ['name' => 'ভেলভেট টাচ বেডশিট — ৬/৭ ফিট (৪/৫ হাত প্রায়)',    'slug' => 'velvet-touch-bedsheet-6-7-feet',   'cat' => 'Bedsheets', 'price' => 1050, 'prev' => null, 'tile' => ['🧵', '#fbe9e7'], 'flags' => ['is_trending']],
-            ['name' => 'কটন প্রিন্ট বেডশিট — ৫/৬ ফিট (৩/৪ হাত প্রায়)',    'slug' => 'cotton-print-bedsheet-5-6-feet',   'cat' => 'Bedsheets', 'price' => 850,  'prev' => 1100, 'tile' => ['🌼', '#fdf3e3'], 'flags' => ['is_popular']],
-            ['name' => 'সলিড কালার বেডশিট — ৫/৬ ফিট (৩/৪ হাত প্রায়)',    'slug' => 'solid-color-bedsheet-5-6-feet',    'cat' => 'Bedsheets', 'price' => 850,  'prev' => null, 'tile' => ['🎨', '#eafaf0'], 'flags' => ['is_popular']],
+            ['name' => 'রোজ ফ্লোরাল বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)',   'slug' => 'rose-floral-bedsheet-7-8-feet',    'code' => '101', 'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌹', '#fce7f3'], 'flags' => ['is_trending']],
+            ['name' => 'ট্রপিক্যাল ব্লুম বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)', 'slug' => 'tropical-bloom-bedsheet-7-8-feet', 'code' => '102', 'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌺', '#fde7f0'], 'flags' => ['is_trending']],
+            ['name' => 'প্যাস্টেল গার্ডেন বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)','slug' => 'pastel-garden-bedsheet-7-8-feet',  'code' => '103', 'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌷', '#f5e9fb'], 'flags' => ['is_trending']],
+            ['name' => 'নাইট ব্লসম বেডশিট — ৭/৮ ফিট (৫/৬ হাত প্রায়)',     'slug' => 'night-blossom-bedsheet-7-8-feet',  'code' => '104', 'cat' => 'Bedsheets', 'price' => 1250, 'prev' => 1600, 'tile' => ['🌙', '#e9e7fb'], 'flags' => ['is_trending']],
+            ['name' => 'ক্লাসিক জ্যাকার্ড বেডশিট — ৬/৭ ফিট (৪/৫ হাত প্রায়)','slug' => 'classic-jacquard-bedsheet-6-7-feet','code' => '105', 'cat' => 'Bedsheets', 'price' => 1050, 'prev' => 1350, 'tile' => ['🪷', '#e7f5fb'], 'flags' => ['is_trending']],
+            ['name' => 'ভেলভেট টাচ বেডশিট — ৬/৭ ফিট (৪/৫ হাত প্রায়)',    'slug' => 'velvet-touch-bedsheet-6-7-feet',   'code' => '106', 'cat' => 'Bedsheets', 'price' => 1050, 'prev' => null, 'tile' => ['🧵', '#fbe9e7'], 'flags' => ['is_trending']],
+            ['name' => 'কটন প্রিন্ট বেডশিট — ৫/৬ ফিট (৩/৪ হাত প্রায়)',    'slug' => 'cotton-print-bedsheet-5-6-feet',   'code' => '107', 'cat' => 'Bedsheets', 'price' => 850,  'prev' => 1100, 'tile' => ['🌼', '#fdf3e3'], 'flags' => ['is_popular']],
+            ['name' => 'সলিড কালার বেডশিট — ৫/৬ ফিট (৩/৪ হাত প্রায়)',    'slug' => 'solid-color-bedsheet-5-6-feet',    'code' => '108', 'cat' => 'Bedsheets', 'price' => 850,  'prev' => null, 'tile' => ['🎨', '#eafaf0'], 'flags' => ['is_popular']],
 
             // ---- Other home textiles ----
-            ['name' => 'উইন্টার কম্ফোর্টার — ডাবল',      'slug' => 'winter-comforter-double',   'cat' => 'Comforters',    'price' => 2450, 'prev' => 2900, 'tile' => ['🧶', '#f3e8ff'], 'flags' => ['is_popular']],
-            ['name' => 'লাইট কম্ফোর্টার — সিঙ্গেল',      'slug' => 'light-comforter-single',    'cat' => 'Comforters',    'price' => 1700, 'prev' => null, 'tile' => ['🧶', '#efe6fb'], 'flags' => []],
-            ['name' => 'কুইল্টেড বেড কভার — ডাবল',       'slug' => 'quilted-bed-cover-double',  'cat' => 'Bed Covers',    'price' => 1950, 'prev' => 2300, 'tile' => ['🛋️', '#e0f2fe'], 'flags' => ['is_recommended']],
-            ['name' => 'এমব্রয়ডারি বেড কভার — কিং',      'slug' => 'embroidery-bed-cover-king', 'cat' => 'Bed Covers',    'price' => 2600, 'prev' => null, 'tile' => ['🛋️', '#dbeafe'], 'flags' => []],
-            ['name' => 'কটন পিলো কভার — ২ পিস সেট',      'slug' => 'cotton-pillow-cover-2pc',   'cat' => 'Pillow Covers', 'price' => 350,  'prev' => 450,  'tile' => ['🪶', '#ecfdf5'], 'flags' => ['is_popular']],
-            ['name' => 'ভেলভেট পিলো কভার — ২ পিস সেট',   'slug' => 'velvet-pillow-cover-2pc',   'cat' => 'Pillow Covers', 'price' => 480,  'prev' => null, 'tile' => ['🪶', '#e6faf1'], 'flags' => []],
-            ['name' => 'সফট ফ্লিস কম্বল — ডাবল',         'slug' => 'soft-fleece-blanket-double','cat' => 'Blankets',      'price' => 1400, 'prev' => 1750, 'tile' => ['🧣', '#fef3c7'], 'flags' => ['is_recommended']],
-            ['name' => 'মিঙ্ক কম্বল — সিঙ্গেল',           'slug' => 'mink-blanket-single',       'cat' => 'Blankets',      'price' => 1150, 'prev' => null, 'tile' => ['🧣', '#fdf0d5'], 'flags' => []],
+            ['name' => 'উইন্টার কম্ফোর্টার — ডাবল',      'slug' => 'winter-comforter-double',   'code' => '201', 'cat' => 'Comforters',    'price' => 2450, 'prev' => 2900, 'tile' => ['🧶', '#f3e8ff'], 'flags' => ['is_popular']],
+            ['name' => 'লাইট কম্ফোর্টার — সিঙ্গেল',      'slug' => 'light-comforter-single',    'code' => '202', 'cat' => 'Comforters',    'price' => 1700, 'prev' => null, 'tile' => ['🧶', '#efe6fb'], 'flags' => []],
+            ['name' => 'কুইল্টেড বেড কভার — ডাবল',       'slug' => 'quilted-bed-cover-double',  'code' => '301', 'cat' => 'Bed Covers',    'price' => 1950, 'prev' => 2300, 'tile' => ['🛋️', '#e0f2fe'], 'flags' => ['is_recommended']],
+            ['name' => 'এমব্রয়ডারি বেড কভার — কিং',      'slug' => 'embroidery-bed-cover-king', 'code' => '302', 'cat' => 'Bed Covers',    'price' => 2600, 'prev' => null, 'tile' => ['🛋️', '#dbeafe'], 'flags' => []],
+            ['name' => 'কটন পিলো কভার — ২ পিস সেট',      'slug' => 'cotton-pillow-cover-2pc',   'code' => '401', 'cat' => 'Pillow Covers', 'price' => 350,  'prev' => 450,  'tile' => ['🪶', '#ecfdf5'], 'flags' => ['is_popular']],
+            ['name' => 'ভেলভেট পিলো কভার — ২ পিস সেট',   'slug' => 'velvet-pillow-cover-2pc',   'code' => '402', 'cat' => 'Pillow Covers', 'price' => 480,  'prev' => null, 'tile' => ['🪶', '#e6faf1'], 'flags' => []],
+            ['name' => 'সফট ফ্লিস কম্বল — ডাবল',         'slug' => 'soft-fleece-blanket-double','code' => '501', 'cat' => 'Blankets',      'price' => 1400, 'prev' => 1750, 'tile' => ['🧣', '#fef3c7'], 'flags' => ['is_recommended']],
+            ['name' => 'মিঙ্ক কম্বল — সিঙ্গেল',           'slug' => 'mink-blanket-single',       'code' => '502', 'cat' => 'Blankets',      'price' => 1150, 'prev' => null, 'tile' => ['🧣', '#fdf0d5'], 'flags' => []],
         ];
 
         $out = collect();
@@ -124,7 +124,9 @@ class PandaValyDemoSeeder extends Seeder
             $product = Product::updateOrCreate(
                 ['slug' => $def['slug']],
                 [
-                    'sku' => 'PV-' . Str::upper(str_replace('-', '', $def['slug'])),
+                    // Short, quotable code ("Code: 101") rather than a slug of
+                    // the name — a customer reads this out when ordering.
+                    'sku' => $def['code'],
                     'name' => $def['name'],
                     'category_id' => $categories[$def['cat']]->id,
                     'brand_id' => $brand->id,

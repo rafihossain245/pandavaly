@@ -570,6 +570,23 @@
                             </div>
 
                             <div class="mb-4">
+                                <label for="create_sku" class="{{ $label }}">Product code</label>
+                                <input type="text" id="create_sku" name="sku" value="{{ old('sku') }}"
+                                    class="@error('sku') {{ $inputBad }} @else {{ $inputOk }} @enderror"
+                                    placeholder="Leave empty to use the next code in this category">
+                                @error('sku')
+                                    <p class="{{ $errorText }}">{{ $message }}</p>
+                                @else
+                                    {{-- Customers quote this when ordering ("Code: 401"), and it
+                                         prints on the gallery card and the invoice. --}}
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        Shown to customers as <span class="font-semibold">Code: 401</span>.
+                                        Leave empty and the next free number in the category is used.
+                                    </p>
+                                @enderror
+                            </div>
+
+                            <div class="mb-4">
                                 <label class="{{ $label }}">Description</label>
                                 <textarea id="editor" class="hidden" name="content">{{ old('content') }}</textarea>
 

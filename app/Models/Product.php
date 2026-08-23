@@ -70,6 +70,49 @@ class Product extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+    /**
+     * Short, human-quotable product code.
+     *
+     * Customers read this aloud on the phone and type it into the order form
+     * ("কালার কোড: 401"), so it is a 3-digit number, not a slug of the product
+     * name. Each category owns a hundred-block (Bedsheets 1xx, Comforters 2xx …)
+     * so the code also says which range an item belongs to.
+     */
+    public static function nextCode(?int $categoryId): string
+    {
+        $block = 100;
+
+        if ($categoryId) {
+            // Position among active categories decides the block, so the numbers
+            // stay stable as long as the category order does.
+            $position = Category::where('is_active', 1)
+                ->orderBy('sort_order')->orderBy('id')
+                ->pluck('id')->search($categoryId);
+
+            if ($position !== false) {
+                $block = ($position + 1) * 100;
+            }
+        }
+
+        // This model does not use SoftDeletes, so a plain query already sees
+        // every row — including soft-deleted ones whose code the unique index
+        // still reserves.
+        $taken = static::query()
+            ->whereBetween('sku', [(string) $block, (string) ($block + 99)])
+            ->pluck('sku')
+            ->map(fn ($sku) => (int) $sku)
+            ->all();
+
+        for ($code = $block + 1; $code <= $block + 99; $code++) {
+            if (! in_array($code, $taken, true)) {
+                return (string) $code;
+            }
+        }
+
+        // Block full — fall back to something unique rather than colliding.
+        return (string) (static::max('id') + 1000);
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
