@@ -61,6 +61,10 @@
                 <i class="fas fa-magnifying-glass"></i>
             </div>
 
+            {{-- Filled by the funnel with its category filter. Empty on the
+                 receipt page, which has no gallery to filter. --}}
+            @yield('header-nav')
+
             <nav class="lp-actions">
                 <a href="{{ route('track-order') }}" class="lp-action">
                     <i class="fas fa-truck-fast"></i><span>Track Order</span>

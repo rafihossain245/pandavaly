@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Models\Category;
 use App\Models\District;
 use App\Models\Product;
 use App\Models\SalesOrder;
@@ -30,11 +31,21 @@ class LandingController extends Controller
 
         // Everything the funnel sells, trending items first so the designs the
         // shop is pushing head the gallery.
-        $products = Product::with('product_prices')
+        // product_images feeds the gallery's full-screen viewer; without it every
+        // card would open on its thumbnail alone.
+        $products = Product::with(['product_prices', 'product_images'])
             ->where('is_active', 1)
             ->orderByDesc('is_trending')
             ->orderBy('id')
             ->get();
+
+        // Only categories that actually have something to show, so the header
+        // filter can never lead to an empty gallery.
+        $categories = Category::where('is_active', 1)
+            ->whereIn('id', $products->pluck('category_id')->filter()->unique())
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         // Hero slides are admin-managed banners (Website Management → Banners).
         // The offer copy is NOT per-slide: it is rendered once as a fixed
@@ -48,6 +59,7 @@ class LandingController extends Controller
         return view('frontEnd.landing.index', [
             'setting' => $setting,
             'gallery' => $products,
+            'categories' => $categories,
             'slides' => $slides,
             'districts' => District::active()->orderBy('name')->get(['id', 'name', 'delivery_charge']),
         ]);

@@ -1,5 +1,21 @@
 @extends('frontEnd.layouts.landing')
 
+{{-- Filters the gallery in place, like the search box beside it — this funnel
+     has no category pages to send anyone to. --}}
+@section('header-nav')
+    @if($categories->count() > 1)
+        <div class="lp-cat">
+            <i class="fas fa-layer-group"></i>
+            <select id="lpCategory" aria-label="ক্যাটাগরি">
+                <option value="">সব ক্যাটাগরি</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    @endif
+@endsection
+
 @section('content')
 @php
     $priceOf = function ($p) {
@@ -22,8 +38,19 @@
     $catalog = $gallery->mapWithKeys(fn ($p) => [$p->id => [
         'id' => $p->id,
         'name' => $p->name,
+        'sku' => $p->sku,
         'price' => $priceOf($p)['now'],
+        'was' => $priceOf($p)['was'],
         'thumb' => $p->thumbnail ? asset($p->thumbnail) : asset('frontEnd/assets/image/product.jpg'),
+        // Thumbnail first, then any extra shots the shop uploaded, deduplicated
+        // so a thumbnail that is also in the image list is not shown twice.
+        'images' => collect([$p->thumbnail])
+            ->merge($p->product_images->pluck('image_path'))
+            ->filter()
+            ->unique()
+            ->map(fn ($path) => asset($path))
+            ->values()
+            ->all() ?: [asset('frontEnd/assets/image/product.jpg')],
     ]]);
 @endphp
 
@@ -56,12 +83,17 @@
         <div class="lp-gallery" id="lpGallery">
             @foreach($gallery as $p)
                 @php $pr = $priceOf($p); @endphp
-                <div class="lp-gallery-item" data-search="{{ Str::lower($p->name . ' ' . $p->sku) }}">
-                    <div class="lp-gallery-media">
+                <div class="lp-gallery-item" data-search="{{ Str::lower($p->name . ' ' . $p->sku) }}"
+                     data-category="{{ $p->category_id }}">
+                    {{-- Opens the full-screen viewer; a design is bought on the
+                         picture, so it has to be examinable at full size. --}}
+                    <button type="button" class="lp-gallery-media" data-view="{{ $p->id }}"
+                            aria-label="{{ $p->name }} — ছবি দেখুন">
                         <img src="{{ $p->thumbnail ? asset($p->thumbnail) : asset('frontEnd/assets/image/product.jpg') }}"
                              alt="{{ $p->name }}" loading="lazy">
                         <span class="lp-gallery-code">Code: {{ $p->sku }}</span>
-                    </div>
+                        <span class="lp-gallery-zoom"><i class="fas fa-magnifying-glass-plus"></i></span>
+                    </button>
                     <div class="lp-gallery-body">
                         <span class="lp-gallery-name">{{ $p->name }}</span>
                         <span class="lp-gallery-price">
@@ -80,7 +112,7 @@
                 </div>
             @endforeach
         </div>
-        <p class="lp-picked-empty" id="lpNoMatch" style="display:none;">এই নামে কোনো ডিজাইন পাওয়া যায়নি।</p>
+        <p class="lp-picked-empty" id="lpNoMatch" style="display:none;">এই ফিল্টারে কোনো ডিজাইন পাওয়া যায়নি।</p>
     </div>
 </section>
 @endif
@@ -226,6 +258,36 @@
 </section>
 
 <div class="lp-toast" id="lpToast"><i class="fas fa-circle-check"></i> <span></span></div>
+
+{{-- Full-screen image viewer. Built empty and filled by JS from the same
+     CATALOG the order form reads, so the price and the name inside it can
+     never disagree with the card that opened it. --}}
+<div class="lp-lightbox" id="lpLightbox" role="dialog" aria-modal="true" aria-label="প্রোডাক্ট ছবি" hidden>
+    <button type="button" class="lp-lb-x" data-lb-close aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
+    <button type="button" class="lp-lb-arrow is-prev" data-lb-step="-1" aria-label="আগেরটি"><i class="fas fa-chevron-left"></i></button>
+    <button type="button" class="lp-lb-arrow is-next" data-lb-step="1" aria-label="পরেরটি"><i class="fas fa-chevron-right"></i></button>
+
+    <div class="lp-lb-inner">
+        <div class="lp-lb-stage">
+            <img id="lpLbImage" src="" alt="">
+        </div>
+        <div class="lp-lb-thumbs" id="lpLbThumbs"></div>
+        <div class="lp-lb-bar">
+            <div class="lp-lb-meta">
+                <span class="lp-lb-name" id="lpLbName"></span>
+                <span class="lp-lb-price" id="lpLbPrice"></span>
+            </div>
+            <div class="lp-lb-actions">
+                <button type="button" class="lp-mini lp-mini-outline" id="lpLbAdd">
+                    <i class="fas fa-bag-shopping"></i> Add To Cart
+                </button>
+                <button type="button" class="lp-mini lp-mini-solid" id="lpLbBuy">
+                    <i class="fas fa-bolt"></i> Buy Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('js')
@@ -338,15 +400,125 @@
 
     $(document).on('change', '#district_id', render);
 
-    // Live gallery filter — there is no results page to navigate to.
-    $(document).on('input', '#lpSearch', function () {
-        var q = $(this).val().trim().toLowerCase(), shown = 0;
+    // Live gallery filter — there is no results page to navigate to. Search
+    // text and the header's category picker are one filter, applied together,
+    // so choosing a category does not silently discard what was typed.
+    function filterGallery() {
+        var q = ($('#lpSearch').val() || '').trim().toLowerCase(),
+            cat = String($('#lpCategory').val() || ''),
+            shown = 0;
+
         $('#lpGallery .lp-gallery-item').each(function () {
-            var hit = !q || ($(this).data('search') || '').indexOf(q) > -1;
-            $(this).toggle(hit);
+            var $item = $(this),
+                hit = (!q || ($item.data('search') || '').indexOf(q) > -1)
+                    && (!cat || String($item.data('category')) === cat);
+            $item.toggle(hit);
             if (hit) shown++;
         });
+
         $('#lpNoMatch').toggle(shown === 0);
+    }
+
+    $(document).on('input', '#lpSearch', filterGallery);
+
+    $(document).on('change', '#lpCategory', function () {
+        filterGallery();
+        document.getElementById('gallery').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    /* ------------------------- Image viewer ------------------------- */
+    // Steps through whatever the gallery is currently showing, so a filtered
+    // gallery is a filtered viewer too.
+    var $lb = $('#lpLightbox'), lbId = null, lbShot = 0;
+
+    function visibleIds() {
+        return $('#lpGallery .lp-gallery-item:visible').find('[data-view]')
+            .map(function () { return String($(this).data('view')); }).get();
+    }
+
+    function paintViewer() {
+        var item = CATALOG[lbId];
+        if (!item) return;
+
+        var shots = item.images && item.images.length ? item.images : [item.thumb];
+        lbShot = Math.max(0, Math.min(shots.length - 1, lbShot));
+
+        $('#lpLbImage').attr({ src: shots[lbShot], alt: item.name });
+        $('#lpLbName').text(item.name + (item.sku ? ' — ' + item.sku : ''));
+        $('#lpLbPrice').html(
+            (item.was > item.price ? '<del>' + money(item.was) + '</del> ' : '') + money(item.price)
+        );
+
+        // A single shot needs no strip; the arrows still move between products.
+        var thumbs = '';
+        if (shots.length > 1) {
+            shots.forEach(function (src, i) {
+                thumbs += '<button type="button" class="lp-lb-thumb' + (i === lbShot ? ' is-on' : '') +
+                          '" data-lb-shot="' + i + '"><img src="' + src + '" alt=""></button>';
+            });
+        }
+        $('#lpLbThumbs').html(thumbs).toggle(shots.length > 1);
+
+        $('#lpLbAdd').toggleClass('is-added', !!picks[lbId]);
+    }
+
+    function openViewer(id) {
+        if (!CATALOG[id]) return;
+        lbId = String(id);
+        lbShot = 0;
+        paintViewer();
+        $lb.prop('hidden', false);
+        $('body').addClass('lp-locked');
+    }
+
+    function closeViewer() {
+        $lb.prop('hidden', true);
+        $('body').removeClass('lp-locked');
+    }
+
+    // Within a product while it has more shots, then on to the next product.
+    function stepViewer(dir) {
+        var item = CATALOG[lbId];
+        if (!item) return;
+
+        var shots = item.images && item.images.length ? item.images : [item.thumb],
+            next = lbShot + dir;
+
+        if (next >= 0 && next < shots.length) {
+            lbShot = next;
+            paintViewer();
+            return;
+        }
+
+        var ids = visibleIds(), at = ids.indexOf(String(lbId));
+        if (at === -1 || ids.length < 2) return;
+
+        lbId = ids[(at + dir + ids.length) % ids.length];
+        var count = (CATALOG[lbId].images || []).length || 1;
+        lbShot = dir < 0 ? count - 1 : 0;
+        paintViewer();
+    }
+
+    $(document).on('click', '[data-view]', function () { openViewer($(this).data('view')); });
+    $(document).on('click', '[data-lb-close]', closeViewer);
+    $(document).on('click', '[data-lb-step]', function () { stepViewer(parseInt($(this).data('lb-step'), 10)); });
+    $(document).on('click', '[data-lb-shot]', function () { lbShot = parseInt($(this).data('lb-shot'), 10); paintViewer(); });
+
+    // Clicking the backdrop closes; clicking the picture or the bar does not.
+    $lb.on('click', function (e) { if (e.target === this) closeViewer(); });
+
+    $(document).on('keydown', function (e) {
+        if ($lb.prop('hidden')) return;
+        if (e.key === 'Escape') closeViewer();
+        if (e.key === 'ArrowRight') stepViewer(1);
+        if (e.key === 'ArrowLeft') stepViewer(-1);
+    });
+
+    $('#lpLbAdd').on('click', function () { add(lbId); paintViewer(); });
+    $('#lpLbBuy').on('click', function () {
+        add(lbId, true);
+        closeViewer();
+        document.getElementById('order-form').scrollIntoView({ behavior: 'smooth' });
     });
 
     $('#lpOrderForm').on('submit', function (e) {
