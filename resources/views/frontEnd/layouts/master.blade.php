@@ -149,14 +149,16 @@
                 <a class="header-logo" href="{{route('home')}}">
                     <img src="{{asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png')}}" alt="" style="height:50px">
                 </a>
-                @unless($bareChrome)
+                {{-- Bare pages search the funnel's gallery, which lives on the
+                     home page — so the query is carried there rather than to the
+                     multi-page shop. --}}
                 <div class="header-search">
-                    <form action="{{ route('shop') }}" method="get">
-                        <input type="search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search any products...">
+                    <form action="{{ $bareChrome ? route('home') : route('shop') }}" method="get">
+                        <input type="search" name="q" value="{{ request('q') }}" class="form-control"
+                               placeholder="{{ $bareChrome ? 'ডিজাইন বা কোড খুঁজুন...' : 'Search any products...' }}">
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
-                @endunless
                 {{-- WhatsApp moved out of the header; it now lives as a floating
                      contact button at the bottom of every page (see below). --}}
                 {{-- Icon + label actions, matching the brand header. Font Awesome
@@ -172,11 +174,17 @@
                              ordered through the funnel has no account to sign into,
                              and calling is how the shop handles order questions. --}}
                         @if($setting->contact_phone ?? null)
-                            <a href="tel:{{ $setting->contact_phone }}" class="ha-item" title="Call us">
+                            <a href="tel:{{ $setting->contact_phone }}" class="ha-item" title="{{ $setting->contact_phone }}">
                                 <i class="fas fa-phone"></i>
-                                <span class="ha-label">{{ $setting->contact_phone }}</span>
+                                <span class="ha-label">কল করুন</span>
                             </a>
                         @endif
+                        {{-- The funnel's Cart scrolls to its order form; from here
+                             that form is on another page, so link to it. --}}
+                        <a href="{{ route('home') }}#order-form" class="ha-item" title="Order now">
+                            <i class="fas fa-bag-shopping"></i>
+                            <span class="ha-label">Cart</span>
+                        </a>
                     @else
                     <a href="{{ Auth::guard('buyer')->check() ? route('buyer.dashboard') : route('buyer.login') }}" class="ha-item m-d-none">
                         <i class="far fa-user"></i>

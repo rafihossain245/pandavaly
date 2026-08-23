@@ -421,6 +421,18 @@
 
     $(document).on('input', '#lpSearch', filterGallery);
 
+    // A search typed on another page (Track Order, receipt) arrives as ?q=.
+    // Seed the box with it and jump to the gallery, so the query is not lost
+    // just because the shopper was not on the funnel when they typed it.
+    (function () {
+        var q = new URLSearchParams(window.location.search).get('q');
+        if (!q) return;
+        $('#lpSearch').val(q);
+        filterGallery();
+        var g = document.getElementById('gallery');
+        if (g) g.scrollIntoView();
+    })();
+
     $(document).on('change', '#lpCategory', function () {
         filterGallery();
         document.getElementById('gallery').scrollIntoView({ behavior: 'smooth' });
