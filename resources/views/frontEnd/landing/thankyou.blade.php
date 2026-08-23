@@ -4,6 +4,8 @@
 @section('content')
 @php
     $bn = fn ($n) => str_replace(range(0, 9), ['০','১','২','৩','৪','৫','৬','৭','৮','৯'], number_format((float) $n));
+    // Amounts in Latin digits, as on the funnel and on the courier's slip.
+    $money = fn ($n) => '৳' . number_format((float) $n);
 @endphp
 <section class="lp-section">
     <div class="lp-container" style="max-width: 720px;">
@@ -17,7 +19,7 @@
             <div class="lp-receipt-meta">
                 <div><span>অর্ডার নম্বর</span><strong>{{ $order->order_no }}</strong></div>
                 <div><span>তারিখ</span><strong>{{ $order->created_at->format('d M Y') }}</strong></div>
-                <div><span>সর্বমোট</span><strong>৳{{ $bn($order->total) }}</strong></div>
+                <div><span>সর্বমোট</span><strong>{{ $money($order->total) }}</strong></div>
                 <div><span>পেমেন্ট</span><strong>{{ $order->payment_method === 'bank_transfer' ? 'ব্যাংক ট্রান্সফার' : 'ক্যাশ অন ডেলিভারি' }}</strong></div>
             </div>
 
@@ -27,15 +29,15 @@
                     @foreach($order->items as $item)
                         <tr>
                             <td>{{ $item->productSku?->product?->name ?? 'পণ্য' }} × {{ $bn($item->qty) }}</td>
-                            <td style="text-align:right">৳{{ $bn($item->line_total) }}</td>
+                            <td style="text-align:right">{{ $money($item->line_total) }}</td>
                         </tr>
                     @endforeach
-                    <tr><td>সাবটোটাল</td><td style="text-align:right">৳{{ $bn($order->subtotal) }}</td></tr>
+                    <tr><td>সাবটোটাল</td><td style="text-align:right">{{ $money($order->subtotal) }}</td></tr>
                     @if($order->discount > 0)
-                        <tr><td>ডিসকাউন্ট</td><td style="text-align:right">−৳{{ $bn($order->discount) }}</td></tr>
+                        <tr><td>ডিসকাউন্ট</td><td style="text-align:right">−{{ $money($order->discount) }}</td></tr>
                     @endif
-                    <tr><td>ডেলিভারি চার্জ</td><td style="text-align:right">৳{{ $bn($order->shipping_charge) }}</td></tr>
-                    <tr class="is-total"><td>সর্বমোট</td><td style="text-align:right">৳{{ $bn($order->total) }}</td></tr>
+                    <tr><td>ডেলিভারি চার্জ</td><td style="text-align:right">{{ $money($order->shipping_charge) }}</td></tr>
+                    <tr class="is-total"><td>সর্বমোট</td><td style="text-align:right">{{ $money($order->total) }}</td></tr>
                 </tbody>
             </table>
 

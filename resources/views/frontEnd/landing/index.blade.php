@@ -11,6 +11,11 @@
     };
     $bn = fn ($n) => str_replace(range(0, 9), ['০','১','২','৩','৪','৫','৬','৭','৮','৯'], number_format((float) $n));
 
+    // Money stays in Latin digits. Shoppers compare prices against Facebook ads,
+    // SMS and the courier's slip, all of which use them, and a taka figure is
+    // read as a number rather than as part of the surrounding Bengali sentence.
+    $money = fn ($n) => '৳' . number_format((float) $n);
+
     // Everything the funnel can sell, in the shape the picker needs. Emitted
     // once so the gallery, the order form and the floating pill all read from
     // a single source and cannot disagree about price or name.
@@ -60,8 +65,8 @@
                     <div class="lp-gallery-body">
                         <span class="lp-gallery-name">{{ $p->name }}</span>
                         <span class="lp-gallery-price">
-                            @if($pr['was'] > $pr['now'])<del>৳{{ $bn($pr['was']) }}</del>@endif
-                            ৳{{ $bn($pr['now']) }}
+                            @if($pr['was'] > $pr['now'])<del>{{ $money($pr['was']) }}</del>@endif
+                            {{ $money($pr['now']) }}
                         </span>
                         <div class="lp-gallery-actions">
                             <button type="button" class="lp-mini lp-mini-outline" data-add="{{ $p->id }}">
@@ -202,9 +207,9 @@
                     <div id="lpSummaryLines">
                         <p class="lp-summary-empty">এখনো কোনো পণ্য নির্বাচন করা হয়নি।</p>
                     </div>
-                    <div class="lp-summary-row"><span>সাবটোটাল</span><strong id="lpSubtotal">৳০</strong></div>
-                    <div class="lp-summary-row"><span>ডেলিভারি চার্জ</span><strong id="lpShipping">৳০</strong></div>
-                    <div class="lp-summary-row is-total"><span>সর্বমোট</span><strong id="lpTotal">৳০</strong></div>
+                    <div class="lp-summary-row"><span>সাবটোটাল</span><strong id="lpSubtotal">৳0</strong></div>
+                    <div class="lp-summary-row"><span>ডেলিভারি চার্জ</span><strong id="lpShipping">৳0</strong></div>
+                    <div class="lp-summary-row is-total"><span>সর্বমোট</span><strong id="lpTotal">৳0</strong></div>
 
                     <div class="lp-cod">
                         <strong>ক্যাশ অন ডেলিভারি</strong><br>
@@ -231,8 +236,10 @@
 
     var BN = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
     function bn(str) { return String(str).replace(/\d/g, function (d) { return BN[d]; }); }
+    // Latin digits, matching the prices printed on the gallery cards. Only the
+    // amounts: quantities stay Bengali because they read inside Bengali lines.
     function money(n) {
-        return '৳' + bn(Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+        return '৳' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
     // id -> qty. The single source of truth; every view is rendered from it.

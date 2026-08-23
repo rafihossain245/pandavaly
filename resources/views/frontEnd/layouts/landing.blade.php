@@ -99,13 +99,13 @@
     <a href="#order-form" class="lp-cart-pill" data-cart-pill hidden>
         <i class="fas fa-bag-shopping"></i>
         <span class="lp-cart-pill-count"><b data-cart-count>0</b> items</span>
-        <span class="lp-cart-pill-total" data-cart-total>৳০</span>
+        <span class="lp-cart-pill-total" data-cart-total>৳0</span>
     </a>
 
     <a href="#order-form" class="lp-sticky-cta">
         <i class="fas fa-cart-shopping"></i>
         <span>এখনই অর্ডার করুন</span>
-        <span class="lp-sticky-total" data-cart-total>৳০</span>
+        <span class="lp-sticky-total" data-cart-total>৳0</span>
     </a>
 
     @if($phone)
