@@ -64,12 +64,37 @@
     }
 
     @media print {
+        /* Print the invoice ALONE. Everything else on this screen belongs to the
+           admin panel — sidebar, sticky header, breadcrumb, "System Online"
+           footer — and none of it belongs on a document handed to a customer. */
+        #sidebar,
+        #mobileMenuButton,
+        .admin-footer,
+        header.header,
         .no-print { display: none !important; }
-        body { background: #fff !important; }
-        /* Colour bands and tinted rows must survive the print pipeline. */
-        .inv-sheet { border: none; padding: 0; width: auto; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+        /* The shell also shapes the page: a 16rem sidebar offset, full-height
+           column and 1.5rem padding would print the sheet in a narrow strip. */
+        body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+        .md\:ml-64 { margin-left: 0 !important; }
+        .min-h-screen { min-height: 0 !important; }
+        main { padding: 0 !important; }
+
+        .inv-sheet {
+            border: none; padding: 0; margin: 0;
+            width: 100%; max-width: none;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        }
+        /* Colour bands and tinted rows are the design, not decoration — keep
+           them even when the browser's "Background graphics" box is unticked. */
         table.inv-items thead th, .inv-total-row.is-grand, .inv-title-bar,
-        table.inv-items tbody tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .inv-logo-plate, .inv-qr, table.inv-items tbody tr:nth-child(even) td {
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        }
+        /* Never split the table or the totals across two sheets. */
+        table.inv-items { page-break-inside: avoid; }
+        .inv-lower, .inv-foot { page-break-inside: avoid; }
+
         @page { size: A4; margin: 12mm; }
     }
 </style>
