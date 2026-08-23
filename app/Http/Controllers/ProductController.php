@@ -157,7 +157,10 @@ class ProductController extends Controller
                     'user_id' => auth()->id(),
                     'name' => $request->name,
                     'slug' => $this->uniqueProductSlug($request->name, $request->slug),
-                    'sku' => 'PRD-' . strtoupper(Str::random(8)),
+                    // A short code the customer can quote ("Code: 401"), and
+                    // honour one typed into the form. 'PRD-' + 8 random chars was
+                    // unique but unreadable over the phone.
+                    'sku' => filled($request->sku) ? trim($request->sku) : Product::nextCode($request->category_id),
                     'category_id' => $request->category_id,
                     'sub_category_id' => $request->sub_category_id,
                     'brand_id' => $request->brand_id,
@@ -372,10 +375,14 @@ class ProductController extends Controller
     private function productRules(?int $ignoreId = null): array
     {
         $uniqueSlug = 'unique:products,slug' . ($ignoreId ? ',' . $ignoreId : '');
+        // The code is unique too, and it is now typed by hand — without this a
+        // duplicate reaches the unique index and surfaces as a raw SQL error.
+        $uniqueSku = 'unique:products,sku' . ($ignoreId ? ',' . $ignoreId : '');
 
         return [
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|' . $uniqueSlug,
+            'sku' => 'nullable|string|max:50|' . $uniqueSku,
             'category_id' => 'required|exists:categories,id',
             'sub_category_id' => 'nullable|exists:sub_categories,id',
             'brand_id' => 'required|exists:brands,id',
@@ -424,6 +431,7 @@ class ProductController extends Controller
     {
         return [
             'name' => 'product name',
+            'sku' => 'product code',
             'category_id' => 'category',
             'sub_category_id' => 'sub category',
             'brand_id' => 'brand',
@@ -556,6 +564,10 @@ class ProductController extends Controller
                 $data->update([
                     'name' => $request->name,
                     'slug' => $this->uniqueProductSlug($request->name, $request->slug, $data->id),
+                    // Editable, but never blanked: sku is NOT NULL, and clearing
+                    // the field should leave the existing code alone rather than
+                    // fail the save.
+                    'sku' => filled($request->sku) ? trim($request->sku) : $data->sku,
                     'category_id' => $request->category_id,
                     'sub_category_id' => $request->sub_category_id,
                     'brand_id' => $request->brand_id,
