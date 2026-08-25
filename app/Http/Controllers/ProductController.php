@@ -492,6 +492,12 @@ class ProductController extends Controller
 
         $file->move($directory, $filename);
 
+        // Suppliers send 2000–4000px exports; the storefront never draws a
+        // product wider than about 900px, so the original would be several
+        // hundred KB of pixels no screen shows. Failure here is not fatal —
+        // the upload itself succeeded, and the original still displays.
+        \App\Support\ImageOptimizer::optimize($directory . '/' . $filename);
+
         return $folder . '/' . $filename;
     }
 

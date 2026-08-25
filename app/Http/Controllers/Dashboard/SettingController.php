@@ -53,6 +53,11 @@ class SettingController extends Controller
                 'announcement' => 'nullable|string|max:255',
                 'logo_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                 'favicon_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+                // No SVG here: share platforms do not render it.
+                'og_image_path' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+                // mimetypes (not just the extension) so a renamed file is caught.
+                'welcome_audio_path' => 'nullable|file|mimetypes:audio/mpeg,audio/mp3,audio/x-mpeg,audio/mpeg3,audio/x-mpeg-3,audio/wav,audio/x-wav,audio/wave,audio/vnd.wave,audio/x-pn-wav,audio/ogg,application/ogg,audio/x-ogg|max:3072',
+                'order_audio_path' => 'nullable|file|mimetypes:audio/mpeg,audio/mp3,audio/x-mpeg,audio/mpeg3,audio/x-mpeg-3,audio/wav,audio/x-wav,audio/wave,audio/vnd.wave,audio/x-pn-wav,audio/ogg,application/ogg,audio/x-ogg|max:3072',
                 'contact_email' => 'nullable|email|max:255',
                 'contact_phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string',
@@ -64,6 +69,12 @@ class SettingController extends Controller
                 'title.required' => 'The website title is required — it appears in the browser tab.',
                 'logo_path.max' => 'The logo must be 2 MB or smaller.',
                 'favicon_path.max' => 'The favicon must be 2 MB or smaller.',
+                'og_image_path.max' => 'The share image must be 2 MB or smaller.',
+                'og_image_path.mimes' => 'The share image must be a JPG, PNG or WEBP — social platforms do not render SVG.',
+                'welcome_audio_path.mimetypes' => 'The welcome sound must be an MP3, WAV or OGG file.',
+                'order_audio_path.mimetypes' => 'The order sound must be an MP3, WAV or OGG file.',
+                'welcome_audio_path.max' => 'The welcome sound must be 3 MB or smaller — a short cue, not a track.',
+                'order_audio_path.max' => 'The order sound must be 3 MB or smaller — a short cue, not a track.',
             ], $trackingMessages));
 
             $settings = Setting::first();
@@ -94,6 +105,16 @@ class SettingController extends Controller
 
             if ($request->hasFile('logo_path')) {
                 $data['logo_path'] = $this->storeImage($request->file('logo_path'), $settings?->logo_path);
+            }
+
+            if ($request->hasFile('og_image_path')) {
+                $data['og_image_path'] = $this->storeImage($request->file('og_image_path'), $settings?->og_image_path);
+            }
+
+            foreach (['welcome_audio_path', 'order_audio_path'] as $key) {
+                if ($request->hasFile($key)) {
+                    $data[$key] = $this->storeAudio($request->file($key), $settings?->{$key});
+                }
             }
 
             if ($request->hasFile('favicon_path')) {
@@ -152,11 +173,21 @@ class SettingController extends Controller
      */
     private function storeImage(UploadedFile $file, ?string $previousPath): string
     {
+        return $this->storeUpload($file, $previousPath, 'images/settings', 'png');
+    }
+
+    /** Audio lives in its own folder so a cleanup of images cannot take it. */
+    private function storeAudio(UploadedFile $file, ?string $previousPath): string
+    {
+        return $this->storeUpload($file, $previousPath, 'audio/settings', 'mp3');
+    }
+
+    private function storeUpload(UploadedFile $file, ?string $previousPath, string $folder, string $fallbackExtension): string
+    {
         if (! $file->isValid()) {
-            throw new \RuntimeException('The image "' . $file->getClientOriginalName() . '" was not uploaded (' . $file->getErrorMessage() . ').');
+            throw new \RuntimeException('The file "' . $file->getClientOriginalName() . '" was not uploaded (' . $file->getErrorMessage() . ').');
         }
 
-        $folder = 'images/settings';
         $directory = public_path($folder);
 
         if (! is_dir($directory) && ! @mkdir($directory, 0755, true) && ! is_dir($directory)) {
@@ -167,7 +198,7 @@ class SettingController extends Controller
             throw new \RuntimeException("The upload folder \"{$folder}\" is not writable. Set it to permission 755 on the server.");
         }
 
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png');
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: $fallbackExtension);
         $filename = uniqid() . Str::random(6) . '.' . $extension;
 
         $file->move($directory, $filename);

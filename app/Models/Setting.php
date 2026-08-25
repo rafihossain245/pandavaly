@@ -101,6 +101,9 @@ class Setting extends Model
         'announcement_enabled',
         'logo_path',
         'favicon_path',
+        'og_image_path',
+        'welcome_audio_path',
+        'order_audio_path',
         'contact_email',
         'contact_phone',
         'address',
@@ -133,6 +136,27 @@ class Setting extends Model
         $value = trim((string) ($this->{$key} ?? ''));
 
         return $value !== '' ? $value : (self::LANDING_COPY[$key]['default'] ?? '');
+    }
+
+    /**
+     * The image Facebook, WhatsApp and X show when a link to the shop is
+     * shared. Falls back to the logo only as a last resort — a logo is the
+     * wrong shape for a share card, and a light one renders near-blank.
+     *
+     * SVG is skipped deliberately: no major platform renders an SVG share
+     * image, so a banner stored as SVG would produce a blank card.
+     */
+    public function shareImage(): ?string
+    {
+        foreach ([$this->og_image_path, $this->logo_path] as $candidate) {
+            $candidate = trim((string) $candidate);
+
+            if ($candidate !== '' && ! str_ends_with(strtolower($candidate), '.svg')) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**

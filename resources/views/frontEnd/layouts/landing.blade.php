@@ -15,12 +15,26 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Roboto:wght@400;500;700;800&display=swap">
-    <link rel="stylesheet" href="{{ asset('frontEnd/assets') }}/css/font/css/all.css">
-    {{-- The landing page is deliberately standalone: none of the multi-page
-         theme's stylesheets are loaded, so there is no category nav, cart
-         sidebar or account chrome to strip back out. --}}
-    <link rel="stylesheet" href="{{ asset('frontEnd/assets') }}/css/landing.css">
+
+    {{-- The funnel's own stylesheet is inlined rather than linked. It is the
+         only CSS the first paint actually needs, and as a linked file it was
+         the longest render-blocking request on the page (~1.2s on mobile).
+         Read through the cache and re-read whenever the file changes on disk,
+         so editing landing.css still shows up on the next request. --}}
+    <style>{!! \App\Support\InlineAsset::css('frontEnd/assets/css/landing.css') !!}</style>
+
+    {{-- Everything below is wanted, but not before the first paint: web fonts
+         fall back to the system stack until they arrive, and icons are
+         decorative. Loading them as print and flipping to all on load keeps
+         them off the critical path; the noscript copy covers scripting-off. --}}
+    <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+          href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Roboto:wght@400;500;700;800&display=swap">
+    <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null"
+          href="{{ asset('frontEnd/assets') }}/css/font/css/all.css">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Roboto:wght@400;500;700;800&display=swap">
+        <link rel="stylesheet" href="{{ asset('frontEnd/assets') }}/css/font/css/all.css">
+    </noscript>
     @yield('css')
 </head>
 <body>
@@ -49,9 +63,14 @@
          funnel has no account system, so those icons would lead nowhere. --}}
     <header class="lp-header">
         <div class="lp-container lp-header-inner">
+            @php
+                $logoSrc = $setting->logo_path ?: 'frontEnd/assets/image/logo.png';
+                $logoSize = \App\Support\ImageFile::dimensions($logoSrc);
+            @endphp
             <a class="lp-logo" href="{{ route('home') }}">
-                <img src="{{ asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png') }}"
-                     alt="{{ $setting->title ?? 'Panda Valy' }}">
+                {{-- Sized so the header does not reflow around it on load. --}}
+                <img src="{{ asset($logoSrc) }}" alt="{{ $setting->title ?? 'Panda Valy' }}"
+                     @if($logoSize) width="{{ $logoSize[0] }}" height="{{ $logoSize[1] }}" @endif>
             </a>
 
             {{-- Filters the gallery in place — there is no results page to send
@@ -117,6 +136,16 @@
            class="lp-whatsapp" aria-label="WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
         </a>
+    @endif
+
+    {{-- Welcome cue, unless the page plays its own (the receipt plays the
+         order cue instead — two cues at once would collide). --}}
+    @if(trim($__env->yieldContent('own-sound')) !== 'yes')
+        @include('frontEnd.layouts.sound', [
+            'sound' => $setting->welcome_audio_path ?? null,
+            'soundOnce' => true,
+            'soundKey' => 'welcome',
+        ])
     @endif
 
     <script src="{{ asset('frontEnd/assets') }}/js/jquery-3.7.1.min.js"></script>
