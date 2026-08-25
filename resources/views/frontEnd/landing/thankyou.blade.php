@@ -1,6 +1,9 @@
 @extends('frontEnd.layouts.landing')
 @section('page-title', 'অর্ডার সম্পন্ন হয়েছে')
 
+{{-- Suppresses the layout's welcome cue. --}}
+@section('own-sound', 'yes')
+
 @section('content')
 @php
     $bn = fn ($n) => str_replace(range(0, 9), ['০','১','২','৩','৪','৫','৬','৭','৮','৯'], number_format((float) $n));
@@ -66,4 +69,11 @@
         </div>
     </div>
 </section>
+
+{{-- Order cue. Not session-guarded: reaching this page is the event. --}}
+@include('frontEnd.layouts.sound', [
+    'sound' => $setting->order_audio_path ?? null,
+    'soundOnce' => false,
+    'soundKey' => 'order',
+])
 @endsection

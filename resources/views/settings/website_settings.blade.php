@@ -179,6 +179,32 @@
                     </div>
 
                     <div class="ws-field">
+                        <label for="og_image_path">Social share image</label>
+                        <div class="ws-image-row">
+                            <div class="ws-preview" id="og_image_preview">
+                                @if (! empty($settings->og_image_path))
+                                    <img src="{{ asset($settings->og_image_path) }}" alt="Current share image">
+                                @else
+                                    <span>Falls back to logo</span>
+                                @endif
+                            </div>
+                            <div class="ws-image-fields">
+                                <input type="file" name="og_image_path" id="og_image_path" accept="image/jpeg,image/png,image/webp"
+                                       class="ws-input @error('og_image_path') is-bad @enderror">
+                                @error('og_image_path')
+                                    <p class="ws-err">{{ $message }}</p>
+                                @else
+                                    <p class="ws-help">
+                                        Shown when your link is shared on Facebook, WhatsApp or Messenger.
+                                        <strong>1200&times;630</strong> works best. JPG, PNG or WEBP — social
+                                        platforms do not render SVG.
+                                    </p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ws-field">
                         <label for="favicon_path">Favicon</label>
                         <div class="ws-image-row">
                             <div class="ws-preview is-square" id="favicon_preview">
@@ -366,6 +392,53 @@
             </div>
         </div>
 
+        {{-- -------------------------------------------------------- Sounds --}}
+        <div class="ws-card">
+            <div class="ws-card-head">
+                <div class="ws-card-icon ws-i-violet"><i class="fas fa-volume-high"></i></div>
+                <div>
+                    <h2>Sounds</h2>
+                    <p>Optional audio cues. Leave empty for a silent site.</p>
+                </div>
+            </div>
+            <div class="ws-card-body">
+                <div class="ws-alert ws-alert-error" style="background:#fffbeb; border-color:#fde68a; color:#92400e;">
+                    <i class="fas fa-circle-info"></i>
+                    <div>
+                        <strong>Browsers block sound until the visitor interacts with the page.</strong>
+                        The welcome cue therefore plays on the visitor's first tap, scroll or click —
+                        not the instant the page opens. Visitors can mute it, and the choice is remembered.
+                    </div>
+                </div>
+
+                @php
+                    $sounds = [
+                        'welcome_audio_path' => ['label' => 'Welcome sound', 'help' => 'Plays once on the shop\'s first page a visitor opens.'],
+                        'order_audio_path' => ['label' => 'Order sound', 'help' => 'Plays on the order-received page after checkout.'],
+                    ];
+                @endphp
+
+                @foreach ($sounds as $key => $sound)
+                    <div class="ws-field" style="margin-bottom:18px;">
+                        <label for="{{ $key }}">{{ $sound['label'] }}</label>
+                        @if (! empty($settings->{$key}))
+                            {{-- A player, so the admin can check what is stored without
+                                 opening the storefront and waiting for the cue. --}}
+                            <audio controls preload="none" src="{{ asset($settings->{$key}) }}"
+                                   style="width:100%; max-width:420px; margin-bottom:8px;"></audio>
+                        @endif
+                        <input type="file" name="{{ $key }}" id="{{ $key }}" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg"
+                               class="ws-input @error($key) is-bad @enderror">
+                        @error($key)
+                            <p class="ws-err">{{ $message }}</p>
+                        @else
+                            <p class="ws-help">{{ $sound['help'] }} MP3, WAV or OGG, up to 3 MB. Keep it under ~3 seconds.</p>
+                        @enderror
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
         {{-- --------------------------------------------------- Mobile app --}}
         <div class="ws-card">
             <div class="ws-card-head">
@@ -469,6 +542,7 @@ $(function () {
     }
 
     bindPreview('logo_path', 'logo_preview');
+    bindPreview('og_image_path', 'og_image_preview');
     bindPreview('favicon_path', 'favicon_preview');
 
     // Keep each row's "open profile" shortcut in step with what is typed.

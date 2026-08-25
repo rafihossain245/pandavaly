@@ -62,9 +62,18 @@
 @endphp
 <section class="lp-hero" id="hero">
     <div class="lp-container">
+        @php
+            $heroSrc = $heroBanner?->image_path ?: 'images/demo/banners/dhamaka-offer.svg';
+            $heroSize = \App\Support\ImageFile::dimensions($heroSrc);
+        @endphp
         <a class="lp-hero-banner" href="#gallery">
-            <img src="{{ $heroBanner?->image_path ? asset($heroBanner->image_path) : asset('images/demo/banners/dhamaka-offer.svg') }}"
-                 alt="{{ $heroBanner->title ?? ($setting->announcement ?: ($setting->title ?? 'Panda Valy')) }}">
+            {{-- The banner is the largest thing above the fold, so it is the LCP
+                 element: fetched at high priority, never lazy, and carrying its
+                 real pixel size so nothing below it shifts when it arrives. --}}
+            <img src="{{ asset($heroSrc) }}"
+                 alt="{{ $heroBanner->title ?? ($setting->announcement ?: ($setting->title ?? 'Panda Valy')) }}"
+                 @if($heroSize) width="{{ $heroSize[0] }}" height="{{ $heroSize[1] }}" @endif
+                 fetchpriority="high" decoding="async">
         </a>
     </div>
 </section>
@@ -90,7 +99,8 @@
                     <button type="button" class="lp-gallery-media" data-view="{{ $p->id }}"
                             aria-label="{{ $p->name }} — ছবি দেখুন">
                         <img src="{{ $p->thumbnail ? asset($p->thumbnail) : asset('frontEnd/assets/image/product.jpg') }}"
-                             alt="{{ $p->name }}" loading="lazy">
+                             alt="{{ $p->name }}" loading="lazy" decoding="async"
+                             width="600" height="600">
                         <span class="lp-gallery-code">Code: {{ $p->sku }}</span>
                         <span class="lp-gallery-zoom"><i class="fas fa-magnifying-glass-plus"></i></span>
                     </button>
