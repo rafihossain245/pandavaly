@@ -179,10 +179,29 @@ class SettingController extends Controller
     /** Audio lives in its own folder so a cleanup of images cannot take it. */
     private function storeAudio(UploadedFile $file, ?string $previousPath): string
     {
-        return $this->storeUpload($file, $previousPath, 'audio/settings', 'mp3');
+        return $this->storeUpload($file, $previousPath, 'audio/settings', 'mp3', $this->audioExtension($file));
     }
 
-    private function storeUpload(UploadedFile $file, ?string $previousPath, string $folder, string $fallbackExtension): string
+    /**
+     * The extension an audio upload must be SAVED with.
+     *
+     * Never trust the uploaded name or the framework's guess here. An MP3 has
+     * the MIME type audio/mpeg, whose canonical extension is ".mpeg" — and web
+     * servers map ".mpeg" to the VIDEO mpeg type. The file then downloads fine but no
+     * browser will decode it inside an <audio> element, which is silent
+     * failure: HTTP 200, right bytes, no sound.
+     */
+    private function audioExtension(UploadedFile $file): string
+    {
+        return match (strtolower($file->getMimeType() ?: '')) {
+            'audio/mpeg', 'audio/mp3', 'audio/x-mpeg', 'audio/mpeg3', 'audio/x-mpeg-3' => 'mp3',
+            'audio/wav', 'audio/x-wav', 'audio/wave', 'audio/vnd.wave', 'audio/x-pn-wav' => 'wav',
+            'audio/ogg', 'application/ogg', 'audio/x-ogg' => 'ogg',
+            default => 'mp3',
+        };
+    }
+
+    private function storeUpload(UploadedFile $file, ?string $previousPath, string $folder, string $fallbackExtension, ?string $forceExtension = null): string
     {
         if (! $file->isValid()) {
             throw new \RuntimeException('The file "' . $file->getClientOriginalName() . '" was not uploaded (' . $file->getErrorMessage() . ').');
@@ -198,7 +217,8 @@ class SettingController extends Controller
             throw new \RuntimeException("The upload folder \"{$folder}\" is not writable. Set it to permission 755 on the server.");
         }
 
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: $fallbackExtension);
+        $extension = $forceExtension
+            ?: strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: $fallbackExtension);
         $filename = uniqid() . Str::random(6) . '.' . $extension;
 
         $file->move($directory, $filename);
