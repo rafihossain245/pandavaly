@@ -81,7 +81,6 @@ use App\Http\Controllers\Front\OtpAuthController;
 use App\Http\Controllers\Front\BuyerDashboardController;
 use App\Http\Controllers\Front\ProductReviewController;
 use App\Http\Controllers\Dashboard\ProductReviewController as DashboardProductReviewController;
-use App\Http\Controllers\Webhooks\SteadfastWebhookController;
 
 // Route::get('/', function () {
 //      return Auth::check()
@@ -138,10 +137,6 @@ Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.p
 Route::post('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'apply'])->name('checkout.coupon.apply');
 Route::delete('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'remove'])->name('checkout.coupon.remove');
 Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
-
-Route::post('/webhooks/steadfast/delivery-status', [SteadfastWebhookController::class, 'handle'])
-    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
-    ->name('webhooks.steadfast.delivery');
 
 Route::middleware('buyer.auth')->group(function () {
     Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->name('reviews.store');
