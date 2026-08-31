@@ -57,6 +57,7 @@ use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\Dashboard\BuyerController;
@@ -80,6 +81,7 @@ use App\Http\Controllers\Front\OtpAuthController;
 use App\Http\Controllers\Front\BuyerDashboardController;
 use App\Http\Controllers\Front\ProductReviewController;
 use App\Http\Controllers\Dashboard\ProductReviewController as DashboardProductReviewController;
+use App\Http\Controllers\Webhooks\SteadfastWebhookController;
 
 // Route::get('/', function () {
 //      return Auth::check()
@@ -136,6 +138,10 @@ Route::post('/checkout', [CheckoutController::class, 'place'])->name('checkout.p
 Route::post('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'apply'])->name('checkout.coupon.apply');
 Route::delete('/checkout/coupon', [\App\Http\Controllers\Front\CouponController::class, 'remove'])->name('checkout.coupon.remove');
 Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+
+Route::post('/webhooks/steadfast/delivery-status', [SteadfastWebhookController::class, 'handle'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+    ->name('webhooks.steadfast.delivery');
 
 Route::middleware('buyer.auth')->group(function () {
     Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])->name('reviews.store');
@@ -285,6 +291,13 @@ Route::middleware(['auth', 'role:super admin|admin|vendor|agent']) // or a custo
     Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('orders/{order}/verify-payment', [OrderController::class, 'verifyPayment'])->name('orders.verify-payment');
     Route::post('orders/{order}/send-to-courier', [OrderController::class, 'sendToCourier'])->name('orders.send-to-courier');
+
+    // Courier support endpoints for customer service lookups
+    Route::prefix('support/courier')->group(function () {
+        Route::get('tracking/{code}', [\App\Http\Controllers\SupportController::class, 'trackingByCode'])->name('support.courier.tracking');
+        Route::get('invoice/{invoice}', [\App\Http\Controllers\SupportController::class, 'trackingByInvoice'])->name('support.courier.invoice');
+        Route::post('refresh-status', [\App\Http\Controllers\SupportController::class, 'refreshStatus'])->name('support.courier.refresh');
+    });
 
     Route::get('/get-sub-category', [ProductController::class, 'getSubCategory'])
     ->name('get-sub-category');

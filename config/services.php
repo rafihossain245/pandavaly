@@ -80,6 +80,11 @@ return [
 
         // 0 = home delivery, 1 = Point/Hub pickup.
         'delivery_type' => (int) env('STEADFAST_DELIVERY_TYPE', 0),
+
+        // Webhook callback settings
+        'webhook_enabled' => filter_var(env('STEADFAST_WEBHOOK_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        'webhook_token' => env('STEADFAST_WEBHOOK_TOKEN'),
+        'webhook_url' => env('STEADFAST_WEBHOOK_URL', env('APP_URL') . '/webhooks/steadfast/delivery-status'),
     ],
 
 ];

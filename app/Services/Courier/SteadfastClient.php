@@ -42,9 +42,13 @@ class SteadfastClient
      * Creates one consignment.
      *
      * @return array{consignment_id: ?string, tracking_code: ?string, delivery_status: ?string, raw: array}
+     * @throws CourierException when validation fails
      */
     public function createOrder(array $payload): array
     {
+        // Validate payload before sending to API
+        CourierPayloadValidator::validate($payload);
+
         if (! $this->isLive()) {
             return $this->pretendToCreate($payload);
         }
@@ -70,7 +74,7 @@ class SteadfastClient
         ];
     }
 
-    /** Current delivery status for a consignment. */
+    /** Current delivery status for a consignment by consignment ID. */
     public function statusByConsignmentId(string $consignmentId): ?string
     {
         if (! $this->isLive()) {
@@ -78,6 +82,30 @@ class SteadfastClient
         }
 
         $body = $this->get('status_by_cid/' . urlencode($consignmentId));
+
+        return $body['delivery_status'] ?? null;
+    }
+
+    /** Current delivery status by invoice (your order number). */
+    public function statusByInvoice(string $invoice): ?string
+    {
+        if (! $this->isLive()) {
+            return null;
+        }
+
+        $body = $this->get('status_by_invoice/' . urlencode($invoice));
+
+        return $body['delivery_status'] ?? null;
+    }
+
+    /** Current delivery status by tracking code (Steadfast's tracking number). */
+    public function statusByTrackingCode(string $trackingCode): ?string
+    {
+        if (! $this->isLive()) {
+            return null;
+        }
+
+        $body = $this->get('status_by_trackingcode/' . urlencode($trackingCode));
 
         return $body['delivery_status'] ?? null;
     }
