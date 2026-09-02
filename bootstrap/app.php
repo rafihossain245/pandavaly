@@ -26,6 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'buyer.guest' => RedirectIfBuyerAuthenticated::class,
         ]);
 
+        // Exclude external webhook endpoints from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/steadfast/delivery-status',
+            'webhooks/steadfast/*',
+        ]);
+
         // Unauthenticated admin/staff users should be sent to the admin login page
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
     })
