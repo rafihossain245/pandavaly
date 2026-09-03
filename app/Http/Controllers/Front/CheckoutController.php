@@ -386,12 +386,12 @@ class CheckoutController extends Controller
 
         $order->load('items.productSku.product', 'buyer');
         $email = $order->shipping_email ?: $buyer->email;
-        if ($email) {
+        $adminEmail = config('mail.admin_address');
+        if ($email || $adminEmail) {
             try {
-                $message = Mail::to($email);
-                $adminEmail = config('mail.admin_address');
+                $message = Mail::to($email ?: $adminEmail);
 
-                if ($adminEmail && strcasecmp($adminEmail, $email) !== 0) {
+                if ($email && $adminEmail && strcasecmp($adminEmail, $email) !== 0) {
                     $message->cc($adminEmail);
                 }
 

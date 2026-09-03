@@ -332,16 +332,16 @@ class SteadfastWebhookController
     private function sendOrderMail($order, \Illuminate\Mail\Mailable $mail): void
     {
         $email = $order->shipping_email ?: $order->buyer?->email;
+        $adminEmail = config('mail.admin_address');
 
-        if (!$email) {
+        if (!$email && !$adminEmail) {
             return;
         }
 
         try {
-            $message = Mail::to($email);
-            $adminEmail = config('mail.admin_address');
+            $message = Mail::to($email ?: $adminEmail);
 
-            if ($adminEmail && strcasecmp($adminEmail, $email) !== 0) {
+            if ($email && $adminEmail && strcasecmp($adminEmail, $email) !== 0) {
                 $message->cc($adminEmail);
             }
 

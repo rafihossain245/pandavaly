@@ -192,14 +192,14 @@ class OrderController extends Controller
     private function sendMail(SalesOrder $order, \Illuminate\Mail\Mailable $mailable): void
     {
         $email = $order->shipping_email ?: $order->buyer?->email;
-        if (!$email) {
+        $adminEmail = config('mail.admin_address');
+        if (!$email && !$adminEmail) {
             return;
         }
         try {
-            $message = Mail::to($email);
-            $adminEmail = config('mail.admin_address');
+            $message = Mail::to($email ?: $adminEmail);
 
-            if ($adminEmail && strcasecmp($adminEmail, $email) !== 0) {
+            if ($email && $adminEmail && strcasecmp($adminEmail, $email) !== 0) {
                 $message->cc($adminEmail);
             }
 

@@ -217,6 +217,14 @@
                         @error('shipping_phone')<p class="lp-err">{{ $message }}</p>@enderror
                     </div>
                     <div class="lp-field">
+                        <label for="shipping_email">ইমেইল</label>
+                        <input type="email" id="shipping_email" name="shipping_email"
+                               value="{{ old('shipping_email') }}"
+                               class="lp-input @error('shipping_email') is-bad @enderror"
+                               placeholder="example@gmail.com (ঐচ্ছিক)">
+                        @error('shipping_email')<p class="lp-err">{{ $message }}</p>@enderror
+                    </div>
+                    <div class="lp-field">
                         <label for="district_id">জেলা <span class="req">*</span></label>
                         <select id="district_id" name="district_id" required
                                 class="lp-input @error('district_id') is-bad @enderror">
