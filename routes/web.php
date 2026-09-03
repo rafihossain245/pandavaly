@@ -80,6 +80,7 @@ use App\Http\Controllers\Front\GoogleAuthController;
 use App\Http\Controllers\Front\OtpAuthController;
 use App\Http\Controllers\Front\BuyerDashboardController;
 use App\Http\Controllers\Front\ProductReviewController;
+use App\Http\Controllers\Front\SitemapController;
 use App\Http\Controllers\Dashboard\ProductReviewController as DashboardProductReviewController;
 use App\Http\Controllers\Webhooks\SteadfastWebhookController;
 
@@ -92,6 +93,7 @@ use App\Http\Controllers\Webhooks\SteadfastWebhookController;
 // The storefront front page is a single-page sales funnel: offer, packages,
 // gallery, reviews and the order form on one screen, with no login step.
 Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::post('/order', [LandingController::class, 'place'])->name('landing.order');
 Route::get('/order/received/{order}', [LandingController::class, 'thankYou'])->name('landing.thankyou');
 // The previous multi-section homepage is still reachable while the funnel beds
