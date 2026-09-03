@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Models\CourierConsignment;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -35,7 +35,7 @@ class SteadfastWebhookController
      * Handle a Steadfast webhook request.
      * Supports both custom field names and the provider's documented payload.
      */
-    public function handle(Request $request): Response
+    public function handle(Request $request): JsonResponse
     {
         try {
             if (!$this->isValidWebhook($request)) {
@@ -48,7 +48,7 @@ class SteadfastWebhookController
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Unauthorized',
-                ], Response::HTTP_UNAUTHORIZED);
+                    ], JsonResponse::HTTP_UNAUTHORIZED);
             }
 
             $data = $request->all();
@@ -65,7 +65,7 @@ class SteadfastWebhookController
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Invalid consignment ID.',
-                ], Response::HTTP_BAD_REQUEST);
+                ], JsonResponse::HTTP_BAD_REQUEST);
             }
 
             $consignment = CourierConsignment::where('consignment_id', (string) $normalised['consignment_id'])
@@ -93,7 +93,7 @@ class SteadfastWebhookController
             return response()->json([
                 'status' => 'success',
                 'message' => 'Webhook received successfully.',
-            ], Response::HTTP_OK);
+            ], JsonResponse::HTTP_OK);
 
         } catch (\Throwable $e) {
             Log::error('Steadfast webhook processing failed', [
@@ -105,14 +105,14 @@ class SteadfastWebhookController
             return response()->json([
                 'status' => 'error',
                 'message' => 'Webhook processing failed.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
      * Backward-compatible alias for the route / controller name.
      */
-    public function deliveryStatus(Request $request): Response
+    public function deliveryStatus(Request $request): JsonResponse
     {
         return $this->handle($request);
     }
