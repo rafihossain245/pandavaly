@@ -21,6 +21,7 @@
     <link rel="shortcut icon" href="{{asset($setting->favicon_path ?? 'frontEnd/assets/image/favicon.png')}}" type="assets/image/x-icon">
     @include('frontEnd.layouts.css')
     @yield('css')
+    @yield('head')
     {{-- Pages that have their own identity (content pages, product details) can
          override this; everything else keeps the site-wide title. --}}
     <title>@yield('page-title', $setting->title ?? 'Home - An Ecommerce Journey!')</title>

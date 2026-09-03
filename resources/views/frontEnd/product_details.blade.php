@@ -4,6 +4,53 @@
 @section('page-title', $product->name)
 @section('og-type', 'product')
 @section('og-image', $product->thumbnail ? asset($product->thumbnail) : asset('frontEnd/assets/image/product.jpg'))
+@php
+    $seoPrice = $product->product_prices->first();
+    $seoSellingPrice = (float) ($seoPrice->selling_price ?? $product->selling_price ?? 0);
+    $seoDescription = trim(preg_replace('/\s+/', ' ', strip_tags((string) $product->description)));
+    $seoDescription = \Illuminate\Support\Str::limit($seoDescription, 155);
+    $seoImage = $product->thumbnail ? asset($product->thumbnail) : asset('frontEnd/assets/image/product.jpg');
+@endphp
+@section('meta-description', $seoDescription ?: 'Shop ' . $product->name . ' from Panda Valy with convenient delivery in Bangladesh.')
+@section('canonical', route('product.details', $product->slug))
+@section('head')
+    <script type="application/ld+json">
+        @php
+            $productSchema = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Product',
+                'name' => $product->name,
+                'url' => route('product.details', $product->slug),
+                'image' => [$seoImage],
+                'description' => $seoDescription ?: $product->name,
+                'sku' => $product->sku,
+                'offers' => [
+                    '@type' => 'Offer',
+                    'url' => route('product.details', $product->slug),
+                    'priceCurrency' => 'BDT',
+                    'price' => number_format($seoSellingPrice, 2, '.', ''),
+                    'availability' => ($product->stock_qty === null || $product->stock_qty > 0)
+                        ? 'https://schema.org/InStock'
+                        : 'https://schema.org/OutOfStock',
+                    'itemCondition' => 'https://schema.org/NewCondition',
+                ],
+            ];
+
+            if ($product->brand?->name) {
+                $productSchema['brand'] = ['@type' => 'Brand', 'name' => $product->brand->name];
+            }
+
+            if ($reviewCount > 0) {
+                $productSchema['aggregateRating'] = [
+                    '@type' => 'AggregateRating',
+                    'ratingValue' => number_format((float) $averageRating, 1, '.', ''),
+                    'reviewCount' => $reviewCount,
+                ];
+            }
+        @endphp
+        {!! json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+    </script>
+@endsection
 
 @section('css')
     <style>

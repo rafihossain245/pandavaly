@@ -10,7 +10,8 @@
      * else is shop-owned, from Website Settings.
      */
     $metaTitle = trim($__env->yieldContent('page-title')) ?: ($setting->title ?? config('app.name'));
-    $metaDescription = $setting?->metaDescription() ?: '';
+    $metaDescription = trim($__env->yieldContent('meta-description'))
+        ?: ($setting?->metaDescription() ?: '');
     // Page override first (a product shares its own photo), then the shop's
     // share image from Website Settings, then the logo as a last resort.
     //
@@ -40,6 +41,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="{{ $metaTitle }}">
 <meta property="og:url" content="{{ url()->current() }}">
+<link rel="canonical" href="{{ trim($__env->yieldContent('canonical')) ?: url()->current() }}">
 {{-- The catalogue and every heading are Bengali, which is what a share card
      should be tagged as regardless of the admin UI language. --}}
 <meta property="og:locale" content="bn_BD">
