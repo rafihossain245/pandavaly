@@ -388,7 +388,14 @@ class CheckoutController extends Controller
         $email = $order->shipping_email ?: $buyer->email;
         if ($email) {
             try {
-                Mail::to($email)->send(new OrderConfirmed($order));
+                $message = Mail::to($email);
+                $adminEmail = config('mail.admin_address');
+
+                if ($adminEmail && strcasecmp($adminEmail, $email) !== 0) {
+                    $message->cc($adminEmail);
+                }
+
+                $message->send(new OrderConfirmed($order));
             } catch (\Throwable) {
                 // Email failure must not block the confirmation page
             }

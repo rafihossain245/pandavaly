@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\InvoiceReady;
+use App\Mail\OrderCancelled;
 use App\Mail\OrderDelivered;
 use App\Mail\PaymentReceived;
 use App\Models\Invoice;
@@ -181,6 +182,8 @@ class OrderController extends Controller
             $this->sendMail($order, new PaymentReceived($order));
         } elseif ($request->status === 'cancelled') {
             $order->invoice?->update(['status' => 'void']);
+            $order->load('buyer');
+            $this->sendMail($order, new OrderCancelled($order));
         }
 
         return back()->with('success', 'Order updated to: ' . ucfirst(str_replace('_', ' ', $request->status)) . '.');
@@ -193,7 +196,14 @@ class OrderController extends Controller
             return;
         }
         try {
-            Mail::to($email)->send($mailable);
+            $message = Mail::to($email);
+            $adminEmail = config('mail.admin_address');
+
+            if ($adminEmail && strcasecmp($adminEmail, $email) !== 0) {
+                $message->cc($adminEmail);
+            }
+
+            $message->send($mailable);
         } catch (\Throwable) {
             // Email failure must not break the order workflow
         }

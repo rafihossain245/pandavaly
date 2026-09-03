@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Webhooks;
 
 use App\Models\CourierConsignment;
+use App\Mail\OrderCancelled;
+use App\Mail\OrderDelivered;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Webhook receiver for Steadfast Courier delivery status updates.
@@ -72,13 +75,14 @@ class SteadfastWebhookController
                 ->first();
 
             if ($consignment) {
+                $oldStatus = $consignment->delivery_status;
                 $consignment->update([
                     'delivery_status' => $normalised['status'] ?? $consignment->delivery_status,
                     'status_synced_at' => now(),
                 ]);
 
-                if (!empty($normalised['status'])) {
-                    $this->handleStatusChange($consignment, $consignment->delivery_status, $normalised['status']);
+                if (!empty($normalised['status']) && $oldStatus !== $normalised['status']) {
+                    $this->handleStatusChange($consignment, $oldStatus, $normalised['status']);
                 }
             }
 
@@ -232,6 +236,8 @@ class SteadfastWebhookController
             ]);
         }
 
+        $this->sendOrderMail($order, new OrderDelivered($order));
+
         // TODO: Implement additional logic
         // - Send delivery confirmation email
         // - event(new OrderDelivered($order));
@@ -278,6 +284,8 @@ class SteadfastWebhookController
             $order->update(['status' => 'cancelled']);
         }
 
+        $this->sendOrderMail($order, new OrderCancelled($order));
+
         // TODO: Implement
         // - Auto-refund customer
         // - Notify admin team
@@ -319,5 +327,30 @@ class SteadfastWebhookController
         // Could implement generic status update here
         // - In-transit update?
         // - Notify customer?
+    }
+
+    private function sendOrderMail($order, \Illuminate\Mail\Mailable $mail): void
+    {
+        $email = $order->shipping_email ?: $order->buyer?->email;
+
+        if (!$email) {
+            return;
+        }
+
+        try {
+            $message = Mail::to($email);
+            $adminEmail = config('mail.admin_address');
+
+            if ($adminEmail && strcasecmp($adminEmail, $email) !== 0) {
+                $message->cc($adminEmail);
+            }
+
+            $message->send($mail);
+        } catch (\Throwable $e) {
+            Log::warning('Steadfast customer notification failed', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }
