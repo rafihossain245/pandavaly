@@ -62,7 +62,18 @@ class LandingController extends Controller
             'categories' => $categories,
             'slides' => $slides,
             'districts' => District::active()->orderBy('name')->get(['id', 'name', 'delivery_charge']),
+            'prefillItems' => session()->pull('landing_prefill', []),
         ]);
+    }
+
+    public function startProduct(Product $product, Request $request)
+    {
+        abort_unless($product->is_active, 404);
+
+        $quantity = max(1, min(99, (int) $request->integer('qty', 1)));
+        session()->put('landing_prefill', [(string) $product->id => $quantity]);
+
+        return redirect(route('home') . '#order-form');
     }
 
     /**
@@ -131,6 +142,7 @@ class LandingController extends Controller
         $request->merge([
             'billing_same_as_shipping' => 1,
             'payment_method' => 'cod',
+            'landing_checkout' => true,
         ]);
 
         $response = $checkout->place($request);

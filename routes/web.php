@@ -94,6 +94,7 @@ use App\Http\Controllers\Webhooks\SteadfastWebhookController;
 // gallery, reviews and the order form on one screen, with no login step.
 Route::get('/', [LandingController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/order/start/{product}', [LandingController::class, 'startProduct'])->name('landing.start-product');
 Route::post('/order', [LandingController::class, 'place'])->name('landing.order');
 Route::get('/order/received/{order}', [LandingController::class, 'thankYou'])->name('landing.thankyou');
 // The previous multi-section homepage is still reachable while the funnel beds

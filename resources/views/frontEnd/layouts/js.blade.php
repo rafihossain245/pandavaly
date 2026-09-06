@@ -75,6 +75,14 @@
             var skuId    = $form.find('.selected-sku-id').val() || '';
             var variantLabel = $form.find('.selected-variant-label').val() || '';
 
+            var landingStart = $btn.data('landing-start');
+            if (landingStart) {
+                var landingUrl = new URL(landingStart, window.location.origin);
+                landingUrl.searchParams.set('qty', qty || 1);
+                window.location.href = landingUrl.toString();
+                return;
+            }
+
             $btn.prop('disabled', true);
 
             $.ajax({
@@ -122,6 +130,17 @@
             var qty = parseInt($btn.closest('[data-qty]').data('qty') || $form.find('[name=qty]').val() || 1);
             var skuId = $form.find('.selected-sku-id').val() || '';
             var variantLabel = $form.find('.selected-variant-label').val() || '';
+
+            // Product-detail pages without variants use the single-page COD
+            // funnel. Variant products continue through cart/checkout so the
+            // selected SKU is preserved.
+            var landingStart = $btn.data('landing-start');
+            if (landingStart && !$('.product-variant-selector').length) {
+                var landingUrl = new URL(landingStart, window.location.origin);
+                landingUrl.searchParams.set('qty', qty || 1);
+                window.location.href = landingUrl.toString();
+                return;
+            }
 
             $btn.prop('disabled', true);
 

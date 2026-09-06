@@ -225,12 +225,28 @@
                         @error('shipping_email')<p class="lp-err">{{ $message }}</p>@enderror
                     </div>
                     <div class="lp-field">
+                        <label>ডেলিভারি এলাকা <span class="req">*</span></label>
+                        <div class="lp-delivery-options">
+                            <label class="lp-delivery-option">
+                                <input type="radio" name="delivery_zone" value="dhaka"
+                                       {{ old('delivery_zone') === 'dhaka' ? 'checked' : '' }} required>
+                                <span>ঢাকার ভিতরে</span>
+                            </label>
+                            <label class="lp-delivery-option">
+                                <input type="radio" name="delivery_zone" value="outside"
+                                       {{ old('delivery_zone') === 'outside' ? 'checked' : '' }}>
+                                <span>ঢাকার বাইরে</span>
+                            </label>
+                        </div>
+                        @error('delivery_zone')<p class="lp-err">{{ $message }}</p>@enderror
+                    </div>
+                    <div class="lp-field">
                         <label for="district_id">জেলা <span class="req">*</span></label>
                         <select id="district_id" name="district_id" required
                                 class="lp-input @error('district_id') is-bad @enderror">
                             <option value="">-- জেলা নির্বাচন করুন --</option>
                             @foreach($districts as $d)
-                                <option value="{{ $d->id }}" data-charge="{{ $d->delivery_charge }}"
+                                <option value="{{ $d->id }}" data-zone="{{ strtolower($d->name) === 'dhaka' ? 'dhaka' : 'outside' }}" data-charge="{{ $d->delivery_charge }}"
                                         {{ (string) old('district_id') === (string) $d->id ? 'selected' : '' }}>
                                     {{ $d->name }}
                                 </option>
@@ -390,6 +406,23 @@
         });
     }
 
+    function filterDistricts() {
+        var zone = $('input[name="delivery_zone"]:checked').val();
+        var $select = $('#district_id');
+        var current = $select.val();
+
+        $select.find('option[value]').each(function () {
+            var matches = !zone || $(this).data('zone') === zone;
+            $(this).prop('hidden', !matches).prop('disabled', !matches);
+        });
+
+        if (current && $select.find('option:selected').prop('disabled')) {
+            $select.val('');
+        }
+
+        render();
+    }
+
     function add(id, silent) {
         id = String(id);
         if (!CATALOG[id]) return;
@@ -417,6 +450,9 @@
     });
 
     $(document).on('change', '#district_id', render);
+    $(document).on('change', 'input[name="delivery_zone"]', filterDistricts);
+
+    filterDistricts();
 
     // Live gallery filter — there is no results page to navigate to. Search
     // text and the header's category picker are one filter, applied together,

@@ -173,6 +173,8 @@ class CheckoutController extends Controller
             'shipping_phone'           => 'required|string|max:30',
             'shipping_email'           => 'nullable|email|max:255',
             'shipping_address'         => 'required|string',
+            'delivery_zone'            => 'nullable|in:dhaka,outside',
+            'accepted_terms'           => $request->boolean('landing_checkout') ? 'accepted' : 'nullable|accepted',
             'district_id'              => 'required|exists:districts,id',
             'thana_id'                 => ['nullable', $thanaInDistrict('district_id')],
 

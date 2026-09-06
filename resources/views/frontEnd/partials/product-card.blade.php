@@ -14,7 +14,7 @@
         default => null,
     };
 @endphp
-<div class="product-card {{ $wrapperClass ?? 'item' }}">
+<div class="product-card {{ $wrapperClass ?? 'item' }}" @if($landingFlow ?? false) data-landing-flow="1" @endif>
     @if($hasDiscount)
         <div class="discount-badge">Save {{ $discountPct }}%</div>
     @endif
@@ -37,10 +37,12 @@
     </div>
     <div class="stock-info">IN STOCK: <span class="stock-count">{{ $item->stock_qty ?? 0 }}</span></div>
     <div class="action-buttons mt-2 d-flex gap-2">
-        <button type="button" class="add-to-cart-btn" data-product="{{ $item->id }}">
+        <button type="button" class="add-to-cart-btn" data-product="{{ $item->id }}"
+            @if($landingFlow ?? false) data-landing-start="{{ route('landing.start-product', $item->id) }}" @endif>
             <i class="fa-solid fa-bag-shopping"></i> Add to Cart
         </button>
-        <button type="button" class="btn-buy-now buy-now-btn" data-product="{{ $item->id }}">
+        <button type="button" class="btn-buy-now buy-now-btn" data-product="{{ $item->id }}"
+            @if($landingFlow ?? false) data-landing-start="{{ route('landing.start-product', $item->id) }}" @endif>
             <i class="fa-solid fa-bolt"></i> Buy Now
         </button>
     </div>

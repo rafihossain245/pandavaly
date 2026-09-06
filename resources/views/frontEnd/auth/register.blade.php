@@ -1,4 +1,5 @@
 @extends('frontEnd.layouts.master')
+@section('chrome', 'bare')
 
 @section('content')
 <section class="buyer-auth py-5">

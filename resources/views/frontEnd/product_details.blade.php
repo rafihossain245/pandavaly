@@ -1,6 +1,7 @@
 ﻿@extends('frontEnd.layouts.master')
 
 {{-- Shared links should preview the product, not the shop logo. --}}
+@section('chrome', 'bare')
 @section('page-title', $product->name)
 @section('og-type', 'product')
 @section('og-image', $product->thumbnail ? asset($product->thumbnail) : asset('frontEnd/assets/image/product.jpg'))
@@ -798,7 +799,9 @@
                                     <i class="fas fa-shopping-cart me-1"></i> Add to Cart
                                 </button>
                                 <button type="button" class="btn btn-buy-now flex-fill buy-now-btn"
-                                        data-product="{{ $product->id }}" {{ $inStock ? '' : 'disabled' }}>
+                                    data-product="{{ $product->id }}"
+                                    data-landing-start="{{ route('landing.start-product', $product->id) }}"
+                                    {{ $inStock ? '' : 'disabled' }}>
                                     <i class="fas fa-bolt me-1"></i> Buy Now
                                 </button>
                             </div>
@@ -1316,7 +1319,7 @@
                 <h2 class="section-title recom-title">Related Products</h2>
                 <div class="products-grid">
                     @forelse($relatedProducts as $item)
-                        @include('frontEnd.partials.product-card', ['item' => $item, 'wrapperClass' => 'item'])
+                        @include('frontEnd.partials.product-card', ['item' => $item, 'wrapperClass' => 'item', 'landingFlow' => true])
                     @empty
                         <p class="text-muted">No related products found.</p>
                     @endforelse
@@ -2336,6 +2339,27 @@
             const skuId = $form.find('.selected-sku-id').val() || '';
             const variantLabel = $form.find('.selected-variant-label').val() || '';
 
+            if (!$('.product-variant-selector').length) {
+                const landingUrl = new URL("{{ route('landing.start-product', $product->id) }}", window.location.origin);
+                landingUrl.searchParams.set('qty', qty);
+
+                if (window.goeTrack) {
+                    goeTrack('add_to_cart', {
+                        currency: 'BDT',
+                        value: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))) * Number(qty),
+                        items: [{
+                            id: String(productId),
+                            name: @json($product->name),
+                            price: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))),
+                            quantity: Number(qty)
+                        }]
+                    });
+                }
+
+                setTimeout(function () { window.location.href = landingUrl.toString(); }, 200);
+                return;
+            }
+
             $.post("{{ route('cart.add') }}", {
                 _token: $('meta[name="csrf-token"]').attr('content'),
                 product_id: productId,
@@ -2366,6 +2390,35 @@
                     alert(message);
                 }
             });
+        });
+
+        // Non-variant Add to Cart uses the same one-page order form as Buy Now.
+        $('.product-buy-form .add-to-cart-btn').on('click', function (event) {
+            if ($('.product-variant-selector').length) return;
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            const $btn = $(this);
+            const $form = $btn.closest('.product-buy-form');
+            const qty = $form.find('.qty-input').val() || 1;
+            const landingUrl = new URL("{{ route('landing.start-product', $product->id) }}", window.location.origin);
+            landingUrl.searchParams.set('qty', qty);
+
+            if (window.goeTrack) {
+                goeTrack('add_to_cart', {
+                    currency: 'BDT',
+                    value: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))) * Number(qty),
+                    items: [{
+                        id: String({{ $product->id }}),
+                        name: @json($product->name),
+                        price: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))),
+                        quantity: Number(qty)
+                    }]
+                });
+            }
+
+            setTimeout(function () { window.location.href = landingUrl.toString(); }, 200);
         });
 
     </script>

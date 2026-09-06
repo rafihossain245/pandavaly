@@ -77,3 +77,21 @@
     'soundKey' => 'order',
 ])
 @endsection
+
+@section('js')
+<script>
+    (function () {
+        if (!window.goeTrack) return;
+
+        var once = 'landing.purchase.{{ $order->id }}';
+        try {
+            if (sessionStorage.getItem(once)) return;
+            sessionStorage.setItem(once, '1');
+        } catch (e) {
+            // If storage is unavailable, report rather than suppress the purchase.
+        }
+
+        goeTrack('purchase', @json(\App\Services\Tracking::orderPayload($order)));
+    })();
+</script>
+@endsection

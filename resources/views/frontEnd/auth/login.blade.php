@@ -1,5 +1,5 @@
 @extends('frontEnd.layouts.master')
-
+@section('chrome', 'bare')
 @section('css')
     <style>
         .signin-wrap {

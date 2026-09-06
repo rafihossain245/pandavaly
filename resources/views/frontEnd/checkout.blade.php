@@ -1,5 +1,7 @@
 @extends('frontEnd.layouts.master')
 
+@section('chrome', 'bare')
+
 @section('css')
 <style>
     .checkout-page { background: #f5f5f5; min-height: 60vh; padding: 0 0 50px; }
@@ -12,15 +14,6 @@
     .co-breadcrumb a:hover { color: var(--primary); }
     .co-breadcrumb .co-crumb-sep { color: #c9c9c9; }
     .co-breadcrumb .co-crumb-current { color: var(--primary); font-weight: 700; }
-
-    /* Guest login/register prompt (guests can still check out without one) */
-    .co-guest-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; padding: 14px 18px; margin-bottom: 12px; font-size: 14px; color: #444; }
-    .co-guest-actions { display: flex; gap: 8px; }
-    .co-guest-btn { display: inline-block; padding: 7px 20px; border-radius: 4px; font-size: 13.5px; font-weight: 700; text-decoration: none; transition: filter .2s, background .2s; }
-    .co-guest-btn-outline { border: 1px solid #cfcfcf; color: #444; background: #fff; }
-    .co-guest-btn-outline:hover { background: #f5f5f5; color: #222; }
-    .co-guest-btn-solid { background: var(--primary); color: #fff; border: 1px solid var(--primary); }
-    .co-guest-btn-solid:hover { filter: brightness(.94); color: #fff; }
 
     .co-section { background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; margin-bottom: 10px; }
     .co-section-header { padding: 11px 18px; border-bottom: 1px solid #f0f0f0; font-size: 14px; font-weight: 700; color: #111; background: #fafafa; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -140,17 +133,6 @@
         @if($errors->any())
             <div class="alert alert-danger mb-3">Please fix the errors below and try again.</div>
         @endif
-
-        {{-- Guests can check out as-is; an account is created for them on submit. --}}
-        @guest('buyer')
-        <div class="co-guest-bar">
-            <span>Have any account? please login or register</span>
-            <div class="co-guest-actions">
-                <a href="{{ route('login') }}" class="co-guest-btn co-guest-btn-outline">Login</a>
-                <a href="{{ route('buyer.register') }}" class="co-guest-btn co-guest-btn-solid">Register</a>
-            </div>
-        </div>
-        @endguest
 
         <form action="{{ route('checkout.place') }}" method="POST">
             @csrf
