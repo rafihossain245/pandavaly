@@ -287,6 +287,18 @@
                         {{ $setting->copy('landing_cod_note') }}
                     </div>
 
+
+                    <label class="lp-terms-check">
+                        <input type="checkbox" name="accepted_terms" value="1"
+                               {{ old('accepted_terms') ? 'checked' : '' }}>
+                        <span>
+                            আমি <a href="{{ route('page.show', 'delivery-return-policy') }}" target="_blank" rel="noopener">ডেলিভারি ও রিটার্ন নীতি</a>,
+                            <a href="{{ route('page.show', 'privacy-policy') }}" target="_blank" rel="noopener">গোপনীয়তা নীতি</a>
+                            এবং <a href="{{ route('page.show', 'terms-and-conditions') }}" target="_blank" rel="noopener">শর্তাবলী</a> পড়েছি ও গ্রহণ করছি।
+                        </span>
+                    </label>
+                    @error('accepted_terms')<p class="lp-err">অর্ডার করতে নীতিমালা গ্রহণ করুন।</p>@enderror
+
                     <button type="submit" class="lp-btn lp-btn-solid lp-btn-block lp-btn-lg" id="lpSubmit">
                         <i class="fas fa-lock"></i> অর্ডার কনফার্ম করুন
                     </button>
