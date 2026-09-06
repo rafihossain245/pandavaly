@@ -105,7 +105,12 @@
                         <span class="lp-gallery-zoom"><i class="fas fa-magnifying-glass-plus"></i></span>
                     </button>
                     <div class="lp-gallery-body">
-                        <span class="lp-gallery-name">{{ $p->name }}</span>
+                        <a class="lp-gallery-name" href="{{ route('product.details', $p->slug) }}">
+                            {{ $p->name }}
+                        </a>
+                        <a class="lp-gallery-detail-link" href="{{ route('product.details', $p->slug) }}">
+                            বিস্তারিত দেখুন <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
                         <span class="lp-gallery-price">
                             @if($pr['was'] > $pr['now'])<del>{{ $money($pr['was']) }}</del>@endif
                             {{ $money($pr['now']) }}
