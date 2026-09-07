@@ -1,4 +1,5 @@
 @extends('frontEnd.layouts.master')
+@section('chrome', 'bare')
 
 @section('page-title', $page->title)
 
