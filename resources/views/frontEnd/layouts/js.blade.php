@@ -43,6 +43,7 @@
         }
 
         function updateFloatingCart(count, total) {
+            $('.header-cart-total').text(numFmt(total || 0));
             var $fc = $('.floating-cart');
             if (!$fc.length) return;
             if (count > 0) {

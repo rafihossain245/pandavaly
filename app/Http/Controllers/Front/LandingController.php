@@ -33,7 +33,13 @@ class LandingController extends Controller
         // shop is pushing head the gallery.
         // product_images feeds the gallery's full-screen viewer; without it every
         // card would open on its thumbnail alone.
-        $products = Product::with(['product_prices', 'product_images'])
+        $products = Product::with([
+            'product_prices',
+            'product_images',
+            // Cards send products with selectable variants to the details page
+            // instead of silently ordering the first SKU.
+            'skus.productAttributes',
+        ])
             ->where('is_active', 1)
             ->orderByDesc('is_trending')
             ->orderBy('id')

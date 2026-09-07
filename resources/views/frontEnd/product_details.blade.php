@@ -41,13 +41,6 @@
                 $productSchema['brand'] = ['@type' => 'Brand', 'name' => $product->brand->name];
             }
 
-            if ($reviewCount > 0) {
-                $productSchema['aggregateRating'] = [
-                    '@type' => 'AggregateRating',
-                    'ratingValue' => number_format((float) $averageRating, 1, '.', ''),
-                    'reviewCount' => $reviewCount,
-                ];
-            }
         @endphp
         {!! json_encode($productSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
@@ -127,6 +120,18 @@
             width: auto;
             margin: 0;
             flex: 1 1 0;
+            transform-origin: center;
+            animation: product-order-pulse 1.55s ease-in-out infinite;
+        }
+
+        @keyframes product-order-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(230, 0, 126, 0); }
+            50% { transform: scale(1.025); box-shadow: 0 8px 18px rgba(230, 0, 126, .25); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .product-buy-box .product-buy-form .buy-now-btn,
+            .product-mobile-order { animation: none !important; }
         }
 
         .product-buy-box .product-buy-form .add-to-cart-btn {
@@ -526,6 +531,39 @@
             border: 1px solid #e5e7eb;
             border-radius: 6px;
         }
+
+        .product-rating { display: none !important; }
+        .product-mobile-order, .product-mobile-whatsapp { display: none; }
+        .product-policy-content { color: #374151; font-size: 14px; line-height: 1.75; }
+        .product-information-table { width: 100%; border-collapse: collapse; }
+        .product-information-table th,
+        .product-information-table td { padding: 11px 13px; border: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+        .product-information-table th { width: 34%; background: #f8fafc; color: #374151; }
+
+        @media (max-width: 768px) {
+            html, body { max-width: 100%; overflow-x: hidden; }
+            body { padding-bottom: 72px; }
+            .floating-contact { display: none !important; }
+            .product-part { width: 100%; max-width: 100%; display: block !important; }
+            .product-image-part, .product-info-part { width: 100% !important; max-width: 100% !important; min-width: 0; }
+            #exzoom, #exzoom .exzoom_img_box, #exzoom .exzoom_img_ul {
+                width: 100% !important; max-width: 100% !important;
+            }
+            #exzoom .exzoom_img_ul li { width: 100% !important; }
+            #exzoom .exzoom_img_ul li img { width: 100% !important; height: auto !important; object-fit: contain; }
+            .product-mobile-order {
+                position: fixed; left: 12px; right: 66px; bottom: 10px; z-index: 70;
+                min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+                border: 0; border-radius: 9px; background: var(--primary); color: #fff;
+                font-size: 16px; font-weight: 800; box-shadow: 0 6px 20px rgba(230,0,126,.28);
+                transform-origin: center; animation: product-order-pulse 1.55s ease-in-out infinite;
+            }
+            .product-mobile-whatsapp {
+                position: fixed; right: 10px; bottom: 10px; z-index: 70; width: 48px; height: 52px;
+                display: grid; place-items: center; border-radius: 9px; background: #25d366; color: #fff; font-size: 23px;
+                box-shadow: 0 6px 18px rgba(37,211,102,.25);
+            }
+        }
     </style>
 @endsection
 
@@ -637,8 +675,14 @@
                     <div class="exzoom hidden" id="exzoom">
                         <div class="exzoom_img_box">
                             <ul class='exzoom_img_ul'>
-                                @foreach ($product->product_images as $image)
-                                    <li><img src="{{ asset($image->image_path) }}" /></li>
+                                @php
+                                    $detailImages = collect([$product->thumbnail])
+                                        ->merge($product->product_images->pluck('image_path'))
+                                        ->filter()->unique()->values();
+                                    if ($detailImages->isEmpty()) $detailImages = collect(['frontEnd/assets/image/product.jpg']);
+                                @endphp
+                                @foreach ($detailImages as $imagePath)
+                                    <li><img src="{{ asset($imagePath) }}" alt="{{ $product->name }}" /></li>
                                 @endforeach
                             </ul>
                         </div>
@@ -793,30 +837,13 @@
                                 @endif
                             </div>
                             <div class="d-flex gap-2">
-                                {{-- Outlined + solid pairing, matching the product cards. --}}
-                                <button type="button" class="btn btn-cart-outline flex-fill add-to-cart-btn"
-                                        data-product="{{ $product->id }}" {{ $inStock ? '' : 'disabled' }}>
-                                    <i class="fas fa-shopping-cart me-1"></i> Add to Cart
-                                </button>
                                 <button type="button" class="btn btn-buy-now flex-fill buy-now-btn"
                                     data-product="{{ $product->id }}"
                                     data-landing-start="{{ route('landing.start-product', $product->id) }}"
                                     {{ $inStock ? '' : 'disabled' }}>
-                                    <i class="fas fa-bolt me-1"></i> Buy Now
+                                    <i class="fas fa-bag-shopping me-1"></i> অর্ডার করুন
                                 </button>
                             </div>
-                            @php $contactPhone = App\Models\Setting::first()->contact_phone ?? null; @endphp
-                            @if($contactPhone)
-                                <div class="d-flex gap-2 mt-2">
-                                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $contactPhone) }}?text={{ urlencode('I want to order: ' . $product->name) }}"
-                                        target="_blank" rel="noopener" class="btn flex-fill" style="background:#25D366;color:#fff;">
-                                        <i class="fa-brands fa-whatsapp me-1"></i> Order On WhatsApp
-                                    </a>
-                                    <a href="tel:{{ $contactPhone }}" class="btn btn-dark flex-fill">
-                                        <i class="fas fa-phone me-1"></i> Call For Order
-                                    </a>
-                                </div>
-                            @endif
                         </form>
                     </div>
                     
@@ -1137,14 +1164,47 @@
                     <div class="product-container">
                         <div class="tabs-container">
                             <div class="tabs-header">
-                                <button class="tab-button active" data-tab="description">Description</button>
-                                <button class="tab-button" data-tab="reviews">Customer Reviews ({{ $reviewCount }})</button>
+                                <button class="tab-button active" data-tab="description">Product</button>
+                                <button class="tab-button" data-tab="information">Information</button>
+                                <button class="tab-button" data-tab="return-policy">Return &amp; Refund</button>
                             </div>
 
                             <div class="tab-content active" id="description">
                                 <div class="product-description">
                                     {!! $product->description !!}
                                     
+                                </div>
+                            </div>
+
+                            <div class="tab-content" id="information">
+                                @if($product->product_specifications->count())
+                                    <table class="product-information-table">
+                                        <tbody>
+                                            @foreach($product->product_specifications as $specification)
+                                                <tr>
+                                                    <th>{{ $specification->specification_name }}</th>
+                                                    <td>{{ $specification->specification_value }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                @else
+                                    <p class="text-muted mb-0">এই পণ্যের অতিরিক্ত তথ্য এখনো যোগ করা হয়নি।</p>
+                                @endif
+                            </div>
+
+                            <div class="tab-content" id="return-policy">
+                                @php
+                                    $returnPolicy = \App\Models\Page::active()
+                                        ->where('slug', 'delivery-return-policy')
+                                        ->first();
+                                @endphp
+                                <div class="product-policy-content">
+                                    @if($returnPolicy?->hasContent())
+                                        {!! $returnPolicy->content !!}
+                                    @else
+                                        <p class="mb-0">রিটার্ন ও রিফান্ড নীতি শিগগিরই যোগ করা হবে।</p>
+                                    @endif
                                 </div>
                             </div>
 
@@ -1327,10 +1387,20 @@
             </div>
         </div>
     </div>
-    <div class="fixed-action action-btn" style="display: none;">
-        <button class="buy-now-btn" data-product="{{ $product->id }}">Buy Now</button>
-        <button class="add-to-cart-btn" data-product="{{ $product->id }}">Add To Cart</button>
-    </div>
+    <button type="button" class="product-mobile-order buy-now-btn" data-product="{{ $product->id }}"
+            data-landing-start="{{ route('landing.start-product', $product->id) }}" {{ $inStock ? '' : 'disabled' }}>
+        <i class="fas fa-bag-shopping"></i> অর্ডার করুন
+    </button>
+    @php
+        $detailWhatsapp = preg_replace('/\D/', '', (string) (\App\Models\Setting::first()->contact_phone ?? ''));
+        if (str_starts_with($detailWhatsapp, '0')) $detailWhatsapp = '88' . $detailWhatsapp;
+    @endphp
+    @if($detailWhatsapp)
+        <a class="product-mobile-whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp"
+           href="https://wa.me/{{ $detailWhatsapp }}?text={{ urlencode('আসসালামু আলাইকুম, আমি ' . $product->name . ' অর্ডার করতে চাই। ' . route('product.details', $product->slug)) }}">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+    @endif
 
 @endsection
 @section('scripts')
@@ -2420,6 +2490,23 @@
 
             setTimeout(function () { window.location.href = landingUrl.toString(); }, 200);
         });
+
+        // Rotate only when multiple product images exist. Any shopper
+        // interaction pauses the movement so zooming or swiping is not disrupted.
+        (function setupProductGalleryAutoplay() {
+            const $gallery = $('#exzoom');
+            if ($gallery.find('.exzoom_img_ul li').length < 2) return;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            let paused = false;
+            $gallery.on('mouseenter focusin touchstart pointerdown', function () { paused = true; });
+            $gallery.on('mouseleave focusout', function () { paused = false; });
+
+            window.setInterval(function () {
+                if (paused || document.hidden) return;
+                $gallery.find('.exzoom_next_btn').trigger('click');
+            }, 4000);
+        })();
 
     </script>
 @endsection

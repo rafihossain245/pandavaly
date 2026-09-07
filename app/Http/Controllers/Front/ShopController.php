@@ -13,7 +13,7 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['product_prices', 'category', 'brand'])
+        $query = Product::with(['product_prices', 'category', 'brand', 'skus.productAttributes'])
             ->withMin('product_prices', 'selling_price')
             ->where('is_active', 1);
 

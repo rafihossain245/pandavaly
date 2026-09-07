@@ -9,6 +9,10 @@
     // because the funnel sells without any of them and those surfaces would be
     // dead ends for a shopper who arrived through it.
     $bareChrome = trim($__env->yieldContent('chrome')) === 'bare';
+    $whatsappNumber = preg_replace('/\D/', '', (string) ($setting->contact_phone ?? ''));
+    if (str_starts_with($whatsappNumber, '0')) {
+        $whatsappNumber = '88' . $whatsappNumber;
+    }
 @endphp
 <head>
     <meta charset="UTF-8">
@@ -142,10 +146,10 @@
         <div class="header-main">
             <div class="container">
                 @unless($bareChrome)
-                <div class="toggle-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu"
-                    aria-controls="offcanvasMenu" style="display: none;">
+                <button class="toggle-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu"
+                    aria-controls="offcanvasMenu" aria-label="ক্যাটাগরি খুলুন">
                     <i class="fas fa-bars"></i>
-                </div>
+                </button>
                 @endunless
                 <a class="header-logo" href="{{route('home')}}">
                     <img src="{{asset($setting->logo_path ?? 'frontEnd/assets/image/logo.png')}}" alt="" style="height:50px">
@@ -187,29 +191,16 @@
                             <span class="ha-label">Cart</span>
                         </a>
                     @else
-                    <a href="{{ Auth::guard('buyer')->check() ? route('buyer.dashboard') : route('buyer.login') }}" class="ha-item m-d-none">
-                        <i class="far fa-user"></i>
-                        <span class="ha-label">{{ Auth::guard('buyer')->check() ? 'Account' : 'Sign In' }}</span>
-                    </a>
-                    <a href="{{ Auth::guard('buyer')->check() ? route('buyer.wishlist') : route('buyer.login') }}" class="ha-item">
-                        <span class="ha-icon-wrap">
-                            <i class="far fa-heart"></i>
-                            <span class="total-wishlist">{{ Auth::guard('buyer')->check() ? Auth::guard('buyer')->user()->wishlists()->count() : 0 }}</span>
-                        </span>
-                        <span class="ha-label">Wishlist</span>
-                    </a>
                     <a href="#" class="ha-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
                         aria-controls="offcanvasRight">
                         <span class="ha-icon-wrap">
                             <i class="fas fa-bag-shopping"></i>
                             <span class="total-cart">{{ $cart['count'] }}</span>
                         </span>
-                        <span class="ha-label">Cart</span>
-                    </a>
-                    <a href="#" class="ha-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu"
-                        aria-controls="offcanvasMenu">
-                        <i class="fas fa-ellipsis"></i>
-                        <span class="ha-label">More</span>
+                        <span class="ha-label header-cart-summary">
+                            <b>Cart</b>
+                            <small>৳<span class="header-cart-total">{{ number_format($cart['total']) }}</span></small>
+                        </span>
                     </a>
                     @endif
                 </div>
@@ -284,8 +275,8 @@
     </a>
     {{-- Floating WhatsApp contact (moved here from the header). Only rendered
          once a contact phone exists, so we never ship a dead wa.me link. --}}
-    @if($setting->contact_phone ?? null)
-        <a href="https://wa.me/{{ preg_replace('/\D/', '', $setting->contact_phone) }}"
+    @if($whatsappNumber)
+        <a href="https://wa.me/{{ $whatsappNumber }}?text={{ urlencode('আসসালামু আলাইকুম, Panda Valy থেকে পণ্য অর্ডার করতে চাই। ' . url()->current()) }}"
             target="_blank" rel="noopener" class="floating-contact" title="Chat with us on WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
             <span class="floating-contact-text">
@@ -392,10 +383,7 @@
         </div>
     </div>
 
-    {{-- Mobile bottom bar. Shown only under 576px, by `display: block !important`
-         in responsive.css, which is what overrides the inline none.
-         The hrefs were the theme's placeholder files (index.html, shop.html,
-         cartlists.html) and so 404'd — they are real routes now. --}}
+    {{-- Minimal mobile navigation: Home, cart amount and WhatsApp. --}}
     @unless($bareChrome)
     <section class="footer-nav" style="display: none">
         <div class="nav-container">
@@ -405,31 +393,21 @@
                 <span class="nav-text">Home</span>
             </a>
 
-            <a href="#" class="nav-item" id="openCategory" data-bs-toggle="offcanvas"
-                data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
-                <span class="nav-icon">📂</span>
-                <span class="nav-text">Category</span>
-            </a>
-
-            <a href="{{ route('shop') }}" class="logo" aria-label="Shop all products">
-                <span class="logo-icon">🛍️</span>
-            </a>
-
             <a href="{{ route('cart.index') }}"
-               class="nav-item cart-container {{ request()->routeIs('cart.index') ? 'active' : '' }}">
-                <span class="nav-icon">🛒</span>
-                {{-- The theme styles .cart-count but never rendered one here. --}}
-                @if(($cart['count'] ?? 0) > 0)
-                    <span class="cart-count">{{ $cart['count'] }}</span>
-                @endif
-                <span class="nav-text">Cart</span>
+               class="mobile-main-cart {{ request()->routeIs('cart.index') ? 'active' : '' }}">
+                <span class="mobile-main-cart-icon"><i class="fas fa-basket-shopping"></i><b class="total-cart">{{ $cart['count'] }}</b></span>
+                <span>৳<b class="header-cart-total">{{ number_format($cart['total']) }}</b></span>
             </a>
 
-            <a href="{{ Auth::guard('buyer')->check() ? route('buyer.dashboard') : route('buyer.login') }}"
-               class="nav-item {{ request()->routeIs('buyer.*') ? 'active' : '' }}">
-                <span class="nav-icon">👤</span>
-                <span class="nav-text">Profile</span>
-            </a>
+            @if($whatsappNumber)
+                <a href="https://wa.me/{{ $whatsappNumber }}?text={{ urlencode('আসসালামু আলাইকুম, Panda Valy থেকে পণ্য অর্ডার করতে চাই। ' . url()->current()) }}"
+                   target="_blank" rel="noopener" class="nav-item mobile-nav-whatsapp">
+                    <span class="nav-icon"><i class="fa-brands fa-whatsapp"></i></span>
+                    <span class="nav-text">WhatsApp</span>
+                </a>
+            @else
+                <span class="nav-item is-disabled"><span class="nav-icon"><i class="fa-brands fa-whatsapp"></i></span><span class="nav-text">WhatsApp</span></span>
+            @endif
         </div>
     </section>
     @endunless

@@ -96,7 +96,7 @@ class HomeController extends Controller
         $config = $section->config ?? [];
         $limit = $config['limit'] ?? 8;
 
-        $query = Product::with('product_prices')->where('is_active', 1);
+        $query = Product::with(['product_prices', 'skus.productAttributes'])->where('is_active', 1);
 
         return match ($config['source'] ?? 'manual') {
             'trending' => $query->where('is_trending', 1)->orderBy('id', 'desc')->limit($limit)->get(),
@@ -128,7 +128,7 @@ class HomeController extends Controller
             return redirect()->route('home')->with('error', 'Product not found');
         }
 
-        $relatedProducts = Product::with('product_prices')
+        $relatedProducts = Product::with(['product_prices', 'skus.productAttributes'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', 1)
