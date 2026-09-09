@@ -31,9 +31,19 @@
         <span class="current-price">৳ {{ number_format($price->selling_price ?? $item->selling_price ?? 0, 0) }}</span>
     </div>
     <div class="action-buttons mt-2">
-        <a href="{{ $hasVariants ? route('product.details', $item->slug) : route('landing.start-product', $item->id) }}"
-           class="btn-buy-now product-card-order-btn">
-            <i class="fa-solid fa-bag-shopping"></i> অর্ডার করুন
-        </a>
+        @if($hasVariants)
+            {{-- A SKU must be selected before this product can be added safely. --}}
+            <a href="{{ route('product.details', $item->slug) }}"
+               class="btn-buy-now product-card-order-btn">
+                <i class="fa-solid fa-sliders"></i> অপশন দেখুন
+            </a>
+        @else
+            <button type="button"
+                    class="btn-buy-now product-card-order-btn product-card-cart-btn"
+                    data-product="{{ $item->id }}"
+                    data-qty="{{ max(1, (int) ($item->moq ?? 1)) }}">
+                <i class="fa-solid fa-bag-shopping"></i> কার্টে যোগ করুন
+            </button>
+        @endif
     </div>
 </div>

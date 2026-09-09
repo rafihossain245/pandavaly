@@ -2,6 +2,7 @@
 
 {{-- Shared links should preview the product, not the shop logo. --}}
 @section('chrome', 'bare')
+@section('body-class', 'product-view-body')
 @section('page-title', $product->name)
 @section('og-type', 'product')
 @section('og-image', $product->thumbnail ? asset($product->thumbnail) : asset('frontEnd/assets/image/product.jpg'))
@@ -48,6 +49,15 @@
 
 @section('css')
     <style>
+        /* Match the reference page's centered desktop measure. At the supplied
+           1339px viewport this leaves about 40px on each side, while the
+           gallery itself keeps its existing 360px dimensions. */
+        @media (min-width: 1200px) {
+            .product-view-body .container {
+                max-width: 1280px !important;
+            }
+        }
+
         .product-highlight-box {
             border: 1px solid var(--primary-border);
             border-radius: 8px;
@@ -106,6 +116,79 @@
 
         .product-part {
             width: 100%;
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+            align-items: start;
+            gap: clamp(20px, 3vw, 42px);
+        }
+
+        /* Keep the gallery close to the scale used by large marketplaces.  The
+           old theme gave it 44% of the page, which made portrait products look
+           oversized and left too little room for the buying information. */
+        .product-image-part {
+            width: 100%;
+            max-width: 360px;
+            min-width: 0;
+        }
+
+        .product-info-part {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .product-part > .desc-part {
+            grid-column: 1 / -1;
+        }
+
+        #exzoom {
+            width: 100%;
+            max-width: 360px;
+            margin-inline: auto;
+        }
+
+        #exzoom .exzoom_img_ul_outer {
+            border-color: #e5e7eb;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        #exzoom .exzoom_img_ul li {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+        }
+
+        /* Preserve every source image's proportions. Theme-wide !important
+           rules previously stretched gallery photos into a square. */
+        #exzoom .exzoom_img_ul li img {
+            width: auto !important;
+            height: auto !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            margin: auto !important;
+            object-fit: contain;
+        }
+
+        .product-info-part h1,
+        .product-highlight-box,
+        .product-buy-box,
+        .product-description,
+        .product-policy-content {
+            overflow-wrap: anywhere;
+        }
+
+        .product-description img,
+        .product-description video,
+        .product-policy-content img,
+        .product-policy-content video {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        .product-description iframe,
+        .product-policy-content iframe {
+            max-width: 100%;
         }
 
         .product-buy-box {
@@ -122,6 +205,18 @@
             flex: 1 1 0;
             transform-origin: center;
             animation: product-order-pulse 1.55s ease-in-out infinite;
+        }
+
+        /* Goer Bazar keeps desktop actions to one half of the information
+           column. Avoid letting Panda Valy's single action become an unusually
+           long full-row button on wide displays. */
+        @media (min-width: 992px) {
+            .product-buy-box .product-buy-form .buy-now-btn {
+                flex: 0 1 calc(50% - 4px);
+                width: calc(50% - 4px);
+                min-width: 280px;
+                max-width: 420px;
+            }
         }
 
         @keyframes product-order-pulse {
@@ -540,17 +635,43 @@
         .product-information-table td { padding: 11px 13px; border: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
         .product-information-table th { width: 34%; background: #f8fafc; color: #374151; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767.98px) {
             html, body { max-width: 100%; overflow-x: hidden; }
             body { padding-bottom: 72px; }
             .floating-contact { display: none !important; }
-            .product-part { width: 100%; max-width: 100%; display: block !important; }
-            .product-image-part, .product-info-part { width: 100% !important; max-width: 100% !important; min-width: 0; }
-            #exzoom, #exzoom .exzoom_img_box, #exzoom .exzoom_img_ul {
-                width: 100% !important; max-width: 100% !important;
+            .product-details { width: 100%; min-width: 0; }
+            .product-part {
+                width: 100%; max-width: 100%; display: grid !important;
+                grid-template-columns: minmax(0, 1fr); gap: 20px;
             }
-            #exzoom .exzoom_img_ul li { width: 100% !important; }
-            #exzoom .exzoom_img_ul li img { width: 100% !important; height: auto !important; object-fit: contain; }
+            .product-image-part {
+                width: 100% !important; max-width: min(100%, 420px) !important;
+                min-width: 0; margin-inline: auto;
+            }
+            .product-info-part { width: 100% !important; max-width: 100% !important; min-width: 0; margin-top: 0; }
+            .product-part > .desc-part { grid-column: 1; }
+            #exzoom { width: 100% !important; }
+            .product-highlight-box .highlight-tag { max-width: 100%; white-space: normal; }
+            .product-buy-box .product-buy-form > .d-flex { flex-wrap: wrap; }
+            .desc-part .tabs-header {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            .desc-part .tab-button {
+                min-width: 0;
+                padding: 11px 6px;
+                font-size: 13px;
+                text-align: center;
+                overflow-wrap: anywhere;
+            }
+            .desc-part .tab-content { padding: 16px 12px; }
+            .product-information-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .product-information-table th { min-width: 120px; }
             .product-mobile-order {
                 position: fixed; left: 12px; right: 66px; bottom: 10px; z-index: 70;
                 min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -563,6 +684,14 @@
                 display: grid; place-items: center; border-radius: 9px; background: #25d366; color: #fff; font-size: 23px;
                 box-shadow: 0 6px 18px rgba(37,211,102,.25);
             }
+        }
+
+        @media (max-width: 359.98px) {
+            .product-highlight-box { padding: 12px; }
+            .product-buy-box { padding: 12px; }
+            .desc-part .tab-button { padding-inline: 3px; font-size: 12px; }
+            .product-mobile-order { left: 8px; right: 62px; font-size: 14px; }
+            .product-mobile-whatsapp { right: 8px; }
         }
     </style>
 @endsection
@@ -1710,6 +1839,9 @@
                 next: function () {            //下一张图片
                     moveRight();
                 },
+                resize: function () {
+                    resizeGallery();
+                },
                 setImg: function () {            //设置大图
                     let url = arguments[0];
 
@@ -1832,6 +1964,54 @@
                 previewImg(imgArr[imgIndex]);
                 autoPlay();//自动播放
                 bindingEvent();//绑定事件
+            }
+
+            /**
+             * The original plugin measured the gallery once and then kept pixel
+             * widths forever. Recalculate those values when a responsive column
+             * changes size (including phone rotation and split-screen resizing).
+             */
+            function resizeGallery() {
+                if (!ele || !exzoom_img_ul_outer || !exzoom_img_ul_outer.length) {
+                    return;
+                }
+
+                let nextWidth = Math.round(ele.width());
+                if (!nextWidth || Math.abs(nextWidth - boxWidth) < 1) {
+                    return;
+                }
+
+                boxWidth = boxHeight = nextWidth;
+                images = exzoom_img_ul.find('li img');
+                imgNum = images.length;
+                imgArr = [];
+
+                for (let i = 0; i < imgNum; i++) {
+                    imgArr[i] = copute_image_prop(images.eq(i), null, null, false);
+                    exzoom_img_ul.find('li').eq(i).css({
+                        width: boxWidth + 'px',
+                        height: boxHeight + 'px'
+                    });
+                }
+
+                exzoom_img_ul_width = boxWidth * imgNum;
+                exzoom_img_ul_max_margin = boxWidth * Math.max(0, imgNum - 1);
+                exzoom_img_ul.css({
+                    width: exzoom_img_ul_width + 'px',
+                    left: (-boxWidth * Math.min(imgIndex, Math.max(0, imgNum - 1))) + 'px'
+                });
+
+                exzoom_img_box.add(exzoom_img_ul_outer).css({
+                    width: boxWidth + 'px',
+                    height: boxHeight + 'px'
+                });
+                exzoom_preview.css({
+                    width: boxWidth + 'px',
+                    height: boxHeight + 'px',
+                    left: (boxWidth + 5) + 'px'
+                });
+                exzoom_nav.css('width', Math.max(0, boxWidth - exzoom_prev_btn.width() - exzoom_next_btn.width()) + 'px');
+                previewImg(imgArr[imgIndex] || imgArr[0]);
             }
 
             /**
@@ -2170,7 +2350,7 @@
              * @param height : image 为图片url地址时指定高度
              * @returns {Array}
              */
-            function copute_image_prop(image, width, height) {
+            function copute_image_prop(image, width, height, appendNavigation = true) {
                 let src;
                 let res = [];
 
@@ -2196,7 +2376,7 @@
                     res[7] = boxHeight / 2;
                     res[8] = boxHeight * 2;//width
                     res[9] = boxHeight * 2;//height
-                    exzoom_nav_inner.append(`<span><img src="${src}" width="${g.navWidth}" height="${g.navHeight}"/></span>`);
+                    if (appendNavigation) exzoom_nav_inner.append(`<span><img src="${src}" width="${g.navWidth}" height="${g.navHeight}"/></span>`);
                 } else if (img_scale > 1) {
                     res[3] = boxHeight;//width
                     res[4] = boxHeight / img_scale;
@@ -2206,7 +2386,7 @@
                     res[8] = boxHeight * 2 * img_scale;//width
                     res[9] = boxHeight * 2;//height
                     let top = (g.navHeight - (g.navWidth / img_scale)) / 2;
-                    exzoom_nav_inner.append(`<span><img src="${src}" width="${g.navWidth}" style='top:${top}px;' /></span>`);
+                    if (appendNavigation) exzoom_nav_inner.append(`<span><img src="${src}" width="${g.navWidth}" style='top:${top}px;' /></span>`);
                 } else if (img_scale < 1) {
                     res[3] = boxHeight * img_scale;//width
                     res[4] = boxHeight;//height
@@ -2216,7 +2396,7 @@
                     res[8] = boxHeight * 2;//width
                     res[9] = boxHeight * 2 / img_scale;
                     let top = (g.navWidth - (g.navHeight * img_scale)) / 2;
-                    exzoom_nav_inner.append(`<span><img src="${src}" height="${g.navHeight}" style="left:${top}px;"/></span>`);
+                    if (appendNavigation) exzoom_nav_inner.append(`<span><img src="${src}" height="${g.navHeight}" style="left:${top}px;"/></span>`);
                 }
 
                 return res;
@@ -2232,6 +2412,22 @@
                     autoPlay: false,
                 });
                 $("#exzoom").removeClass('hidden')
+
+                const gallery = document.getElementById('exzoom');
+                let resizeFrame = null;
+                const refreshGallerySize = function () {
+                    window.cancelAnimationFrame(resizeFrame);
+                    resizeFrame = window.requestAnimationFrame(function () {
+                        $(gallery).exzoom('resize');
+                    });
+                };
+
+                if ('ResizeObserver' in window) {
+                    gallery._resizeObserver = new ResizeObserver(refreshGallerySize);
+                    gallery._resizeObserver.observe(gallery);
+                } else {
+                    $(window).on('resize.productGallery', refreshGallerySize);
+                }
             });
 
         });

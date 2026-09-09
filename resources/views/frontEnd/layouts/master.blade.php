@@ -114,7 +114,7 @@
     </style>
 </head>
 
-<body>
+<body class="@yield('body-class')">
 
     @include('frontEnd.layouts.tracking-noscript')
 

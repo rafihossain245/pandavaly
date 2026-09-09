@@ -60,7 +60,7 @@
         }
 
         // ---- Add to Cart ----
-        $(document).on('click', '.add-to-cart-btn', function (e) {
+        $(document).on('click', '.add-to-cart-btn, .product-card-cart-btn', function (e) {
             e.preventDefault();
             var $btn     = $(this);
             var origHtml = $btn.html();

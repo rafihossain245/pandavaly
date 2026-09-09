@@ -123,7 +123,7 @@
                 <div class="lp-order-col">
                     <p class="lp-order-legend"><i class="fas fa-bag-shopping"></i> আপনার নির্বাচন</p>
                     <div class="lp-pick" id="lpPicked"></div>
-                    <div class="lp-picked-empty" id="lpPickedEmpty">উপরের পণ্য থেকে <strong>অর্ডার করুন</strong> বাটনে চাপুন।</div>
+                    <div class="lp-picked-empty" id="lpPickedEmpty">উপরের পণ্য থেকে <strong>কার্টে যোগ করুন</strong> বাটনে চাপুন।</div>
 
                     <p class="lp-order-legend" style="margin-top:22px;"><i class="fas fa-user"></i> ডেলিভারি তথ্য</p>
                     <div class="lp-field">
@@ -274,8 +274,7 @@
         if (!CATALOG[productId]) return;
         if (!picks[productId]) picks[productId] = 1;
         renderOrder();
-        toast(CATALOG[productId].name + ' অর্ডারে যোগ হয়েছে');
-        document.getElementById('order-form').scrollIntoView({ behavior: 'smooth' });
+        toast(CATALOG[productId].name + ' কার্টে যোগ হয়েছে');
     }
 
     $(document).on('click', '[data-order]', function () { openOrder($(this).data('order')); });
@@ -293,11 +292,28 @@
     function filterDistricts() {
         var zone = $('input[name="delivery_zone"]:checked').val();
         var $select = $('#district_id');
-        $select.find('option[value]').each(function () {
-            var matches = !zone || $(this).data('zone') === zone;
+        var $placeholder = $select.find('option[value=""]').first();
+        var selectedValue = String($select.val() || '');
+        var selectedZone = $select.find('option:selected').data('zone');
+
+        // The placeholder must stay enabled. Previously it was included in
+        // this filter, so the browser could keep displaying an old, disabled
+        // district (for example Habiganj after switching back to Dhaka).
+        $placeholder.prop('hidden', false).prop('disabled', false);
+        $select.find('option[value]:not([value=""])').each(function () {
+            var matches = !zone || String($(this).data('zone')) === String(zone);
             $(this).prop('hidden', !matches).prop('disabled', !matches);
         });
-        if ($select.val() && $select.find('option:selected').prop('disabled')) $select.val('');
+
+        if (selectedValue && zone && String(selectedZone) !== String(zone)) {
+            if (zone === 'dhaka') {
+                // Dhaka is the only valid district for the inside-Dhaka zone.
+                $select.val($select.find('option[data-zone="dhaka"]:not(:disabled)').first().val());
+            } else {
+                $select.val('');
+                $placeholder.prop('selected', true);
+            }
+        }
         renderOrder();
     }
     $(document).on('change', 'input[name="delivery_zone"]', filterDistricts);

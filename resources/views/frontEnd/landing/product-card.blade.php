@@ -27,11 +27,11 @@
 
         @if($hasVariants)
             <a href="{{ route('product.details', $p->slug) }}" class="lp-order-button">
-                <i class="fas fa-bag-shopping"></i> অর্ডার করুন
+                <i class="fas fa-sliders"></i> অপশন দেখুন
             </a>
         @else
             <button type="button" class="lp-order-button" data-order="{{ $p->id }}">
-                <i class="fas fa-bag-shopping"></i> অর্ডার করুন
+                <i class="fas fa-bag-shopping"></i> কার্টে যোগ করুন
             </button>
         @endif
     </div>
