@@ -49,12 +49,17 @@
 
 @section('css')
     <style>
-        /* Match the reference page's centered desktop measure. At the supplied
-           1339px viewport this leaves about 40px on each side, while the
-           gallery itself keeps its existing 360px dimensions. */
+        .product-view-body {
+            background: #f6f6f6;
+        }
+
+        /* Naturo's desktop page uses a centred, bounded canvas. This keeps the
+           same proportions on 16-inch laptops and 22/24-inch monitors instead
+           of allowing the product panel to stretch with the whole viewport. */
         @media (min-width: 1200px) {
             .product-view-body .container {
-                max-width: 1280px !important;
+                width: calc(100% - 32px) !important;
+                max-width: 1430px !important;
             }
         }
 
@@ -116,15 +121,22 @@
 
         .product-part {
             width: 100%;
+        }
+
+        .product-main-card {
+            width: 100%;
+            box-sizing: border-box;
             display: grid;
             grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
             align-items: start;
             gap: clamp(20px, 3vw, 42px);
+            padding: 24px;
+            border: 1px solid #ececec;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
         }
 
-        /* Keep the gallery close to the scale used by large marketplaces.  The
-           old theme gave it 44% of the page, which made portrait products look
-           oversized and left too little room for the buying information. */
         .product-image-part {
             width: 100%;
             max-width: 360px;
@@ -137,13 +149,18 @@
         }
 
         .product-part > .desc-part {
-            grid-column: 1 / -1;
+            margin-top: 36px;
+            border: 1px solid #ececec;
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
         }
 
         #exzoom {
             width: 100%;
             max-width: 360px;
             margin-inline: auto;
+            position: relative;
         }
 
         #exzoom .exzoom_img_ul_outer {
@@ -192,31 +209,81 @@
         }
 
         .product-buy-box {
-            border: 1px solid #e8e8e8;
-            border-radius: 6px;
-            padding: 15px;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
         }
 
         .product-buy-box .product-buy-form .add-to-cart-btn,
         .product-buy-box .product-buy-form .buy-now-btn {
-            display: inline-block;
-            width: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
             margin: 0;
-            flex: 1 1 0;
-            transform-origin: center;
-            animation: product-order-pulse 1.55s ease-in-out infinite;
+            min-height: 48px;
+            border-radius: 5px;
+            font-weight: 700;
+            animation: none;
         }
 
-        /* Goer Bazar keeps desktop actions to one half of the information
-           column. Avoid letting Panda Valy's single action become an unusually
-           long full-row button on wide displays. */
-        @media (min-width: 992px) {
-            .product-buy-box .product-buy-form .buy-now-btn {
-                flex: 0 1 calc(50% - 4px);
-                width: calc(50% - 4px);
-                min-width: 280px;
-                max-width: 420px;
-            }
+        .product-detail-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px 14px;
+            margin-top: 22px;
+        }
+
+        .product-detail-actions .add-to-cart-btn {
+            border: 2px solid var(--primary);
+            background: #fff;
+            color: var(--primary) !important;
+        }
+
+        .product-detail-actions .buy-now-btn {
+            border: 2px solid var(--primary);
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .product-contact-action {
+            min-width: 0;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 2px solid #111827;
+            border-radius: 5px;
+            background: #fff;
+            color: #111827;
+            font-weight: 700;
+            line-height: 1.35;
+            text-align: center;
+            overflow-wrap: anywhere;
+            text-decoration: none;
+        }
+
+        .product-contact-action:hover {
+            color: #111827;
+        }
+
+        .product-contact-action.whatsapp-action {
+            border-color: #25b85a;
+            background: #25b85a;
+            color: #fff;
+        }
+
+        .product-category-meta {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            color: #64748b;
+        }
+
+        .product-category-meta a {
+            color: #111827;
+            text-decoration: none;
         }
 
         @keyframes product-order-pulse {
@@ -229,14 +296,143 @@
             .product-mobile-order { animation: none !important; }
         }
 
-        .product-buy-box .product-buy-form .add-to-cart-btn {
-            color: #fff;
+        @media (max-width: 575px) {
+            .product-detail-actions {
+                display: none;
+            }
         }
 
-        @media (max-width: 575px) {
-            .product-buy-box .buy-now-btn,
-            .product-buy-box .add-to-cart-btn {
+        @media (min-width: 1280px) {
+            .product-details {
+                margin-top: 28px;
+            }
+
+            .product-main-card {
+                grid-template-columns: minmax(0, 468px) minmax(0, 1fr);
+                gap: 40px;
+                min-height: 650px;
+                padding: 34px 38px;
+            }
+
+            .product-image-part {
+                max-width: 468px;
+            }
+
+            #exzoom {
+                width: 360px;
+                max-width: calc(100% - 108px);
+                margin-left: 108px;
+                margin-right: 0;
+            }
+
+            #exzoom .exzoom_img_ul_outer {
+                border: 1px solid #e1e5df;
+                border-radius: 7px;
+            }
+
+            #exzoom .exzoom_nav {
+                position: absolute !important;
+                top: 0 !important;
+                left: -108px !important;
+                width: 96px !important;
+                height: 360px !important;
+                margin: 0 !important;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
+
+            #exzoom .exzoom_nav_inner {
+                position: static !important;
+                width: 100% !important;
+                height: auto !important;
+                display: flex !important;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            #exzoom .exzoom_nav_inner span {
+                float: none !important;
+                flex: 0 0 96px;
+                width: 96px !important;
+                height: 96px !important;
+                margin: 0 !important;
+                display: grid !important;
+                place-items: center;
+                border-radius: 6px;
+                background: #fff;
+                overflow: hidden;
+            }
+
+            #exzoom .exzoom_nav_inner span img {
+                position: static !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                object-fit: contain;
+            }
+
+            #exzoom .exzoom_btn {
+                position: static !important;
+            }
+
+            #exzoom .exzoom_btn a {
+                top: 50% !important;
+                bottom: auto !important;
+                width: 38px !important;
+                height: 48px !important;
+                line-height: 48px !important;
+                transform: translateY(-50%);
+                z-index: 5;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, .88);
+                box-shadow: 0 2px 8px rgba(15, 23, 42, .12);
+            }
+
+            #exzoom .exzoom_prev_btn {
+                left: 10px !important;
+            }
+
+            #exzoom .exzoom_next_btn {
+                left: auto !important;
+                right: 10px !important;
+            }
+
+            #exzoom .exzoom_preview {
+                max-width: none !important;
+                max-height: none !important;
+                pointer-events: none;
+                border: 2px solid var(--primary);
+                border-radius: 4px;
+                background: #fff;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, .16);
+            }
+
+            .product-info-part h1 {
+                margin: 0 0 18px;
+                font-size: clamp(25px, 1.55vw, 30px);
+                line-height: 1.3;
+            }
+
+            .product-highlight-box {
                 display: none;
+            }
+
+            .product-buy-box {
+                margin-top: 0 !important;
+            }
+
+            .product-buy-box .variant-current-price {
+                font-size: 28px !important;
+            }
+        }
+
+        /* Hover zoom is a desktop interaction. On touch/tablet layouts the
+           image remains fully visible and never covers the buying controls. */
+        @media (max-width: 1279.98px) {
+            #exzoom .exzoom_preview,
+            #exzoom .exzoom_zoom {
+                display: none !important;
             }
         }
 
@@ -635,14 +831,13 @@
         .product-information-table td { padding: 11px 13px; border: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
         .product-information-table th { width: 34%; background: #f8fafc; color: #374151; }
 
-        @media (max-width: 767.98px) {
+        @media (max-width: 991.98px) {
             html, body { max-width: 100%; overflow-x: hidden; }
-            body { padding-bottom: 72px; }
-            .floating-contact { display: none !important; }
             .product-details { width: 100%; min-width: 0; }
-            .product-part {
+            .product-main-card {
                 width: 100%; max-width: 100%; display: grid !important;
                 grid-template-columns: minmax(0, 1fr); gap: 20px;
+                padding: 14px;
             }
             .product-image-part {
                 width: 100% !important; max-width: min(100%, 420px) !important;
@@ -653,6 +848,11 @@
             #exzoom { width: 100% !important; }
             .product-highlight-box .highlight-tag { max-width: 100%; white-space: normal; }
             .product-buy-box .product-buy-form > .d-flex { flex-wrap: wrap; }
+        }
+
+        @media (max-width: 767.98px) {
+            body { padding-bottom: 72px; }
+            .floating-contact { display: none !important; }
             .desc-part .tabs-header {
                 display: grid;
                 grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -799,7 +999,13 @@
                         // With variants the sellable stock is the SKUs', not the product's.
                         $inStock = collect($skuMap)->contains(fn ($entry) => $entry['in_stock']);
                     }
+
+                    $detailPhone = (string) (\App\Models\Setting::query()->value('contact_phone') ?? '');
+                    $detailPhoneDigits = preg_replace('/\D/', '', $detailPhone);
+                    $detailWhatsapp = $detailPhoneDigits;
+                    if (str_starts_with($detailWhatsapp, '0')) $detailWhatsapp = '88' . $detailWhatsapp;
                 @endphp
+                <div class="product-main-card">
                 <div class="product-image-part">
                     <div class="exzoom hidden" id="exzoom">
                         <div class="exzoom_img_box">
@@ -965,15 +1171,38 @@
                                     <span class="text-muted small">(Min. order: {{ $moq }})</span>
                                 @endif
                             </div>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-buy-now flex-fill buy-now-btn"
+                            <div class="product-detail-actions">
+                                <button type="button" class="btn add-to-cart-btn"
+                                    data-product="{{ $product->id }}"
+                                    {{ $inStock ? '' : 'disabled' }}>
+                                    <i class="fas fa-cart-plus me-1"></i> কার্টে যোগ করুন
+                                </button>
+                                <button type="button" class="btn btn-buy-now buy-now-btn"
                                     data-product="{{ $product->id }}"
                                     data-landing-start="{{ route('landing.start-product', $product->id) }}"
                                     {{ $inStock ? '' : 'disabled' }}>
                                     <i class="fas fa-bag-shopping me-1"></i> অর্ডার করুন
                                 </button>
+                                @if($detailWhatsapp)
+                                    <a class="product-contact-action whatsapp-action"
+                                       href="https://wa.me/{{ $detailWhatsapp }}?text={{ urlencode('আমি ' . $product->name . ' অর্ডার করতে চাই।') }}"
+                                       target="_blank" rel="noopener">
+                                        <i class="fab fa-whatsapp"></i> হোয়াটসঅ্যাপে অর্ডার করুন
+                                    </a>
+                                @endif
+                                @if($detailPhoneDigits)
+                                    <a class="product-contact-action call-action" href="tel:{{ $detailPhoneDigits }}">
+                                        <i class="fas fa-phone-alt"></i> কল অর্ডার: {{ $detailPhone }}
+                                    </a>
+                                @endif
                             </div>
                         </form>
+                        @if($product->category)
+                            <div class="product-category-meta">
+                                ক্যাটাগরি:
+                                <a href="{{ route('shop', ['category' => $product->category->slug]) }}">{{ $product->category->name }}</a>
+                            </div>
+                        @endif
                     </div>
                     
                     {{-- <div class="store-info my-3">
@@ -1289,6 +1518,7 @@
                         </div>
                     </div>
                 </div> --}}
+                </div>
                 <div class="desc-part w-100">
                     <div class="product-container">
                         <div class="tabs-container">
@@ -1520,10 +1750,6 @@
             data-landing-start="{{ route('landing.start-product', $product->id) }}" {{ $inStock ? '' : 'disabled' }}>
         <i class="fas fa-bag-shopping"></i> অর্ডার করুন
     </button>
-    @php
-        $detailWhatsapp = preg_replace('/\D/', '', (string) (\App\Models\Setting::first()->contact_phone ?? ''));
-        if (str_starts_with($detailWhatsapp, '0')) $detailWhatsapp = '88' . $detailWhatsapp;
-    @endphp
     @if($detailWhatsapp)
         <a class="product-mobile-whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp"
            href="https://wa.me/{{ $detailWhatsapp }}?text={{ urlencode('আসসালামু আলাইকুম, আমি ' . $product->name . ' অর্ডার করতে চাই। ' . route('product.details', $product->slug)) }}">
@@ -1958,7 +2184,7 @@
                 exzoom_preview.css({
                     "width": boxHeight + "px",
                     "height": boxHeight + "px",
-                    "left": boxHeight + 5 + "px",//添加个边距
+                    "left": boxHeight + 8 + "px",//添加个边距
                 });
 
                 previewImg(imgArr[imgIndex]);
@@ -1977,7 +2203,14 @@
                 }
 
                 let nextWidth = Math.round(ele.width());
-                if (!nextWidth || Math.abs(nextWidth - boxWidth) < 1) {
+                if (!nextWidth) {
+                    return;
+                }
+
+                // The source canvas stays 360px on large screens, but the
+                // available preview space changes with the monitor width.
+                if (Math.abs(nextWidth - boxWidth) < 1) {
+                    previewImg(imgArr[imgIndex] || imgArr[0]);
                     return;
                 }
 
@@ -2008,7 +2241,7 @@
                 exzoom_preview.css({
                     width: boxWidth + 'px',
                     height: boxHeight + 'px',
-                    left: (boxWidth + 5) + 'px'
+                    left: (boxWidth + 8) + 'px'
                 });
                 exzoom_nav.css('width', Math.max(0, boxWidth - exzoom_prev_btn.width() - exzoom_next_btn.width()) + 'px');
                 previewImg(imgArr[imgIndex] || imgArr[0]);
@@ -2155,12 +2388,13 @@
                 //大屏幕在大图区域移动
                 exzoom_zoom_outer.on("mousemove", function (e) {
                     let width_limit = exzoom_zoom.width() / 2,
+                        height_limit = exzoom_zoom.height() / 2,
                         max_X = exzoom_zoom_outer.width() - width_limit,
-                        max_Y = exzoom_zoom_outer.height() - width_limit,
+                        max_Y = exzoom_zoom_outer.height() - height_limit,
                         current_X = e.pageX - exzoom_zoom_outer.offset().left,
                         current_Y = e.pageY - exzoom_zoom_outer.offset().top,
                         move_X = current_X - width_limit,
-                        move_Y = current_Y - width_limit;
+                        move_Y = current_Y - height_limit;
 
                     if (current_X <= width_limit) {
                         move_X = 0;
@@ -2168,17 +2402,22 @@
                     if (current_X >= max_X) {
                         move_X = max_X - width_limit;
                     }
-                    if (current_Y <= width_limit) {
+                    if (current_Y <= height_limit) {
                         move_Y = 0;
                     }
                     if (current_Y >= max_Y) {
-                        move_Y = max_Y - width_limit;
+                        move_Y = max_Y - height_limit;
                     }
                     exzoom_zoom.css({ "left": move_X + "px", "top": move_Y + "px" });
 
+                    let maxLensX = Math.max(1, exzoom_zoom_outer.width() - exzoom_zoom.width()),
+                        maxLensY = Math.max(1, exzoom_zoom_outer.height() - exzoom_zoom.height()),
+                        maxPreviewX = Math.max(0, exzoom_preview_img.width() - exzoom_preview.width()),
+                        maxPreviewY = Math.max(0, exzoom_preview_img.height() - exzoom_preview.height());
+
                     exzoom_preview_img.css({
-                        "left": -move_X * exzoom_preview.width() / exzoom_zoom.width() + "px",
-                        "top": -move_Y * exzoom_preview.width() / exzoom_zoom.width() + "px"
+                        "left": -(move_X / maxLensX) * maxPreviewX + "px",
+                        "top": -(move_Y / maxLensY) * maxPreviewY + "px"
                     });
                 });
 
@@ -2294,6 +2533,23 @@
                 }
                 exzoom_preview_img.attr("src", image_prop[0]);
 
+                let desktopZoom = window.matchMedia('(min-width: 1280px)').matches;
+                let previewWidth = boxWidth;
+                let previewHeight = boxHeight;
+                let zoomScale = 2;
+
+                if (desktopZoom) {
+                    let card = ele.closest('.product-main-card').get(0);
+                    let gallery = ele.get(0);
+                    if (card && gallery) {
+                        let cardRect = card.getBoundingClientRect();
+                        let galleryRect = gallery.getBoundingClientRect();
+                        previewWidth = Math.max(420, Math.min(850, Math.floor(cardRect.right - galleryRect.right - 16)));
+                    }
+                    previewHeight = Math.max(360, Math.min(520, Math.round(previewWidth * 0.58)));
+                    zoomScale = 3;
+                }
+
                 exzoom_main_img.attr("src", image_prop[0])
                     .css({
                         "width": image_prop[3] + "px",
@@ -2307,12 +2563,19 @@
                     "position": "relative"
                 });
                 exzoom_zoom.css({
-                    "width": image_prop[7] + "px",
-                    "height": image_prop[7] + "px"
+                    "width": (desktopZoom ? Math.min(image_prop[3], previewWidth / zoomScale) : image_prop[7]) + "px",
+                    "height": (desktopZoom ? Math.min(image_prop[4], previewHeight / zoomScale) : image_prop[7]) + "px"
                 });
                 exzoom_preview_img.css({
-                    "width": image_prop[8] + "px",
-                    "height": image_prop[9] + "px"
+                    "width": (desktopZoom ? image_prop[3] * zoomScale : image_prop[8]) + "px",
+                    "height": (desktopZoom ? image_prop[4] * zoomScale : image_prop[9]) + "px",
+                    "left": 0,
+                    "top": 0
+                });
+                exzoom_preview.css({
+                    "width": previewWidth + "px",
+                    "height": previewHeight + "px",
+                    "left": (boxWidth + 8) + "px"
                 });
             }
 
@@ -2422,11 +2685,11 @@
                     });
                 };
 
+                $(window).on('resize.productGallery', refreshGallerySize);
+
                 if ('ResizeObserver' in window) {
                     gallery._resizeObserver = new ResizeObserver(refreshGallerySize);
                     gallery._resizeObserver.observe(gallery);
-                } else {
-                    $(window).on('resize.productGallery', refreshGallerySize);
                 }
             });
 
@@ -2591,7 +2854,9 @@
         })();
 
         // Buy Now: add to cart then redirect to checkout
-        $('.buy-now-btn').on('click', function () {
+        $('.buy-now-btn').on('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
             const $btn = $(this);
             const productId = $btn.data('product') || $('.product-buy-form').data('product');
             let $form = $btn.closest('form');
@@ -2656,35 +2921,6 @@
                     alert(message);
                 }
             });
-        });
-
-        // Non-variant Add to Cart uses the same one-page order form as Buy Now.
-        $('.product-buy-form .add-to-cart-btn').on('click', function (event) {
-            if ($('.product-variant-selector').length) return;
-
-            event.preventDefault();
-            event.stopImmediatePropagation();
-
-            const $btn = $(this);
-            const $form = $btn.closest('.product-buy-form');
-            const qty = $form.find('.qty-input').val() || 1;
-            const landingUrl = new URL("{{ route('landing.start-product', $product->id) }}", window.location.origin);
-            landingUrl.searchParams.set('qty', qty);
-
-            if (window.goeTrack) {
-                goeTrack('add_to_cart', {
-                    currency: 'BDT',
-                    value: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))) * Number(qty),
-                    items: [{
-                        id: String({{ $product->id }}),
-                        name: @json($product->name),
-                        price: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))),
-                        quantity: Number(qty)
-                    }]
-                });
-            }
-
-            setTimeout(function () { window.location.href = landingUrl.toString(); }, 200);
         });
 
         // Rotate only when multiple product images exist. Any shopper
