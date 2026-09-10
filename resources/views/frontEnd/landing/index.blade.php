@@ -264,7 +264,9 @@
         $('#lpShipping').text(money(charge));
         $('#lpTotal').text(money(subtotal + charge));
         $('[data-cart-count]').text(bn(count));
+        $('.lp-badge').toggle(count > 0);
         $('[data-cart-total]').text(money(subtotal));
+        $('.lp-action-cart-copy [data-cart-total]').toggle(count > 0);
         $desktopPill.prop('hidden', count === 0);
         $('[data-order]').toggleClass('is-added', function () { return !!picks[String($(this).data('order'))]; });
     }

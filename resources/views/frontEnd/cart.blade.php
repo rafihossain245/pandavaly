@@ -202,7 +202,10 @@ $(document).ready(function () {
         $('#cp-item-count').text(Object.keys(cart.items).length);
         // Update sidebar too
         $('#cs-items-wrap').html(cart.cart_items_html || '');
-        $('.total-cart, .cs-count').text(cart.count);
+        $('.total-cart').text(cart.count > 0 ? cart.count : '').toggle(cart.count > 0);
+        $('.header-cart-total').text(numberFormat(total));
+        $('.header-cart-amount, .mobile-main-cart-total').toggle(cart.count > 0);
+        $('.cs-count').text(cart.count);
         $('.cs-total-val').text(numberFormat(total));
     }
 

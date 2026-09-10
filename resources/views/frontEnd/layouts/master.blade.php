@@ -160,7 +160,7 @@
                 <div class="header-search">
                     <form action="{{ $bareChrome ? route('home') : route('shop') }}" method="get">
                         <input type="search" name="q" value="{{ request('q') }}" class="form-control"
-                               placeholder="{{ $bareChrome ? 'ডিজাইন বা কোড খুঁজুন...' : 'Search any products...' }}">
+                               placeholder="পণ্য খুঁজুন...">
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
@@ -184,22 +184,26 @@
                                 <span class="ha-label">কল করুন</span>
                             </a>
                         @endif
-                        {{-- The funnel's Cart scrolls to its order form; from here
-                             that form is on another page, so link to it. --}}
-                        <a href="{{ route('home') }}#order-form" class="ha-item" title="Order now">
-                            <i class="fas fa-bag-shopping"></i>
-                            <span class="ha-label">Cart</span>
+                        <a href="{{ route('cart.index') }}" class="ha-item" title="View cart">
+                            <span class="ha-icon-wrap">
+                                <i class="fas fa-bag-shopping"></i>
+                                <span class="total-cart"@if($cart['count'] < 1) style="display:none"@endif>{{ $cart['count'] > 0 ? $cart['count'] : '' }}</span>
+                            </span>
+                            <span class="ha-label header-cart-summary">
+                                <b>Cart</b>
+                                <small class="header-cart-amount"@if($cart['count'] < 1) style="display:none"@endif>৳<span class="header-cart-total">{{ number_format($cart['total']) }}</span></small>
+                            </span>
                         </a>
                     @else
                     <a href="#" class="ha-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
                         aria-controls="offcanvasRight">
                         <span class="ha-icon-wrap">
                             <i class="fas fa-bag-shopping"></i>
-                            <span class="total-cart">{{ $cart['count'] }}</span>
+                            <span class="total-cart"@if($cart['count'] < 1) style="display:none"@endif>{{ $cart['count'] > 0 ? $cart['count'] : '' }}</span>
                         </span>
                         <span class="ha-label header-cart-summary">
                             <b>Cart</b>
-                            <small>৳<span class="header-cart-total">{{ number_format($cart['total']) }}</span></small>
+                            <small class="header-cart-amount"@if($cart['count'] < 1) style="display:none"@endif>৳<span class="header-cart-total">{{ number_format($cart['total']) }}</span></small>
                         </span>
                     </a>
                     @endif
@@ -209,7 +213,7 @@
             <div class="container mobile-search">
                 <div class="header-search">
                     <form action="{{ route('shop') }}" method="get">
-                        <input type="search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search any products...">
+                        <input type="search" name="q" value="{{ request('q') }}" class="form-control" placeholder="পণ্য খুঁজুন...">
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
@@ -395,8 +399,8 @@
 
             <a href="{{ route('cart.index') }}"
                class="mobile-main-cart {{ request()->routeIs('cart.index') ? 'active' : '' }}">
-                <span class="mobile-main-cart-icon"><i class="fas fa-basket-shopping"></i><b class="total-cart">{{ $cart['count'] }}</b></span>
-                <span>৳<b class="header-cart-total">{{ number_format($cart['total']) }}</b></span>
+                <span class="mobile-main-cart-icon"><i class="fas fa-basket-shopping"></i><b class="total-cart"@if($cart['count'] < 1) style="display:none"@endif>{{ $cart['count'] > 0 ? $cart['count'] : '' }}</b></span>
+                <span class="mobile-main-cart-total"@if($cart['count'] < 1) style="display:none"@endif>৳<b class="header-cart-total">{{ number_format($cart['total']) }}</b></span>
             </a>
 
             @if($whatsappNumber)

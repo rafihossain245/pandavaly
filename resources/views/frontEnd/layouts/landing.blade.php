@@ -84,7 +84,7 @@
             {{-- Filters the gallery in place — there is no results page to send
                  anyone to on a single-screen funnel. --}}
             <div class="lp-search">
-                <input type="search" id="lpSearch" placeholder="পণ্য বা কোড খুঁজুন..." autocomplete="off">
+                <input type="search" id="lpSearch" placeholder="পণ্য খুঁজুন..." autocomplete="off">
                 <i class="fas fa-magnifying-glass"></i>
             </div>
 
@@ -99,11 +99,11 @@
                 <a href="#order-form" class="lp-action lp-action-cart">
                     <span class="lp-action-icon">
                         <i class="fas fa-bag-shopping"></i>
-                        <span class="lp-badge" data-cart-count>0</span>
+                        <span class="lp-badge" data-cart-count style="display:none"></span>
                     </span>
                     <span class="lp-action-cart-copy">
                         <b>Cart</b>
-                        <small data-cart-total>৳0</small>
+                        <small data-cart-total style="display:none">৳0</small>
                     </span>
                 </a>
             </nav>

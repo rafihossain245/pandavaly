@@ -145,9 +145,35 @@ class Product extends Model
 
     public function hasVariants(): bool
     {
-        return $this->relationLoaded('skus')
-            ? $this->skus->isNotEmpty()
-            : $this->skus()->exists();
+        $hasOptionAssignment = static function (ProductSku $sku): bool {
+            if (!$sku->is_active) {
+                return false;
+            }
+
+            if ($sku->relationLoaded('productAttributes')) {
+                return $sku->productAttributes->contains(
+                    fn (ProductAttribute $assignment) =>
+                        $assignment->attribute_id !== null
+                        && $assignment->attribute_value_id !== null
+                );
+            }
+
+            return $sku->productAttributes()
+                ->whereNotNull('attribute_id')
+                ->whereNotNull('attribute_value_id')
+                ->exists();
+        };
+
+        if ($this->relationLoaded('skus')) {
+            return $this->skus->contains($hasOptionAssignment);
+        }
+
+        return $this->skus()
+            ->where('is_active', true)
+            ->whereHas('productAttributes', fn ($query) => $query
+                ->whereNotNull('attribute_id')
+                ->whereNotNull('attribute_value_id'))
+            ->exists();
     }
 
     /**

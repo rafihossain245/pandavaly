@@ -53,6 +53,10 @@
             background: #f6f6f6;
         }
 
+        .product-view-body .headline-socials {
+            display: none !important;
+        }
+
         /* Naturo's desktop page uses a centred, bounded canvas. This keeps the
            same proportions on 16-inch laptops and 22/24-inch monitors instead
            of allowing the product panel to stretch with the whole viewport. */
@@ -149,11 +153,16 @@
         }
 
         .product-part > .desc-part {
-            margin-top: 36px;
+            margin-top: 14px;
             border: 1px solid #ececec;
             border-radius: 10px;
             background: #fff;
             overflow: hidden;
+        }
+
+        .product-part > .desc-part .tabs-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
         }
 
         #exzoom {
@@ -308,68 +317,24 @@
             }
 
             .product-main-card {
-                grid-template-columns: minmax(0, 468px) minmax(0, 1fr);
+                grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
                 gap: 40px;
-                min-height: 650px;
                 padding: 34px 38px;
             }
 
             .product-image-part {
-                max-width: 468px;
+                max-width: 360px;
             }
 
             #exzoom {
                 width: 360px;
-                max-width: calc(100% - 108px);
-                margin-left: 108px;
-                margin-right: 0;
+                max-width: 100%;
+                margin-inline: 0;
             }
 
             #exzoom .exzoom_img_ul_outer {
                 border: 1px solid #e1e5df;
                 border-radius: 7px;
-            }
-
-            #exzoom .exzoom_nav {
-                position: absolute !important;
-                top: 0 !important;
-                left: -108px !important;
-                width: 96px !important;
-                height: 360px !important;
-                margin: 0 !important;
-                overflow-x: hidden !important;
-                overflow-y: auto !important;
-            }
-
-            #exzoom .exzoom_nav_inner {
-                position: static !important;
-                width: 100% !important;
-                height: auto !important;
-                display: flex !important;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            #exzoom .exzoom_nav_inner span {
-                float: none !important;
-                flex: 0 0 96px;
-                width: 96px !important;
-                height: 96px !important;
-                margin: 0 !important;
-                display: grid !important;
-                place-items: center;
-                border-radius: 6px;
-                background: #fff;
-                overflow: hidden;
-            }
-
-            #exzoom .exzoom_nav_inner span img {
-                position: static !important;
-                width: 100% !important;
-                height: 100% !important;
-                max-width: 100% !important;
-                max-height: 100% !important;
-                object-fit: contain;
             }
 
             #exzoom .exzoom_btn {
@@ -855,7 +820,7 @@
             .floating-contact { display: none !important; }
             .desc-part .tabs-header {
                 display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: minmax(0, 1fr);
             }
             .desc-part .tab-button {
                 min-width: 0;
@@ -1000,9 +965,7 @@
                         $inStock = collect($skuMap)->contains(fn ($entry) => $entry['in_stock']);
                     }
 
-                    $detailPhone = (string) (\App\Models\Setting::query()->value('contact_phone') ?? '');
-                    $detailPhoneDigits = preg_replace('/\D/', '', $detailPhone);
-                    $detailWhatsapp = $detailPhoneDigits;
+                    $detailWhatsapp = preg_replace('/\D/', '', (string) (\App\Models\Setting::query()->value('contact_phone') ?? ''));
                     if (str_starts_with($detailWhatsapp, '0')) $detailWhatsapp = '88' . $detailWhatsapp;
                 @endphp
                 <div class="product-main-card">
@@ -1172,17 +1135,6 @@
                                 @endif
                             </div>
                             <div class="product-detail-actions">
-                                <button type="button" class="btn add-to-cart-btn"
-                                    data-product="{{ $product->id }}"
-                                    {{ $inStock ? '' : 'disabled' }}>
-                                    <i class="fas fa-cart-plus me-1"></i> কার্টে যোগ করুন
-                                </button>
-                                <button type="button" class="btn btn-buy-now buy-now-btn"
-                                    data-product="{{ $product->id }}"
-                                    data-landing-start="{{ route('landing.start-product', $product->id) }}"
-                                    {{ $inStock ? '' : 'disabled' }}>
-                                    <i class="fas fa-bag-shopping me-1"></i> অর্ডার করুন
-                                </button>
                                 @if($detailWhatsapp)
                                     <a class="product-contact-action whatsapp-action"
                                        href="https://wa.me/{{ $detailWhatsapp }}?text={{ urlencode('আমি ' . $product->name . ' অর্ডার করতে চাই।') }}"
@@ -1190,11 +1142,12 @@
                                         <i class="fab fa-whatsapp"></i> হোয়াটসঅ্যাপে অর্ডার করুন
                                     </a>
                                 @endif
-                                @if($detailPhoneDigits)
-                                    <a class="product-contact-action call-action" href="tel:{{ $detailPhoneDigits }}">
-                                        <i class="fas fa-phone-alt"></i> কল অর্ডার: {{ $detailPhone }}
-                                    </a>
-                                @endif
+                                <button type="button" class="btn btn-buy-now buy-now-btn"
+                                    data-product="{{ $product->id }}"
+                                    data-landing-start="{{ route('landing.start-product', $product->id) }}"
+                                    {{ $inStock ? '' : 'disabled' }}>
+                                    <i class="fas fa-bag-shopping me-1"></i> অর্ডার করুন
+                                </button>
                             </div>
                         </form>
                         @if($product->category)
@@ -1519,13 +1472,22 @@
                     </div>
                 </div> --}}
                 </div>
+                @php
+                    $productDescriptionHtml = (string) ($product->description ?? '');
+                    $productDescriptionText = trim(html_entity_decode(
+                        strip_tags($productDescriptionHtml),
+                        ENT_QUOTES | ENT_HTML5,
+                        'UTF-8'
+                    ));
+                    $hasProductDescription = $productDescriptionText !== ''
+                        || preg_match('/<(img|video|iframe|table)\b/i', $productDescriptionHtml);
+                @endphp
+                @if($hasProductDescription)
                 <div class="desc-part w-100">
                     <div class="product-container">
                         <div class="tabs-container">
                             <div class="tabs-header">
                                 <button class="tab-button active" data-tab="description">Product</button>
-                                <button class="tab-button" data-tab="information">Information</button>
-                                <button class="tab-button" data-tab="return-policy">Return &amp; Refund</button>
                             </div>
 
                             <div class="tab-content active" id="description">
@@ -1731,6 +1693,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
         <div class="related-products pt-4">
@@ -2870,27 +2833,6 @@
             const skuId = $form.find('.selected-sku-id').val() || '';
             const variantLabel = $form.find('.selected-variant-label').val() || '';
 
-            if (!$('.product-variant-selector').length) {
-                const landingUrl = new URL("{{ route('landing.start-product', $product->id) }}", window.location.origin);
-                landingUrl.searchParams.set('qty', qty);
-
-                if (window.goeTrack) {
-                    goeTrack('add_to_cart', {
-                        currency: 'BDT',
-                        value: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))) * Number(qty),
-                        items: [{
-                            id: String(productId),
-                            name: @json($product->name),
-                            price: Number(@json((float) ($product->product_prices->first()->selling_price ?? $product->selling_price ?? 0))),
-                            quantity: Number(qty)
-                        }]
-                    });
-                }
-
-                setTimeout(function () { window.location.href = landingUrl.toString(); }, 200);
-                return;
-            }
-
             $.post("{{ route('cart.add') }}", {
                 _token: $('meta[name="csrf-token"]').attr('content'),
                 product_id: productId,
@@ -2899,12 +2841,18 @@
                 variant_label: variantLabel
             })
             .done(function (res) {
-                var go = function () { window.location.href = "{{ route('checkout.index') }}"; };
+                var go = function () {
+                    var landingUrl = new URL(
+                        $btn.data('landing-start') || "{{ route('landing.start-product', $product->id) }}",
+                        window.location.origin
+                    );
+                    landingUrl.searchParams.set('qty', qty);
+                    window.location.href = landingUrl.toString();
+                };
 
-                // Buy Now really does add to the cart, so it reports AddToCart
-                // like any other add — otherwise the funnel shows a checkout
-                // starting from nothing. The short delay gives the pixel request
-                // time to leave the browser before the page navigates away.
+                // Keep the regular cart in sync, then hand the selected product
+                // and quantity to the homepage shipping form. The short delay
+                // gives the tracking request time to leave before navigation.
                 if (res && res.tracking && window.goeTrack) {
                     goeTrack('add_to_cart', res.tracking);
                     setTimeout(go, 250);

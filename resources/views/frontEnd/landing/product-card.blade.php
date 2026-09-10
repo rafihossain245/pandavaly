@@ -4,7 +4,9 @@
     $discountPercent = $hasDiscount && $productPrice['was'] > 0
         ? (int) round((($productPrice['was'] - $productPrice['now']) / $productPrice['was']) * 100)
         : 0;
-    $hasVariants = $p->skus->isNotEmpty();
+    // A historical SKU row is not a selectable variant by itself. Only show
+    // "View options" when an active SKU has a real attribute/value assignment.
+    $hasVariants = $p->hasVariants();
 @endphp
 
 <article class="lp-product-card"

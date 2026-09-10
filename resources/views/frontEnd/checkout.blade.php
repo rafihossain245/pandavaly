@@ -556,7 +556,10 @@ jQuery(function ($) {
         var total = Number(cart.total || 0);
         var pretty = total.toLocaleString('en-US');
 
-        $('.total-cart, .cs-count').text(count);
+        $('.total-cart').text(count > 0 ? count : '').toggle(count > 0);
+        $('.header-cart-total').text(pretty);
+        $('.header-cart-amount, .mobile-main-cart-total').toggle(count > 0);
+        $('.cs-count').text(count);
         $('.cs-total-val').text(pretty);
         if (itemsHtml) {
             $('#cs-items-wrap').html(itemsHtml);
