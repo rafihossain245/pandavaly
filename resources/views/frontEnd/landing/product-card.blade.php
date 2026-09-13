@@ -27,14 +27,24 @@
             @if($hasDiscount)<del>{{ $money($productPrice['was']) }}</del>@endif
         </div>
 
-        @if($hasVariants)
-            <a href="{{ route('product.details', $p->slug) }}" class="lp-order-button">
-                <i class="fas fa-sliders"></i> অপশন দেখুন
-            </a>
-        @else
-            <button type="button" class="lp-order-button" data-order="{{ $p->id }}">
-                <i class="fas fa-bag-shopping"></i> কার্টে যোগ করুন
-            </button>
-        @endif
+        <div class="lp-product-actions">
+            @if($hasVariants)
+                {{-- Both actions lead to the selector; adding a variant without
+                     its chosen SKU would put the wrong item in the order. --}}
+                <a href="{{ route('product.details', $p->slug) }}" class="lp-card-button lp-buy-button">
+                    <i class="fas fa-bolt"></i> Buy now
+                </a>
+                <a href="{{ route('product.details', $p->slug) }}" class="lp-card-button lp-cart-button">
+                    <i class="fas fa-sliders"></i> Add to cart
+                </a>
+            @else
+                <button type="button" class="lp-card-button lp-buy-button" data-buy-now="{{ $p->id }}">
+                    <i class="fas fa-bolt"></i> Buy now
+                </button>
+                <button type="button" class="lp-card-button lp-cart-button" data-order="{{ $p->id }}">
+                    <i class="fas fa-bag-shopping"></i> Add to cart
+                </button>
+            @endif
+        </div>
     </div>
 </article>

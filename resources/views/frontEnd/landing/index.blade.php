@@ -280,6 +280,10 @@
     }
 
     $(document).on('click', '[data-order]', function () { openOrder($(this).data('order')); });
+    $(document).on('click', '[data-buy-now]', function () {
+        openOrder($(this).data('buy-now'));
+        document.getElementById('order-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     $(document).on('click', '.lp-qty-up, .lp-qty-down', function () {
         var id = String($(this).closest('.lp-pick-row').data('id'));
         picks[id] = Math.max(1, Math.min(99, (picks[id] || 1) + ($(this).hasClass('lp-qty-up') ? 1 : -1)));
