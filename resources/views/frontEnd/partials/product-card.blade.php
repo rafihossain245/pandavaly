@@ -32,29 +32,17 @@
     </div>
     <div class="action-buttons mt-2">
         @if($hasVariants)
-            {{-- Both actions open the selector because a SKU must be chosen
-                 before a variant product can be added safely. --}}
-            <a href="{{ route('product.details', $item->slug) }}"
-               class="product-card-buy-btn product-card-order-btn">
-                <i class="fa-solid fa-bolt"></i> Buy now
-            </a>
+            {{-- A SKU must be selected before this product can be added safely. --}}
             <a href="{{ route('product.details', $item->slug) }}"
                class="btn-buy-now product-card-order-btn">
-                <i class="fa-solid fa-sliders"></i> Add to cart
+                <i class="fa-solid fa-sliders"></i> অপশন দেখুন
             </a>
         @else
-            <button type="button"
-                    class="product-card-buy-btn product-card-order-btn buy-now-btn"
-                    data-product="{{ $item->id }}"
-                    data-qty="{{ max(1, (int) ($item->moq ?? 1)) }}"
-                    @if($landingFlow ?? false) data-landing-start="{{ route('landing.start-product', $item->id) }}" @endif>
-                <i class="fa-solid fa-bolt"></i> Buy now
-            </button>
             <button type="button"
                     class="btn-buy-now product-card-order-btn product-card-cart-btn"
                     data-product="{{ $item->id }}"
                     data-qty="{{ max(1, (int) ($item->moq ?? 1)) }}">
-                <i class="fa-solid fa-bag-shopping"></i> Add to cart
+                <i class="fa-solid fa-bag-shopping"></i> কার্টে যোগ করুন
             </button>
         @endif
     </div>

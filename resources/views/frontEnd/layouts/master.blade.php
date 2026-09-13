@@ -4,10 +4,9 @@
     $setting = App\Models\Setting::first();
     $cart = session()->get('cart', ['items' => [], 'total' => 0, 'count' => 0]);
 
-    // Pages reached from the one-page funnel opt out of the storefront chrome
-    // with @section('chrome', 'bare'): no category nav, cart or account links,
-    // because the funnel sells without any of them and those surfaces would be
-    // dead ends for a shopper who arrived through it.
+    // Pages reached from the one-page funnel opt out of the full storefront
+    // chrome with @section('chrome', 'bare'). Their cart action returns directly
+    // to the funnel's shipping form instead of opening the separate cart page.
     $bareChrome = trim($__env->yieldContent('chrome')) === 'bare';
     $whatsappNumber = preg_replace('/\D/', '', (string) ($setting->contact_phone ?? ''));
     if (str_starts_with($whatsappNumber, '0')) {
@@ -175,16 +174,7 @@
                         <span class="ha-label">Track Order</span>
                     </a>
                     @if($bareChrome)
-                        {{-- Phone instead of the account/cart cluster: a shopper who
-                             ordered through the funnel has no account to sign into,
-                             and calling is how the shop handles order questions. --}}
-                        @if($setting->contact_phone ?? null)
-                            <a href="tel:{{ $setting->contact_phone }}" class="ha-item" title="{{ $setting->contact_phone }}">
-                                <i class="fas fa-phone"></i>
-                                <span class="ha-label">কল করুন</span>
-                            </a>
-                        @endif
-                        <a href="{{ route('cart.index') }}" class="ha-item" title="View cart">
+                        <a href="{{ route('home') }}#order-form" class="ha-item" title="Go to shipping form">
                             <span class="ha-icon-wrap">
                                 <i class="fas fa-bag-shopping"></i>
                                 <span class="total-cart"@if($cart['count'] < 1) style="display:none"@endif>{{ $cart['count'] > 0 ? $cart['count'] : '' }}</span>
