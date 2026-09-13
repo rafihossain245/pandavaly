@@ -50,6 +50,7 @@
         'id' => $product->id,
         'name' => $product->name,
         'price' => $priceOf($product)['now'],
+        'moq' => max(1, (int) ($product->moq ?? 1)),
         'thumb' => $product->thumbnail ? asset($product->thumbnail) : asset('frontEnd/assets/image/product.jpg'),
     ]]);
 @endphp
@@ -271,27 +272,99 @@
         $('[data-order]').toggleClass('is-added', function () { return !!picks[String($(this).data('order'))]; });
     }
 
-    function openOrder(productId) {
-        productId = String(productId);
-        if (!CATALOG[productId]) return;
-        if (!picks[productId]) picks[productId] = 1;
-        renderOrder();
-        toast(CATALOG[productId].name + ' কার্টে যোগ হয়েছে');
+    function showCartError(xhr) {
+        var message = xhr && xhr.responseJSON
+            ? (xhr.responseJSON.error || xhr.responseJSON.message)
+            : null;
+        toast(message || 'কার্ট আপডেট করা যায়নি। আবার চেষ্টা করুন।');
     }
 
-    $(document).on('click', '[data-order]', function () { openOrder($(this).data('order')); });
-    $(document).on('click', '[data-buy-now]', function () {
-        openOrder($(this).data('buy-now'));
+    function scrollToOrder() {
         document.getElementById('order-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function openOrder(productId, goToOrder) {
+        productId = String(productId);
+        if (!CATALOG[productId]) return;
+
+        // Clicking an already selected card should not silently increase its
+        // quantity. The +/- controls remain the single source for that.
+        if (picks[productId]) {
+            toast(CATALOG[productId].name + ' ইতোমধ্যে কার্টে আছে');
+            if (goToOrder) scrollToOrder();
+            return;
+        }
+
+        var quantity = CATALOG[productId].moq || 1;
+        var $buttons = $('[data-order="' + productId + '"], [data-buy-now="' + productId + '"]');
+        $buttons.prop('disabled', true);
+
+        $.ajax({
+            url: @json(route('cart.add')),
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                product_id: productId,
+                qty: quantity
+            }
+        }).done(function (response) {
+            var line = response.cart && response.cart.items
+                ? response.cart.items[productId]
+                : null;
+            picks[productId] = parseInt(line && line.qty, 10) || quantity;
+            renderOrder();
+            toast(CATALOG[productId].name + ' কার্টে যোগ হয়েছে');
+            if (response.tracking && window.goeTrack) goeTrack('add_to_cart', response.tracking);
+            if (goToOrder) scrollToOrder();
+        }).fail(showCartError).always(function () {
+            $buttons.prop('disabled', false);
+        });
+    }
+
+    $(document).on('click', '[data-order]', function () { openOrder($(this).data('order'), false); });
+    $(document).on('click', '[data-buy-now]', function () {
+        openOrder($(this).data('buy-now'), true);
     });
     $(document).on('click', '.lp-qty-up, .lp-qty-down', function () {
-        var id = String($(this).closest('.lp-pick-row').data('id'));
-        picks[id] = Math.max(1, Math.min(99, (picks[id] || 1) + ($(this).hasClass('lp-qty-up') ? 1 : -1)));
-        renderOrder();
+        var $row = $(this).closest('.lp-pick-row');
+        var id = String($row.data('id'));
+        var minimum = CATALOG[id].moq || 1;
+        var quantity = Math.max(minimum, Math.min(99, (picks[id] || minimum) + ($(this).hasClass('lp-qty-up') ? 1 : -1)));
+        if (quantity === picks[id]) return;
+
+        $row.find('button').prop('disabled', true);
+        $.ajax({
+            url: @json(route('cart.update')),
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                cart_key: id,
+                qty: quantity
+            }
+        }).done(function () {
+            picks[id] = quantity;
+            renderOrder();
+        }).fail(showCartError).always(function () {
+            $row.find('button').prop('disabled', false);
+        });
     });
     $(document).on('click', '.lp-picked-remove', function () {
-        delete picks[String($(this).closest('.lp-pick-row').data('id'))];
-        renderOrder();
+        var $row = $(this).closest('.lp-pick-row');
+        var id = String($row.data('id'));
+        $row.find('button').prop('disabled', true);
+        $.ajax({
+            url: @json(route('cart.remove')),
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                cart_key: id
+            }
+        }).done(function () {
+            delete picks[id];
+            renderOrder();
+        }).fail(showCartError).always(function () {
+            $row.find('button').prop('disabled', false);
+        });
     });
     $(document).on('change', '#district_id', renderOrder);
 

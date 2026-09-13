@@ -58,6 +58,40 @@
         .cart-toast.show { opacity: 1; transform: translateY(0); }
         .cart-toast i { color: #4caf50; font-size: 18px; }
 
+        /* Keep the cart total in the normal label flow. The legacy theme makes
+           every span inside a header action an absolute count badge, including
+           the numeric span inside the total, which caused it to cover the icon. */
+        .header-action .ha-label.header-cart-summary {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .header-action .header-cart-summary .header-cart-amount {
+            position: static;
+            width: auto;
+            height: auto;
+            color: #fff;
+            background: transparent;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .header-action .header-cart-summary .header-cart-total {
+            position: static;
+            display: inline;
+            width: auto;
+            min-width: 0;
+            height: auto;
+            padding: 0;
+            color: inherit;
+            background: transparent;
+            border-radius: 0;
+            font: inherit;
+            line-height: inherit;
+        }
+
         /* ===== CART PAGE ===== */
         .cart-page { background: #f5f5f5; min-height: 60vh; padding: 28px 0 50px; }
         .cart-breadcrumb { font-size: 13px; color: #666; margin-bottom: 20px; }

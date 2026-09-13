@@ -62,13 +62,28 @@ class LandingController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        // The landing catalogue used to keep its cart only in JavaScript, so
+        // opening a product page made the header look empty. Hydrate the funnel
+        // from the same session cart used by product details. Variant lines are
+        // excluded because this form has no SKU selector and must never replace
+        // a chosen variant with the product's base item.
+        $sessionItems = collect(session('cart.items', []))
+            ->filter(fn ($item) => empty($item['sku_id']) && !empty($item['id']) && (int) ($item['qty'] ?? 0) > 0)
+            ->mapWithKeys(fn ($item) => [(string) $item['id'] => (int) $item['qty']])
+            ->all();
+
+        // A direct /order/start link still works when there is no cart yet.
+        // Once an item is in the session cart, that quantity is authoritative.
+        $routePrefill = session()->pull('landing_prefill', []);
+        $prefillItems = array_replace($routePrefill, $sessionItems);
+
         return view('frontEnd.landing.index', [
             'setting' => $setting,
             'gallery' => $products,
             'categories' => $categories,
             'slides' => $slides,
             'districts' => District::active()->orderBy('name')->get(['id', 'name', 'delivery_charge']),
-            'prefillItems' => session()->pull('landing_prefill', []),
+            'prefillItems' => $prefillItems,
         ]);
     }
 
